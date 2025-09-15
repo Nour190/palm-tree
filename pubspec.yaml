@@ -1,0 +1,58 @@
+name: baseqat
+description: "A new Flutter project."
+publish_to: 'none' 
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_svg: ^2.0.12
+  cached_network_image: ^3.4.1
+  cupertino_icons: ^1.0.8
+  bloc: ^9.0.0
+  get_it: ^8.2.0
+  dartz: ^0.10.1
+  equatable: ^2.0.7
+  supabase_flutter: ^2.10.0
+  flutter_bloc: ^9.1.1
+  gradient_borders: ^1.0.2
+  carousel_slider_plus: ^7.0.1
+  smooth_page_indicator: ^1.2.0+3
+  web: any
+  universal_html: ^2.2.4
+  connectivity_plus: ^6.1.5
+  logger : ^2.6.1
+  retry: ^3.1.2
+  intl: ^0.20.2
+  flutter_screenutil: ^5.9.3
+  google_sign_in: ^6.2.1
+  flutter_secure_storage: ^9.2.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+
+flutter:
+
+  uses-material-design: true # 
+  assets: 
+    - assets/
+    - assets/images/
+
+  fonts: 
+    - family: Inter
+      fonts: 
+        - asset: assets/fonts/InterBold.ttf
+          weight: 700
+        - asset: assets/fonts/InterRegular.ttf
+          weight: 400
+        - asset: assets/fonts/InterLight.ttf
+          weight: 300
+        - asset: assets/fonts/InterMedium.ttf
+          weight: 500
+
