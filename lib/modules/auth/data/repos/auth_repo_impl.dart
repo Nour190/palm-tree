@@ -564,6 +564,8 @@ class AuthRepoImpl extends AuthRepo {
         id: response.user!.id,
         name: authRequestModel.name ?? 'Unknown',
         email: authRequestModel.email,
+        accessToken: response.session!.refreshToken,
+        refreshToken: response.session!.refreshToken
       );
       // Save token
       //await _saveUserData(userModel);
@@ -603,7 +605,7 @@ class AuthRepoImpl extends AuthRepo {
     }
   }
   @override
-  Future<Either<Failure, String>> login(AuthRequestModel authRequestModel) async {
+  Future<Either<Failure, Session>> login(AuthRequestModel authRequestModel) async {
     try {
       final response = await client.auth.signInWithPassword(
         email: authRequestModel.email,
@@ -621,7 +623,7 @@ class AuthRepoImpl extends AuthRepo {
       //   value: response.session!.refreshToken!,
       // );
 
-      return Right(response.session!.refreshToken!);
+      return Right(response.session!);
     } catch (error) {
       if (error is AuthApiException) {
         return Left(SupabaseAuthFailure.fromAuthException(error));
@@ -630,25 +632,85 @@ class AuthRepoImpl extends AuthRepo {
     }
   }
 
+  // @override
+  // Future<Either<Failure, Session>> signInWithGoogle() async {
+  //   try {
+  //     if (kIsWeb) {
+  //
+  //       return await _handleWebGoogleSignInPopup();
+  //
+  //     } else {
+  //
+  //       return await _handleMobileGoogleSignIn();
+  //     }
+  //   } catch (error) {
+  //     if (error is AuthApiException) {
+  //       return Left(SupabaseAuthFailure.fromAuthException(error));
+  //     }
+  //     return Left(SupabaseAuthFailure('Google sign-in failed: ${error.toString()}'));
+  //   }
+  // }
   @override
-  Future<Either<Failure, Session>> signInWithGoogle() async {
+  Future<Either<Failure, Unit>> startWebGoogleSignIn() async {
     try {
-      if (kIsWeb) {
-       // print("web00000000000");
-        return await _handleWebGoogleSignInPopup();
-
-      } else {
-
-        return await _handleMobileGoogleSignIn();
-      }
-    } catch (error) {
-      if (error is AuthApiException) {
-        return Left(SupabaseAuthFailure.fromAuthException(error));
-      }
-      return Left(SupabaseAuthFailure('Google sign-in failed: ${error.toString()}'));
+      await client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo:  kIsWeb ? '${Uri.base.origin}/auth-callback' : null,
+          scopes: 'email profile',
+          queryParams: {
+            'access_type': 'offline',
+            'prompt': 'consent',
+          }
+      );
+      return const Right(unit);
+    } on AuthApiException catch (authError) {
+      return Left(SupabaseAuthFailure.fromAuthException(authError));
+    } catch (e) {
+      return Left(SupabaseAuthFailure('Failed to start web OAuth: ${e.toString()}'));
     }
   }
+  @override
+  Future<Either<Failure, Session>> mobileGoogleSignIn() async {
+    try {
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) return Left(SupabaseAuthFailure('Google sign-in was cancelled'));
 
+      final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
+      final accessToken = googleAuth.accessToken;
+
+      if (idToken == null || accessToken == null) {
+        return Left(SupabaseAuthFailure('Failed to obtain tokens from Google'));
+      }
+
+      final AuthResponse response = await client.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken,
+        accessToken: accessToken,
+      );
+
+      final session = response.session;
+      if (session == null) {
+        return Left(SupabaseAuthFailure('Failed to obtain session from Supabase'));
+      }
+      final user = response.user;
+      if (user != null) {
+        final userModel = UserModel(
+          id: user.id,
+          name: googleUser.displayName ?? user.userMetadata?['name'] ?? 'Unknown',
+          email: user.email ?? googleUser.email,
+          avatarUrl: googleUser.photoUrl ?? user.userMetadata?['picture'],
+        );
+        await createUser(userModel);
+      }
+
+      return Right(session);
+    } on AuthApiException catch (authError) {
+      return Left(SupabaseAuthFailure.fromAuthException(authError));
+    } catch (e) {
+      return Left(SupabaseAuthFailure('Mobile Google sign-in failed: ${e.toString()}'));
+    }
+  }
   // Future<Either<Failure, UserModel>> _handleWebGoogleSignInPopup() async {
   //   try {
   //     // final googleUser = await _googleSignIn.signIn();
@@ -680,119 +742,127 @@ class AuthRepoImpl extends AuthRepo {
   //     return Left(SupabaseAuthFailure('Web Google sign-in failed: ${error.toString()}'));
   //   }
   // }
-  Future<Either<Failure, Session>> _handleWebGoogleSignInPopup() async {
-    try {
-      await client.auth.signInWithOAuth(
-        OAuthProvider.google,
-         redirectTo: kIsWeb ? '${Uri.base.origin}/auth-callback' : null,
-        scopes: 'email profile',
-        queryParams: {
-          'access_type': 'offline',
-          'prompt': 'consent',
-        },
-      );
+  // Future<Either<Failure, Session>> _handleWebGoogleSignInPopup() async {
+  //   try {
+  //     bool x=await client.auth.signInWithOAuth(
+  //       OAuthProvider.google,
+  //         redirectTo: kIsWeb ? '${Uri.base.origin}/auth-callback' : null,
+  //       scopes: 'email profile',
+  //       queryParams: {
+  //         'access_type': 'offline',
+  //         'prompt': 'consent',
+  //       },
+  //     );
+  //
+  //     final session = client.auth.currentSession;
+  //     if (session != null) {
+  //
+  //       final user = session.user;
+  //       if (user != null) {
+  //         final userModel = UserModel(
+  //           id: user.id,
+  //           name: user.userMetadata?['full_name'] ?? user.userMetadata?['name'] ?? 'Unknown',
+  //           email: user.email ?? '',
+  //           avatarUrl: user.userMetadata?['avatar_url'] ?? user.userMetadata?['picture'],
+  //         );
+  //         await createUser(userModel);
+  //       }
+  //
+  //       return Right(session);
+  //     }
+  //
+  //
+  //     return Right(session!);
+  //   } on AuthApiException catch (authError) {
+  //     return Left(SupabaseAuthFailure.fromAuthException(authError));
+  //   } catch (error) {
+  //     return Left(SupabaseAuthFailure('Web Google sign-in failed: ${error.toString()}'));
+  //   }
+  // }
+  //
+  // Future<Either<Failure, Session>> _handleMobileGoogleSignIn() async {
+  //   try {
+  //     final googleUser = await _googleSignIn.signIn();
+  //     if (googleUser == null) {
+  //       return Left(SupabaseAuthFailure('Google sign-in was cancelled by user'));
+  //     }
+  //
+  //     final googleAuth = await googleUser.authentication;
+  //     final idToken = googleAuth.idToken;
+  //     final accessToken = googleAuth.accessToken;
+  //
+  //     if (idToken == null) {
+  //       return Left(SupabaseAuthFailure('Failed to get ID token from Google'));
+  //     }
+  //
+  //     final AuthResponse response = await client.auth.signInWithIdToken(
+  //       provider: OAuthProvider.google,
+  //       idToken: idToken,
+  //       accessToken: accessToken,
+  //     );
+  //
+  //     final session = response.session;
+  //     if (session == null) {
+  //       return Left(SupabaseAuthFailure('Failed to obtain session from Supabase'));
+  //     }
+  //
+  //     // create/update profile optionally
+  //     final user = response.user;
+  //     if (user != null) {
+  //       final userModel = UserModel(
+  //         id: user.id,
+  //         name: googleUser.displayName ?? user.userMetadata?['full_name'] ?? user.userMetadata?['name'] ?? 'Unknown',
+  //         email: user.email ?? googleUser.email,
+  //         avatarUrl: googleUser.photoUrl ?? user.userMetadata?['picture'],
+  //       );
+  //       await createUser(userModel);
+  //     }
+  //     return Right(session);
+  //   } on AuthApiException catch (authError) {
+  //     return Left(SupabaseAuthFailure.fromAuthException(authError));
+  //   } catch (error) {
+  //     return Left(SupabaseAuthFailure('Mobile Google sign-in failed: ${error.toString()}'));
+  //   }
+  // }
 
-      final session = client.auth.currentSession;
-      if (session != null) {
 
-        final user = session.user;
-        if (user != null) {
-          final userModel = UserModel(
-            id: user.id,
-            name: user.userMetadata?['full_name'] ?? user.userMetadata?['name'] ?? 'Unknown',
-            email: user.email ?? '',
-            avatarUrl: user.userMetadata?['avatar_url'] ?? user.userMetadata?['picture'],
-          );
-          await createUser(userModel);
-        }
+  // Future<Either<Failure, Session>> checkOAuthCallback() async {
+  //   try {
+  //     final session = client.auth.currentSession;
+  //
+  //     if (session == null) {
+  //       return Left(SupabaseAuthFailure('No active session'));
+  //     }
+  //
+  //     // Optionally create/update user profile
+  //     final user = session.user;
+  //     if (user != null) {
+  //       final userModel = UserModel(
+  //         id: user.id,
+  //         name: user.userMetadata?['full_name'] ?? user.userMetadata?['name'] ?? 'Unknown',
+  //         email: user.email ?? '',
+  //         avatarUrl: user.userMetadata?['avatar_url'] ?? user.userMetadata?['picture'],
+  //       );
+  //       await createUser(userModel);
+  //     }
+  //
+  //     return Right(session);
+  //   } on AuthApiException catch (authError) {
+  //     return Left(SupabaseAuthFailure.fromAuthException(authError));
+  //   } catch (error) {
+  //     return Left(SupabaseAuthFailure('Failed to process OAuth callback: ${error.toString()}'));
+  //   }
+  // }
 
-        return Right(session);
-      }
-
-
-      return Right(session!);
-    } on AuthApiException catch (authError) {
-      return Left(SupabaseAuthFailure.fromAuthException(authError));
-    } catch (error) {
-      return Left(SupabaseAuthFailure('Web Google sign-in failed: ${error.toString()}'));
-    }
+  @override
+  Stream<AuthState> onAuthStateChange() {
+    return client.auth.onAuthStateChange;
   }
 
-  Future<Either<Failure, Session>> _handleMobileGoogleSignIn() async {
-    try {
-      final googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        return Left(SupabaseAuthFailure('Google sign-in was cancelled by user'));
-      }
-
-      final googleAuth = await googleUser.authentication;
-      final idToken = googleAuth.idToken;
-      final accessToken = googleAuth.accessToken;
-
-      if (idToken == null) {
-        return Left(SupabaseAuthFailure('Failed to get ID token from Google'));
-      }
-
-      final AuthResponse response = await client.auth.signInWithIdToken(
-        provider: OAuthProvider.google,
-        idToken: idToken,
-        accessToken: accessToken,
-      );
-
-      final session = response.session;
-      if (session == null) {
-        return Left(SupabaseAuthFailure('Failed to obtain session from Supabase'));
-      }
-
-      // create/update profile optionally
-      final user = response.user;
-      if (user != null) {
-        final userModel = UserModel(
-          id: user.id,
-          name: googleUser.displayName ?? user.userMetadata?['full_name'] ?? user.userMetadata?['name'] ?? 'Unknown',
-          email: user.email ?? googleUser.email,
-          avatarUrl: googleUser.photoUrl ?? user.userMetadata?['picture'],
-        );
-        await createUser(userModel);
-      }
-      return Right(session);
-    } on AuthApiException catch (authError) {
-      return Left(SupabaseAuthFailure.fromAuthException(authError));
-    } catch (error) {
-      return Left(SupabaseAuthFailure('Mobile Google sign-in failed: ${error.toString()}'));
-    }
+  @override
+  Session? currentSession() {
+    return client.auth.currentSession;
   }
-
-
-  Future<Either<Failure, Session>> checkOAuthCallback() async {
-    try {
-      final session = client.auth.currentSession;
-
-      if (session == null) {
-        return Left(SupabaseAuthFailure('No active session'));
-      }
-
-      // Optionally create/update user profile
-      final user = session.user;
-      if (user != null) {
-        final userModel = UserModel(
-          id: user.id,
-          name: user.userMetadata?['full_name'] ?? user.userMetadata?['name'] ?? 'Unknown',
-          email: user.email ?? '',
-          avatarUrl: user.userMetadata?['avatar_url'] ?? user.userMetadata?['picture'],
-        );
-        await createUser(userModel);
-      }
-
-      return Right(session);
-    } on AuthApiException catch (authError) {
-      return Left(SupabaseAuthFailure.fromAuthException(authError));
-    } catch (error) {
-      return Left(SupabaseAuthFailure('Failed to process OAuth callback: ${error.toString()}'));
-    }
-  }
-
-
 
   @override
   Future<Either<Failure, Unit>> signOut() async {

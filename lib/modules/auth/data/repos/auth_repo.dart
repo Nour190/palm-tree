@@ -9,10 +9,16 @@ abstract class AuthRepo {
   Future<Either<Failure, UserModel>> register(
     AuthRequestModel authRequestModel,
   );
-  Future<Either<Failure, String>> login(AuthRequestModel authRequestModel);
+  Future<Either<Failure, Session>> login(AuthRequestModel authRequestModel);
   Future<Either<Failure, Unit>> createUser(UserModel userModel);
-  Future<Either<Failure, Session>> signInWithGoogle();
-  Future<Either<Failure, Session>> checkOAuthCallback();
+  // Future<Either<Failure, Session>> signInWithGoogle();
+  Future<Either<Failure, Unit>> startWebGoogleSignIn();
+  Future<Either<Failure, Session>> mobileGoogleSignIn();
+  /// Expose the Supabase auth state change stream
+  Stream<AuthState> onAuthStateChange();
+  /// Return current session if exists
+  Session? currentSession();
+  // Future<Either<Failure, Session>> checkOAuthCallback();
   Future<Either<Failure, Unit>> signOut();
   // logout();
 }

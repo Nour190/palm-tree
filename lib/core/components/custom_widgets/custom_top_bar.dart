@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/core/responsive/size_utils.dart';
@@ -38,8 +39,8 @@ class TopBar extends StatelessWidget {
   DeviceType _deviceTypeFor(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final shortest = math.min(size.width, size.height);
-    if (shortest >= 900) return DeviceType.desktop;
-    if (shortest >= 600) return DeviceType.tablet;
+    if (shortest >= 1200.sW) return DeviceType.desktop;
+    if (shortest >= 768.sW) return DeviceType.tablet;
     return DeviceType.mobile;
   }
 
@@ -170,12 +171,12 @@ class _MobileTopBar extends StatelessWidget {
       children: [
         Expanded(
           child: Container(
-            height: 85.h,
-            padding: EdgeInsets.symmetric(horizontal: 12.h),
+            height: 85.sH,
+            padding: EdgeInsets.symmetric(horizontal: 12.sSp),
             decoration: BoxDecoration(
               color: AppColor.white,
-              border: Border.all(color: AppColor.gray900, width: 1),
-              borderRadius: BorderRadius.circular(50.h),
+              border: Border.all(color: AppColor.gray900, width: 1.sW),
+              borderRadius: BorderRadius.circular(50.sH),
             ),
             child: Row(
               children: [
@@ -187,13 +188,13 @@ class _MobileTopBar extends StatelessWidget {
                     items[selectedIndex.clamp(0, items.length - 1)],
                     style: TextStyleHelper.instance.title16RegularInter,
                   ),
-                SizedBox(width: 8.h),
+                SizedBox(width: 8.sSp),
                 _MenuButton(onTap: () => _openMenu(context)),
               ],
             ),
           ),
         ),
-        SizedBox(width: 12.h),
+        SizedBox(width: 12.sSp),
         if (showScanButton) _ScanButton(onTap: onScanTap),
       ],
     );
@@ -239,12 +240,12 @@ class _WideTopBar extends StatelessWidget {
       children: [
         Expanded(
           child: Container(
-            height: 72.h,
-            padding: EdgeInsets.all(16.h),
+            height: 72.sH,
+            padding: EdgeInsets.all(16.sSp),
             decoration: BoxDecoration(
               color: AppColor.white,
-              border: Border.all(color: AppColor.gray900, width: 1),
-              borderRadius: BorderRadius.circular(50.h),
+              border: Border.all(color: AppColor.gray900, width: 1.sW),
+              borderRadius: BorderRadius.circular(50.sH),
             ),
             child: Row(
               children: [
@@ -256,11 +257,11 @@ class _WideTopBar extends StatelessWidget {
                       _NavText(
                         inlineItems[i],
                         selected:
-                            items.indexOf(inlineItems[i]) == selectedIndex,
+                        items.indexOf(inlineItems[i]) == selectedIndex,
                         onTap: () =>
                             onItemTap?.call(items.indexOf(inlineItems[i])),
                       ),
-                      SizedBox(width: 16.h),
+                      SizedBox(width: 16.sSp),
                     ],
                     if (overflowItems.isNotEmpty)
                       _OverflowMenu(
@@ -268,7 +269,7 @@ class _WideTopBar extends StatelessWidget {
                         onSelected: (label) =>
                             onItemTap?.call(items.indexOf(label)),
                       ),
-                    SizedBox(width: 16.h),
+                    SizedBox(width: 16.sSp),
                     _LoginButton(onTap: onLoginTap),
                   ],
                 ),
@@ -276,7 +277,7 @@ class _WideTopBar extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(width: 12.h),
+        SizedBox(width: 12.sSp),
         if (showScanButton) _ScanButton(onTap: onScanTap),
       ],
     );
@@ -296,15 +297,15 @@ class _Brand extends StatelessWidget {
     return Row(
       children: [
         ClipRRect(
-          borderRadius: BorderRadius.circular(100.h),
+          borderRadius: BorderRadius.circular(100.sH),
           child: Container(
-            width: 50.h,
-            height: 50.h,
+            width: 50.sW,
+            height: 50.sH,
             color: AppColor.grey200,
             child: Image.asset(logoPath, fit: BoxFit.cover),
           ),
         ),
-        SizedBox(width: 8.h),
+        SizedBox(width: 8.sSp),
         Text(brand, style: TextStyleHelper.instance.headline24BoldInter),
       ],
     );
@@ -327,13 +328,13 @@ class _NavText extends StatelessWidget {
       onTap: onTap,
       child: Container(
         alignment: Alignment.center,
-        height: 24.h,
+        height: 24.sH,
         decoration: selected
-            ? const BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(color: AppColor.gray900, width: 2),
-                ),
-              )
+            ? BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: AppColor.gray900, width: 2.sW),
+          ),
+        )
             : null,
         child: Text(label, style: style),
       ),
@@ -348,15 +349,15 @@ class _LoginButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(24.h),
+      borderRadius: BorderRadius.circular(24.sH),
       onTap: onTap,
       child: Container(
-        height: 48.h,
-        padding: EdgeInsets.symmetric(horizontal: 24.h),
+        height: 48.sH,
+        padding: EdgeInsets.symmetric(horizontal: 24.sSp),
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: AppColor.gray900,
-          borderRadius: BorderRadius.circular(24.h),
+          borderRadius: BorderRadius.circular(24.sH),
         ),
         child: Text(
           "Login",
@@ -379,14 +380,14 @@ class _ScanButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkResponse(
         onTap: onTap,
-        radius: 40.h,
+        radius: 40.sH,
         child: Container(
-          width: 64.h,
-          height: 64.h,
+          width: 64.sW,
+          height: 64.sH,
           decoration: BoxDecoration(
             color: AppColor.gray900,
-            borderRadius: BorderRadius.circular(100.h),
-            border: Border.all(color: AppColor.gray900, width: 1),
+            borderRadius: BorderRadius.circular(100.sH),
+            border: Border.all(color: AppColor.gray900, width: 1.sW),
           ),
           child: const Center(
             child: Icon(Icons.qr_code_scanner, color: AppColor.white),
@@ -405,13 +406,13 @@ class _MenuButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkResponse(
       onTap: onTap,
-      radius: 28.h,
+      radius: 28.sH,
       child: Container(
-        width: 40.h,
-        height: 40.h,
+        width: 40.sW,
+        height: 40.sH,
         decoration: BoxDecoration(
           color: AppColor.gray900,
-          borderRadius: BorderRadius.circular(100.h),
+          borderRadius: BorderRadius.circular(100.sH),
         ),
         child: const Icon(Icons.menu, color: AppColor.white, size: 20),
       ),
@@ -428,26 +429,26 @@ class _OverflowMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
       onSelected: onSelected,
-      offset: Offset(0, 24.h),
+      offset: Offset(0, 24.sH),
       elevation: 2,
       itemBuilder: (context) => labels
           .map(
             (e) => PopupMenuItem<String>(
-              value: e,
-              child: Text(
-                e,
-                style: TextStyleHelper.instance.title16RegularInter,
-              ),
-            ),
-          )
+          value: e,
+          child: Text(
+            e,
+            style: TextStyleHelper.instance.title16RegularInter,
+          ),
+        ),
+      )
           .toList(),
       child: Container(
-        height: 32.h,
-        padding: EdgeInsets.symmetric(horizontal: 12.h),
+        height: 32.sH,
+        padding: EdgeInsets.symmetric(horizontal: 12.sSp),
         alignment: Alignment.center,
         decoration: BoxDecoration(
           border: Border.all(color: AppColor.blueGray100),
-          borderRadius: BorderRadius.circular(16.h),
+          borderRadius: BorderRadius.circular(16.sH),
         ),
         child: Row(
           children: [

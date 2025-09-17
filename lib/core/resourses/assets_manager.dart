@@ -20,7 +20,7 @@ class AppAssetsManager {
   static String imgRectangle43 = '${_basePath}img_rectangle_4_3.png';
   static String imgRectangle4310x286 =
       '${_basePath}img_rectangle_4_310x286.png';
-  static String imgSearch = '${_basePath}img_search.svg';
+  static String imgSearch = '${_basePath}img_search.png';
   static String imgVector = '${_basePath}img_vector.png';
   static String imgVectorGray900 = '${_basePath}img_vector_gray_900.png';
 
@@ -30,7 +30,7 @@ class AppAssetsManager {
   static String imgEllipse13116x116 = '${_basePath}img_ellipse_13_116x116.png';
   static String imgEllipse132 = '${_basePath}img_ellipse_13_2.png';
   static String imgEllipse133 = '${_basePath}img_ellipse_13_3.png';
-  static String imgGroup = '${_basePath}img_group.svg';
+  static String imgGroup = '${_basePath}img_group.png';
   static String imgImage = '${_basePath}img_image.png';
   static String imgInfo = '${_basePath}img_info.png';
   static String imgPhoto = '${_basePath}img_photo.png';
@@ -42,14 +42,14 @@ class AppAssetsManager {
   static String imgRectangle2200x276 =
       '${_basePath}img_rectangle_2_200x276.png';
   static String imgUsers = '${_basePath}img_users.png';
-  static String imgVectorWhiteA700 = '${_basePath}img_vector_white_a700.svg';
+  static String imgVectorWhiteA700 = '${_basePath}img_vector_white_a700.png';
   static String imgVectorWhiteA70050x66 =
       '${_basePath}img_vector_white_a700_50x66.svg';
 
   // Art Work Card Widget Screen
-  static String imgArrowIcon = '${_basePath}img_arrow_icon.svg';
+  static String imgArrowIcon = '${_basePath}img_arrow_icon.png';
   static String imgArrowIconWhiteA700 =
-      '${_basePath}img_arrow_icon_white_a700.svg';
+      '${_basePath}img_arrow_icon_white_a700.png';
 
   // Custom Icon Button Screen
   // Custom Image View Screen

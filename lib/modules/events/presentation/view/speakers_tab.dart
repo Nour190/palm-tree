@@ -13,8 +13,8 @@ import 'package:baseqat/core/responsive/size_utils.dart';
 class SpeakersTabContent extends StatefulWidget {
   final String headerTitle;
   final String monthLabel;
-  final DateTime currentMonth; // first day will seed the 30-day window
-  final WeekModel week; // initial week (not strictly required, we rebuild)
+  final DateTime currentMonth;
+  final WeekModel week;
   final List<Speaker> speakers;
   final String ctaTitle;
   final String ctaSubtitle;
@@ -183,7 +183,7 @@ class _SpeakersTabContentState extends State<SpeakersTabContent> {
           SizedBox(height: 24.h),
 
           // Schedule list for the selected day
-          ScheduleList(speakers: daySpeakers),
+          ScheduleList(speakers: daySpeakers, onTap: (index) {}),
 
           SizedBox(height: 24.h),
           BottomCta(
@@ -218,7 +218,6 @@ class _SpeakersTabContentState extends State<SpeakersTabContent> {
   }
 }
 
-/// Header row above the strip that shows the current 7-day span and two buttons.
 class _SliceHeader extends StatelessWidget {
   final DateTime start;
   final DateTime end;

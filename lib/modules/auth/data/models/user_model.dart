@@ -6,7 +6,7 @@ class UserModel {
   final DateTime? createdAt;
   final String? refreshToken;
   final String? accessToken;
-  final bool isOAuthRedirect;
+
 
   UserModel({
     required this.id,
@@ -16,7 +16,6 @@ class UserModel {
     this.createdAt,
     this.refreshToken,
     this.accessToken,
-    this.isOAuthRedirect = false,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {

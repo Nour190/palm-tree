@@ -1,6 +1,6 @@
 // lib/core/dependency_injection.dart
-import 'package:baseqat/modules/arts_works/data/data_sources/remote/artwork_remote_data_source.dart';
-import 'package:baseqat/modules/arts_works/data/repositories/repository.dart';
+// import 'package:baseqat/modules/arts_works/data/data_sources/remote/artwork_remote_data_source.dart';
+// import 'package:baseqat/modules/arts_works/data/repositories/repository.dart';
 import 'package:baseqat/modules/auth/data/repos/auth_repo.dart';
 import 'package:baseqat/modules/auth/data/repos/auth_repo_impl.dart';
 import 'package:baseqat/modules/auth/logic/login_cubit/login_cubit.dart';
@@ -26,12 +26,12 @@ Future<void> diInit() async {
   );
 
   // Repository
-  sl.registerLazySingleton<ArtworkRepository>(
-        () => ArtworkRepositoryImpl(remoteDataSource: sl()),
-  );
-
-  // Data sources
-  sl.registerLazySingleton<ArtworkRemoteDataSource>(
-        () => ArtworkRemoteDataSourceImpl(),
-  );
+  // sl.registerLazySingleton<ArtworkRepository>(
+  //       () => ArtworkRepositoryImpl(remoteDataSource: sl()),
+  // );
+  //
+  // // Data sources
+  // sl.registerLazySingleton<ArtworkRemoteDataSource>(
+  //       () => ArtworkRemoteDataSourceImpl(),
+  // );
 }

@@ -4,16 +4,24 @@ import 'package:flutter/material.dart';
 
 class ScheduleList extends StatelessWidget {
   final List<Speaker> speakers;
-  const ScheduleList({super.key, required this.speakers});
+  final void Function(int index)? onTap;
+
+  const ScheduleList({super.key, required this.speakers, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: speakers
+          .asMap()
+          .entries
           .map(
-            (sp) => Padding(
+            (entry) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: SessionCard(speaker: sp),
+              child: SessionCard(
+                speaker: entry.value,
+                index: entry.key,
+                onTap: onTap,
+              ),
             ),
           )
           .toList(),

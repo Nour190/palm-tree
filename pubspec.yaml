@@ -30,6 +30,9 @@ dependencies:
   flutter_screenutil: ^5.9.3
   google_sign_in: ^6.2.1
   flutter_secure_storage: ^9.2.4
+  geolocator: ^14.0.2
+  flutter_osm_plugin: ^1.4.2
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:

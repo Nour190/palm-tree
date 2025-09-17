@@ -1,9 +1,8 @@
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/core/responsive/size_utils.dart';
 import 'package:baseqat/core/resourses/style_manager.dart';
+import 'package:baseqat/modules/events/data/models/category_model.dart';
 import 'package:flutter/material.dart';
-
-import '../../../arts_works/presentation/widgets/category_model.dart';
 
 class CategoryChipWidget extends StatelessWidget {
   final CategoryModel category;

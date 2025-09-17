@@ -1,5 +1,10 @@
 // lib/modules/events/presentation/view/events_screen.dart
+import 'package:baseqat/core/components/custom_widgets/custom_search_view.dart';
+import 'package:baseqat/core/resourses/assets_manager.dart';
+import 'package:baseqat/modules/events/data/models/category_model.dart'
+    hide CategoryModel;
 import 'package:baseqat/modules/events/presentation/view/gallery_tav_view.dart';
+import 'package:baseqat/modules/events/presentation/view/speakers_info_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -8,7 +13,6 @@ import 'package:baseqat/core/components/custom_widgets/events_search_field.dart'
 import 'package:baseqat/core/responsive/size_utils.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 
-import 'package:baseqat/modules/arts_works/presentation/widgets/category_model.dart';
 import 'package:baseqat/modules/events/data/models/week_model.dart';
 
 import 'package:baseqat/modules/events/presentation/view/art_works_view.dart';
@@ -84,12 +88,17 @@ class _EventsScreenState extends State<EventsScreen> {
     if (_selectedIndex == index) return;
     setState(() {
       _selectedIndex = index;
+      // Fix: Update the categories list properly
       for (int i = 0; i < _categories.length; i++) {
-        _categories[i].isSelected = (i == index);
+        _categories[i] = CategoryModel(
+          title: _categories[i].title,
+          isSelected: i == index,
+        );
       }
     });
   }
 
+  final TextEditingController searchController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     final client = Supabase.instance.client;
@@ -101,21 +110,59 @@ class _EventsScreenState extends State<EventsScreen> {
         backgroundColor: AppColor.white,
         body: SafeArea(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+
             children: [
               SizedBox(height: 20.h),
-              Padding(
-                padding: EdgeInsets.all(8.h),
-                child: Column(
-                  spacing: 24.h,
-                  children: [
-                    const EventsSearchField(),
-                    EventsCategoryChips(
-                      categories: _categories,
-                      onTap: _onCategoryTap,
-                      showIndex: true,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 24.h,
+                children: [
+                  EventsSearchHeader(
+                    title: 'Discover',
+                    subtitle: 'What do you want to see today?',
+                    controller: searchController,
+                    searchFieldBuilder: (context, ctrl, onCh, onSub, hint) {
+                      return CustomSearchView(
+                        controller: ctrl,
+                        onChanged: onCh,
+                        hintText: hint,
+                        prefixIcon: AppAssetsManager.imgSearch,
+                        fillColor: AppColor.white,
+                        borderColor: AppColor.gray400,
+                      );
+                    },
+                    style: SearchHeaderStyle(
+                      breakpoint: 840,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      borderColor: AppColor.gray400,
+                      fillColor: Colors.transparent,
+                      prefixIcon: Image.asset(
+                        AppAssetsManager.imgSearch,
+                        width: 20,
+                        height: 20,
+                      ),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                     ),
-                  ],
-                ),
+                    actions: [
+                      IconButton(
+                        onPressed: () {},
+                        icon: const Icon(Icons.tune),
+                      ),
+                    ],
+                  ),
+                  EventsCategoryChips(
+                    categories: _categories,
+                    onTap: _onCategoryTap,
+
+                    enableScrollIndicators: true,
+                    animationDuration: const Duration(milliseconds: 250),
+                    height: 60,
+                  ),
+                ],
               ),
               SizedBox(height: 20.h),
 
@@ -160,22 +207,7 @@ class _EventsScreenState extends State<EventsScreen> {
       case 1:
         return ArtistTabContent(artists: s.artists);
       case 2:
-        // Pass ALL speakers. SpeakersTabContent will:
-        // - build 30-day window from currentMonth
-        // - page by 7 days (prev/next)
-        // - filter by selected day (UTC)
-        return SpeakersTabContent(
-          headerTitle: 'Festival Schedule',
-          monthLabel: _monthLabel,
-          currentMonth: _currentMonth,
-          week: _week,
-          speakers: s.speakers,
-          ctaTitle: 'We look forward\nto seeing you\ntomorrow',
-          ctaSubtitle:
-              'Don’t miss the exciting sessions on dates and palm cultivation.',
-          onPrevMonth: _prevMonth,
-          onNextMonth: _nextMonth,
-        );
+        return SpeakersInfoScreen(speaker: s.speakers[0]);
       case 3:
         return GalleryGrid(items: s.gallery, onTap: (item) {});
       case 4:

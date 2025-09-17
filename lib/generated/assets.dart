@@ -2,6 +2,9 @@
 class Assets {
   Assets._();
 
+  static const String assetsImagesImgSearch = 'assets/images/img_search.svg';
+  static const String assetsImagesImgVectorWhiteA700 = 'assets/images/img_vector_white_a700.svg';
+  static const String assetsImagesImgVectorWhiteA70050x66 = 'assets/images/img_vector_white_a700_50x66.svg';
   static const String fontsInterBold = 'assets/fonts/InterBold.ttf';
   static const String fontsInterLight = 'assets/fonts/InterLight.ttf';
   static const String fontsInterMedium = 'assets/fonts/InterMedium.ttf';
@@ -38,11 +41,11 @@ class Assets {
   static const String imagesImgRectangle42 = 'assets/images/img_rectangle_4_2.png';
   static const String imagesImgRectangle43 = 'assets/images/img_rectangle_4_3.png';
   static const String imagesImgRectangle4310x286 = 'assets/images/img_rectangle_4_310x286.png';
-  static const String imagesImgSearch = 'assets/images/img_search.svg';
+  static const String imagesImgSearch = 'assets/images/img_search.png';
   static const String imagesImgUsers = 'assets/images/img_users.png';
   static const String imagesImgVector = 'assets/images/img_vector.png';
   static const String imagesImgVectorGray900 = 'assets/images/img_vector_gray_900.png';
-  static const String imagesImgVectorWhiteA700 = 'assets/images/img_vector_white_a700.svg';
-  static const String imagesImgVectorWhiteA70050x66 = 'assets/images/img_vector_white_a700_50x66.svg';
+  static const String imagesImgVectorWhiteA700 = 'assets/images/img_vector_white_a700.png';
+  static const String imagesImgVectorWhiteA70050x66 = 'assets/images/img_vector_white_a700_50x66.png';
 
 }

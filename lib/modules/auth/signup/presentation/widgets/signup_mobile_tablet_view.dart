@@ -2,10 +2,14 @@ import 'package:baseqat/modules/auth/signup/presentation/widgets/signup_form.dar
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/resourses/assets_manager.dart';
+import '../../../../../core/resourses/color_manager.dart';
 import '../../../../../core/resourses/style_manager.dart';
 import '../../../../../core/responsive/responsive.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+// import '../../../../home/presentation/view/home_tablet_view.dart';
+import '../../../../tabs/presentation/view/tabs_view.dart';
+import '../../../logic/auth_gate_cubit/auth_cubit.dart';
 import '../../../logic/register_cubit/register_cubit.dart';
 import '../../../logic/register_cubit/register_states.dart';
 
@@ -84,63 +88,87 @@ import '../../../logic/register_cubit/register_states.dart';
 
 
 
-class SignUpMobileTablet extends StatelessWidget {
+class SignUpMobileTablet extends StatefulWidget {
   const SignUpMobileTablet({super.key});
 
+  @override
+  State<SignUpMobileTablet> createState() => _SignUpMobileTabletState();
+}
+
+class _SignUpMobileTabletState extends State<SignUpMobileTablet> {
+  @override
+  void initState() {
+    super.initState();
+    // call cubit to start listener and check redirect
+    Future.microtask(() {
+      final cubit = context.read<RegisterCubit>();
+      cubit.startAuthListener();
+      cubit.checkInitialAuthState();
+    });
+  }
   @override
   Widget build(BuildContext context) {
     final isMobile = Responsive.isMobile(context);
     final formWidth = isMobile ? 340.w : 480.w;
 
-    return Scaffold(
-      body: SafeArea(
-        child: BlocListener<RegisterCubit, RegisterStates>(
-          listener: (context, state) {
-            if (state is RegisterSuccessState) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Account created successfully!')),
-              );
-              // Navigate to login screen or dashboard
-            } else if (state is RegisterErrorState) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Login failed: ${state.errorMessage}')),
-              );
-            }
-          },
-          child: SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: MediaQuery.of(context).size.height -
-                    MediaQuery.of(context).padding.top,
+    return  BlocListener<RegisterCubit, RegisterStates>(
+        listener: (context, state) {
+          if (state is RegisterSuccessState) {
+            // ScaffoldMessenger.of(context).showSnackBar(
+            //   const SnackBar(content: Text('Registration successful!'), backgroundColor: AppColor.black),
+            // );
+            // Navigator.of(context).pushAndRemoveUntil(
+            //   MaterialPageRoute(builder: (context) => const TabsViewScreen()),
+            //       (Route<dynamic> route) => false,
+            // );
+            context.read<AuthCubit>().notifyLoggedIn();
+          } else if (state is RegisterErrorState) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.errorMessage),
+                backgroundColor: AppColor.red,
               ),
-              child: IntrinsicHeight(
-                child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 24.w),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Spacer(flex: 1),
-                        Image.asset(
-                          AppAssetsManager.appLogo,
-                          width: isMobile ? 80.w : 120.w,
-                          height: isMobile ? 80.h : 120.h,
-                        ),
-                        Text("ithra", style: TextStyleHelper.instance.display48BlackBoldInter),
-                        SizedBox(height: 15.h),
-                        SignUpForm(
-                          width: formWidth,
-                          onSubmit: (name, email, password) {
-                            final cubit = context.read<RegisterCubit>();
-                            cubit.nameController.text = name;
-                            cubit.emailController.text = email;
-                            cubit.passwordController.text = password;
-                            cubit.register();
-                          },
-                        ),
-                        const Spacer(flex: 2),
-                      ],
-                    ),
+            );
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Redirecting to Google for sign up...')),
+            );
+          }
+        },
+    child:Scaffold(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height -
+                  MediaQuery.of(context).padding.top,
+            ),
+            child: IntrinsicHeight(
+              child: Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 24.w),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Spacer(flex: 1),
+                      Image.asset(
+                        AppAssetsManager.appLogo,
+                        width: isMobile ? 80.w : 120.w,
+                        height: isMobile ? 80.h : 120.h,
+                      ),
+                      Text("ithra", style: TextStyleHelper.instance.display48BlackBoldInter),
+                      SizedBox(height: 15.h),
+                      SignUpForm(
+                        width: formWidth,
+                        onSubmit: (name, email, password) {
+                          final cubit = context.read<RegisterCubit>();
+                          cubit.nameController.text = name;
+                          cubit.emailController.text = email;
+                          cubit.passwordController.text = password;
+                          cubit.register();
+                        },
+                      ),
+                      const Spacer(flex: 2),
+                    ],
                   ),
                 ),
               ),
@@ -148,6 +176,7 @@ class SignUpMobileTablet extends StatelessWidget {
           ),
         ),
       ),
+    )
     );
   }
 }

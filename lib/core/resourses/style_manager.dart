@@ -1,5 +1,6 @@
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
+import 'package:baseqat/core/responsive/size_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -127,6 +128,14 @@ class TextStyleHelper {
   // ------------------------------
   // Original .sp-based getters (unchanged)
   // ------------------------------
+  TextStyle get display56BoldInter =>
+      TextStyle(
+        fontSize: 56.sSp,
+        fontWeight: FontWeight.w700,
+        fontFamily: 'Inter',
+        color: AppColor.whiteCustom,
+      );
+
   TextStyle get display48BoldInter =>
       TextStyle(
         fontSize: 48.sSp,
@@ -166,7 +175,20 @@ class TextStyleHelper {
         fontFamily: 'Inter',
         color: AppColor.gray900,
       );
+  TextStyle get headline28BoldInter =>
+      TextStyle(
+        fontSize: 28.sSp,
+        fontWeight: FontWeight.w700,
+        fontFamily: 'Inter',
+        color: AppColor.gray900,
+      );
 
+  TextStyle get headline28MediumInter =>
+      TextStyle(
+        fontSize: 28.sSp,
+        fontWeight: FontWeight.w500,
+        fontFamily: 'Inter',
+      );
   TextStyle get headline24BoldInter =>
       TextStyle(
         fontSize: 24.sSp,
@@ -237,13 +259,82 @@ class TextStyleHelper {
         fontFamily: 'Inter',
         color: AppColor.gray900,
       );
-
+  TextStyle get title18LightInter =>
+      TextStyle(
+        fontSize: 18.sSp,
+        fontWeight: FontWeight.w300,
+        fontFamily: 'Inter',
+      );
   TextStyle get body12BoldInter =>
       TextStyle(
         fontSize: 12.sSp,
         fontWeight: FontWeight.w700,
         fontFamily: 'Inter',
         color: AppColor.gray900,
+      );
+
+  TextStyle get title14MediumInter => TextStyle(
+   // fontSize: 14.fSize,
+    fontSize: 14.sSp,
+    fontWeight: FontWeight.w600,
+    fontFamily: 'Inter',
+    color: AppColor.gray900,
+  );
+
+  TextStyle get title18MediumInter => TextStyle(
+    fontSize: 18.sSp,
+    fontWeight: FontWeight.w600,
+    fontFamily: 'Inter',
+    color: AppColor.gray900,
+  );
+
+  TextStyle get title18Inter =>
+      TextStyle(
+        fontSize: 18.sSp,
+        fontWeight: FontWeight.w400,
+        fontFamily: 'Inter',
+        color: AppColor.gray900,
+      );
+  TextStyle get body14RegularInter => TextStyle(
+    fontSize: 14.sSp,
+    fontWeight: FontWeight.w400,
+    fontFamily: 'Inter',
+    color: AppColor.gray700,
+  );
+
+  TextStyle get body16MediumInter => TextStyle(
+    fontSize: 16.sSp,
+    fontWeight: FontWeight.w600,
+    fontFamily: 'Inter',
+    color: AppColor.gray900,
+  );
+
+  TextStyle get body12MediumInter => TextStyle(
+    fontSize: 12.sSp,
+    fontWeight: FontWeight.w600,
+    fontFamily: 'Inter',
+    color: AppColor.gray900,
+  );
+
+  TextStyle get caption12RegularInter => TextStyle(
+    fontSize: 12.sSp,
+    fontWeight: FontWeight.w400,
+    fontFamily: 'Inter',
+    color: AppColor.gray600,
+  );
+
+  TextStyle get headline20BoldInter => TextStyle(
+    fontSize: 20.sSp,
+    fontWeight: FontWeight.w700,
+    fontFamily: 'Inter',
+    color: AppColor.gray900,
+  );
+
+  TextStyle get headline20MediumInter =>
+      TextStyle(
+        fontSize: 20.sSp,
+        fontWeight: FontWeight.w500,
+        fontFamily: 'Inter',
       );
 
   TextStyle get bodyTextInter => TextStyle(fontFamily: 'Inter');
