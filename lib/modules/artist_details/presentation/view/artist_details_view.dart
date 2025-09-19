@@ -4,6 +4,8 @@ import 'package:baseqat/modules/artist_details/presentation/widgets/artist_heade
 import 'package:baseqat/modules/artist_details/presentation/widgets/artist_info_card.dart';
 import 'package:flutter/material.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
+import 'package:baseqat/core/responsive/responsive.dart';
+import 'package:baseqat/core/responsive/size_utils.dart' hide DeviceType;
 
 class ArtistDetailsView extends StatefulWidget {
   final String name;
@@ -31,19 +33,76 @@ class ArtistDetailsView extends StatefulWidget {
 
 class _ArtistDetailsViewState extends State<ArtistDetailsView>
     with TickerProviderStateMixin {
-  bool get _isMobile => MediaQuery.of(context).size.width < 768;
-  bool get _isTablet =>
-      MediaQuery.of(context).size.width >= 768 &&
-      MediaQuery.of(context).size.width < 1200;
 
   @override
   Widget build(BuildContext context) {
-    final padding = _isMobile
-        ? 16.0
-        : _isTablet
-        ? 24.0
-        : 32.0;
-    final spacing = _isMobile ? 24.0 : 32.0;
+    final deviceType = Responsive.deviceTypeOf(context);
+    final isDesktop = deviceType == DeviceType.desktop;
+    final isMobile = deviceType == DeviceType.mobile;
+
+    return deviceType == DeviceType.desktop
+        ? _buildDesktopLayout()
+        : _buildMobileTabletLayout();
+  }
+
+  Widget _buildDesktopLayout() {
+    return Scaffold(
+      backgroundColor: AppColor.backgroundWhite,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: 40.h, vertical: 32.h),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: 1400.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Desktop header with side-by-side layout
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Left side - Image
+                      Expanded(
+                        flex: 5,
+                        child: ArtistHeader(name: widget.name, image: widget.profileImage),
+                      ),
+                      SizedBox(width: 48.h),
+                      // Right side - Info cards
+                      Expanded(
+                        flex: 4,
+                        child: Column(
+                          children: [
+                            SizedBox(height: 80.h), // Align with header text
+                            ArtistInfoCard(
+                              age: widget.age,
+                              country: widget.country,
+                              city: widget.city,
+                            ),
+                            SizedBox(height: 24.h),
+                            ArtistAboutCard(about: widget.about),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 48.h),
+                  // Gallery section
+                  ArtistGalleryGrid(gallery: widget.gallery),
+                  SizedBox(height: 32.h),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileTabletLayout() {
+    final deviceType = Responsive.deviceTypeOf(context);
+    final isMobile = deviceType == DeviceType.mobile;
+    final spacing = isMobile ? 24.h : 32.h;
+    final padding = isMobile ? 16.h : 24.h;
 
     return Scaffold(
       backgroundColor: AppColor.backgroundWhite,
@@ -52,38 +111,19 @@ class _ArtistDetailsViewState extends State<ArtistDetailsView>
           padding: EdgeInsets.all(padding),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1350),
+              constraints: BoxConstraints(maxWidth: 800.h),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ArtistHeader(name: widget.name, image: widget.profileImage),
                   SizedBox(height: spacing),
-                  if (_isMobile) ArtistAboutCard(about: widget.about),
-                  if (_isMobile) SizedBox(height: spacing),
-                  _isMobile
-                      ? ArtistInfoCard(
-                          age: widget.age,
-                          country: widget.country,
-                          city: widget.city,
-                        )
-                      : Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              flex: 6,
-                              child: ArtistAboutCard(about: widget.about),
-                            ),
-                            const SizedBox(width: 32),
-                            Expanded(
-                              flex: 4,
-                              child: ArtistInfoCard(
-                                age: widget.age,
-                                country: widget.country,
-                                city: widget.city,
-                              ),
-                            ),
-                          ],
-                        ),
+                  ArtistInfoCard(
+                    age: widget.age,
+                    country: widget.country,
+                    city: widget.city,
+                  ),
+                  SizedBox(height: spacing),
+                  ArtistAboutCard(about: widget.about),
                   SizedBox(height: spacing),
                   ArtistGalleryGrid(gallery: widget.gallery),
                   SizedBox(height: spacing),

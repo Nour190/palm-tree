@@ -13,6 +13,7 @@ class Assets {
   static const String imagesAppleLogo = 'assets/images/apple_logo.png';
   static const String imagesGoogleLogo = 'assets/images/google_Logo.png';
   static const String imagesImageNotFound = 'assets/images/image_not_found.png';
+  static const String imagesImageWithWideWidth = 'assets/images/img_with_wide_width.png';
   static const String imagesImgArrowIcon = 'assets/images/img_arrow_icon.svg';
   static const String imagesImgArrowIconWhiteA700 = 'assets/images/img_arrow_icon_white_a700.svg';
   static const String imagesImgEllipse13 = 'assets/images/img_ellipse_13.png';

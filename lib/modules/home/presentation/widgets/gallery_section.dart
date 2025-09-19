@@ -1,39 +1,22 @@
-import 'package:baseqat/modules/home/presentation/widgets/section_header_widget.dart';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:baseqat/core/resourses/assets_manager.dart';
-import 'package:baseqat/core/resourses/color_manager.dart';
-import 'package:baseqat/core/resourses/style_manager.dart';
-import 'common/custom_image_view.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:baseqat/core/responsive/responsive.dart';
+import 'package:baseqat/core/responsive/size_ext.dart';
 
 class ResponsiveGallery extends StatefulWidget {
-  final String title;
-  final String? subtitle;
-  final List<String> imageUrls;
-  final bool isMobile, isTablet, isDesktop;
-  final bool isLoading;
-  final VoidCallback? onSeeMore;
-  final VoidCallback? onRefresh;
-  final Function(int)? onImageTap;
-  final String seeMoreText;
-  final bool showShimmer;
-  final int? maxItems;
-
   const ResponsiveGallery({
     super.key,
-    required this.title,
-    this.subtitle,
     required this.imageUrls,
-    required this.isMobile,
-    required this.isTablet,
-    required this.isDesktop,
-    this.isLoading = false,
+    this.title,
+    this.padding,
     this.onSeeMore,
-    this.onRefresh,
-    this.onImageTap,
-    this.seeMoreText = "See More",
-    this.showShimmer = true,
-    this.maxItems,
   });
+
+  final List<String> imageUrls;
+  final String? title;
+  final EdgeInsets? padding;
+  final VoidCallback? onSeeMore;
 
   @override
   State<ResponsiveGallery> createState() => _ResponsiveGalleryState();
@@ -41,439 +24,285 @@ class ResponsiveGallery extends StatefulWidget {
 
 class _ResponsiveGalleryState extends State<ResponsiveGallery>
     with TickerProviderStateMixin {
-  late AnimationController _fadeController;
-  late AnimationController _slideController;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
+  late final AnimationController _appear;
+  late final Animation<double> _fade;
+  int? _hoveredIndex; // for desktop/web hover highlight
 
   @override
   void initState() {
     super.initState();
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 600),
+    _appear = AnimationController(
       vsync: this,
-    );
-    _slideController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeOut));
-
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOut));
-
-    // Start animations
-    _fadeController.forward();
-    _slideController.forward();
+      duration: const Duration(milliseconds: 480),
+    )..forward();
+    _fade = CurvedAnimation(parent: _appear, curve: Curves.easeInOut);
   }
 
   @override
   void dispose() {
-    _fadeController.dispose();
-    _slideController.dispose();
+    _appear.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final crossAxisCount = widget.isDesktop
-        ? 4
-        : widget.isTablet
-        ? 3
-        : 2;
-    final spacing = widget.isDesktop
-        ? 20.0
-        : widget.isTablet
-        ? 16.0
-        : 12.0;
-    final ratio = widget.isDesktop
-        ? 4 / 5
-        : widget.isTablet
-        ? 3 / 4
-        : 1.0;
+    final device = Responsive.deviceTypeOf(context);
 
-    return SlideTransition(
-      position: _slideAnimation,
-      child: FadeTransition(
-        opacity: _fadeAnimation,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Enhanced Header
-            SectionHeaderWidget(
-              title: widget.title,
-              showSeeMore: widget.onSeeMore != null,
-              onSeeMore: widget.onSeeMore,
-              seeMoreButtonText: widget.seeMoreText,
-              padding: EdgeInsets.symmetric(
-                horizontal: widget.isDesktop ? 24 : 16,
-              ),
-            ),
+    // Columns per device
+    final crossAxisCount = switch (device) {
+      DeviceType.mobile => 3,
+      DeviceType.tablet => 4,
+      DeviceType.desktop => 6,
+    };
 
-            // Subtitle if provided
-            if (widget.subtitle != null) ...[
-              SizedBox(height: spacing * 0.3),
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: widget.isDesktop ? 24 : 16,
-                ),
-                child: Text(
-                  widget.subtitle!,
-                  style: TextStyleHelper.instance.title14MediumInter.copyWith(
-                    color: AppColor.gray600,
-                    height: 1.4,
-                  ),
-                ),
-              ),
-            ],
+    // Spacing/padding per device
+    final horizontal = switch (device) {
+      DeviceType.mobile => 16.sW,
+      DeviceType.tablet => 24.sW,
+      DeviceType.desktop => 40.sW,
+    };
+    final spacing = switch (device) {
+      DeviceType.mobile => 12.sW,
+      DeviceType.tablet => 16.sW,
+      DeviceType.desktop => 20.sW,
+    };
 
-            SizedBox(height: spacing),
+    // Pattern: one 2x2 tile followed by four 1x1 tiles, then repeat (inverted)
+    final pattern = const [
+      QuiltedGridTile(2, 2),
+      QuiltedGridTile(1, 1),
+      QuiltedGridTile(1, 1),
+      QuiltedGridTile(1, 1),
+      QuiltedGridTile(1, 1),
+    ];
 
-            // Gallery Grid with Enhanced UI
+    final pad = widget.padding ?? EdgeInsets.symmetric(horizontal: horizontal);
+
+    return FadeTransition(
+      opacity: _fade,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if ((widget.title ?? '').trim().isNotEmpty)
             Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: widget.isDesktop ? 24 : 16,
-              ),
-              child: _buildGalleryContent(crossAxisCount, spacing, ratio),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGalleryContent(
-    int crossAxisCount,
-    double spacing,
-    double ratio,
-  ) {
-    if (widget.isLoading && widget.imageUrls.isEmpty) {
-      return _buildShimmerGrid(crossAxisCount, spacing, ratio);
-    }
-
-    final displayImages = widget.maxItems != null
-        ? widget.imageUrls.take(widget.maxItems!).toList()
-        : widget.imageUrls;
-
-    final itemCount = displayImages.isEmpty ? 8 : displayImages.length;
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        mainAxisSpacing: spacing,
-        crossAxisSpacing: spacing,
-        childAspectRatio: ratio,
-      ),
-      itemCount: itemCount,
-      itemBuilder: (context, index) {
-        return _buildGalleryItem(displayImages, index, spacing);
-      },
-    );
-  }
-
-  Widget _buildGalleryItem(List<String> images, int index, double spacing) {
-    final hasImage = index < images.length;
-    final borderRadius = widget.isDesktop
-        ? 24.0
-        : widget.isTablet
-        ? 20.0
-        : 16.0;
-
-    return AnimatedContainer(
-      duration: Duration(milliseconds: 300 + (index * 50)),
-      curve: Curves.easeOutBack,
-      child: Hero(
-        tag: hasImage ? 'gallery_image_$index' : 'placeholder_$index',
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: hasImage ? () => widget.onImageTap?.call(index) : null,
-            borderRadius: BorderRadius.circular(borderRadius),
-            splashColor: AppColor.primaryColor.withOpacity(0.1),
-            highlightColor: AppColor.primaryColor.withOpacity(0.05),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(borderRadius),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColor.gray900.withOpacity(0.08),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                    spreadRadius: 0,
+              padding: pad.copyWith(bottom: 8.sH, top: 8.sH),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.title!,
+                      style: TextStyle(
+                        fontSize: 18.sSp,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
-                  BoxShadow(
-                    color: AppColor.gray900.withOpacity(0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 1),
-                    spreadRadius: 0,
-                  ),
+                  if (widget.onSeeMore != null)
+                    TextButton(
+                      onPressed: widget.onSeeMore,
+                      child: Text(
+                        'See more',
+                        style: TextStyle(fontSize: 14.sSp),
+                      ),
+                    ),
                 ],
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(borderRadius),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    // Image or Placeholder
-                    hasImage ? _buildImage(images[index]) : _buildPlaceholder(),
+            ),
+          Padding(
+            padding: pad.copyWith(bottom: 8.sH),
+            child: GridView.custom(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverQuiltedGridDelegate(
+                crossAxisCount: crossAxisCount,
+                mainAxisSpacing: spacing,
+                crossAxisSpacing: spacing,
+                repeatPattern: QuiltedGridRepeatPattern.inverted,
+                pattern: pattern,
+              ),
+              childrenDelegate: SliverChildBuilderDelegate((context, index) {
+                if (index >= widget.imageUrls.length) return const SizedBox();
+                final url = widget.imageUrls[index];
+                final heroTag = _heroTag(url, index);
+                final isHovered = _hoveredIndex == index;
 
-                    // Gradient Overlay for better text readability
-                    if (hasImage)
-                      Container(
+                return MouseRegion(
+                  onEnter: (_) => setState(() => _hoveredIndex = index),
+                  onExit: (_) => setState(() => _hoveredIndex = null),
+                  child: Semantics(
+                    button: true,
+                    label: 'Open gallery image ${index + 1}',
+                    child: GestureDetector(
+                      onTapDown: (_) => setState(() => _hoveredIndex = index),
+                      onTapCancel: () => setState(() => _hoveredIndex = null),
+                      onTapUp: (_) => setState(() => _hoveredIndex = null),
+                      onTap: () => _openViewer(context, index),
+                      child: AnimatedScale(
+                      scale: isHovered ? 1.02 : 1.0,
+                      duration: const Duration(milliseconds: 160),
+                      curve: Curves.easeOut,
+                      child: Container(
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              Colors.black.withOpacity(0.1),
-                              Colors.black.withOpacity(0.3),
-                            ],
-                            stops: const [0.0, 0.7, 1.0],
-                          ),
+                          borderRadius: BorderRadius.circular(18.sH),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(
+                                0.12 + (isHovered ? 0.12 : 0.0),
+                              ),
+                              blurRadius: 4 + (isHovered ? 6 : 0),
+                              offset: Offset(0, 4.sH),
+                            ),
+                          ],
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Hero(tag: heroTag, child: _buildImage(url)),
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 160),
+                              color: Colors.black.withOpacity(
+                                0.08 + (isHovered ? 0.12 : 0.0),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-
-                    // Interactive Overlay
-                    if (hasImage) _buildInteractiveOverlay(),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildImage(String imageUrl) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        CustomImageView(imagePath: imageUrl, fit: BoxFit.cover),
-        // Loading indicator overlay
-        if (widget.isLoading)
-          Container(
-            color: Colors.white.withOpacity(0.8),
-            child: const Center(
-              child: SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    AppColor.primaryColor,
+                    ),
+                    ),
                   ),
-                ),
-              ),
+                );
+              }, childCount: widget.imageUrls.length),
             ),
           ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildPlaceholder() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColor.gray100, AppColor.gray200.withOpacity(0.5)],
-        ),
-      ),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.asset(
-            AppAssetsManager.imgPlaceholder,
-            fit: BoxFit.cover,
-            color: AppColor.gray400.withOpacity(0.6),
-            colorBlendMode: BlendMode.overlay,
-          ),
-          Center(
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.9),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+  // === Helpers ===
+
+  String _heroTag(String url, int index) => 'rg-hero-$index-$url';
+
+  Image _buildImage(String path) {
+    final isNetwork = path.startsWith('http://') || path.startsWith('https://');
+    return isNetwork
+        ? Image.network(path, fit: BoxFit.cover)
+        : Image.asset(path, fit: BoxFit.cover);
+  }
+
+  void _openViewer(BuildContext context, int index) {
+    final pageCtrl = PageController(initialPage: index);
+
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 320),
+        reverseTransitionDuration: const Duration(milliseconds: 240),
+        opaque: false,
+        barrierColor: Colors.black.withOpacity(0.92),
+        pageBuilder: (_, __, ___) {
+          return GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => Navigator.of(context).maybePop(),
+            child: SafeArea(
+              child: Stack(
+                children: [
+                  PageView.builder(
+                    controller: pageCtrl,
+                    itemCount: widget.imageUrls.length,
+                    itemBuilder: (context, i) {
+                      final url = widget.imageUrls[i];
+                      final tag = _heroTag(url, i);
+
+                      // fresh controller per page for clean double-tap zoom
+                      final transform = TransformationController();
+                      double lastScale = 1.0;
+
+                      void toggleZoom(TapDownDetails d, BoxConstraints c) {
+                        const zoomIn = 2.2;
+                        const zoomOut = 1.0;
+                        final tap = d.localPosition;
+                        final to = (lastScale == 1.0) ? zoomIn : zoomOut;
+                        lastScale = to;
+
+                        final x = -tap.dx * (to - 1);
+                        final y = -tap.dy * (to - 1);
+                        transform.value = Matrix4.identity()
+                          ..translate(x, y)
+                          ..scale(to);
+                      }
+
+                      return Center(
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            return GestureDetector(
+                              onDoubleTapDown: (d) =>
+                                  toggleZoom(d, constraints),
+                              onDoubleTap: () {},
+                              child: InteractiveViewer(
+                                transformationController: transform,
+                                minScale: 1,
+                                maxScale: 4,
+                                child: Hero(tag: tag, child: _buildImage(url)),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
+
+                  // Close
+                  Positioned(
+                    top: 12.sH,
+                    right: 12.sW,
+                    child: IconButton(
+                      onPressed: () => Navigator.of(context).maybePop(),
+                      icon: const Icon(Icons.close, color: Colors.white),
+                    ),
+                  ),
+
+                  // Page indicator
+                  Positioned(
+                    bottom: 16.sH,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 10.sW,
+                          vertical: 6.sH,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.35),
+                          borderRadius: BorderRadius.circular(20.sH),
+                        ),
+                        child: AnimatedBuilder(
+                          animation: pageCtrl,
+                          builder: (context, _) {
+                            final p = pageCtrl.hasClients
+                                ? (pageCtrl.page ?? index.toDouble())
+                                : index.toDouble();
+                            final cur = p.round();
+                            return Text(
+                              '${cur + 1} / ${widget.imageUrls.length}',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12.sSp,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
-              child: Icon(
-                Icons.image_outlined,
-                size: widget.isDesktop ? 32 : 24,
-                color: AppColor.gray500,
-              ),
             ),
-          ),
-        ],
+          );
+        },
       ),
-    );
-  }
-
-  Widget _buildInteractiveOverlay() {
-    return Positioned.fill(
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.center,
-            end: Alignment.center,
-            colors: [
-              Colors.transparent,
-              AppColor.primaryColor.withOpacity(0.0),
-            ],
-          ),
-        ),
-        child: const Center(
-          child: Icon(
-            Icons.zoom_in_rounded,
-            color: Colors.white,
-            size: 32,
-            shadows: [
-              Shadow(
-                color: Colors.black54,
-                blurRadius: 8,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildShimmerGrid(int crossAxisCount, double spacing, double ratio) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        mainAxisSpacing: spacing,
-        crossAxisSpacing: spacing,
-        childAspectRatio: ratio,
-      ),
-      itemCount: 8,
-      itemBuilder: (context, index) {
-        return _buildShimmerItem(index);
-      },
-    );
-  }
-
-  Widget _buildShimmerItem(int index) {
-    final borderRadius = widget.isDesktop
-        ? 24.0
-        : widget.isTablet
-        ? 20.0
-        : 16.0;
-
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(borderRadius),
-        boxShadow: [
-          BoxShadow(
-            color: AppColor.gray900.withOpacity(0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
-        child: AnimatedContainer(
-          duration: Duration(milliseconds: 1200 + (index * 100)),
-          child: _ShimmerEffect(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppColor.gray200,
-                    AppColor.gray100,
-                    AppColor.gray200,
-                  ],
-                  stops: const [0.0, 0.5, 1.0],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// Shimmer Effect Widget
-class _ShimmerEffect extends StatefulWidget {
-  final Widget child;
-
-  const _ShimmerEffect({required this.child});
-
-  @override
-  State<_ShimmerEffect> createState() => _ShimmerEffectState();
-}
-
-class _ShimmerEffectState extends State<_ShimmerEffect>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    )..repeat();
-
-    _animation = Tween<double>(
-      begin: -1.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.linear));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        return ShaderMask(
-          shaderCallback: (rect) {
-            return LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppColor.gray200,
-                Colors.white.withOpacity(0.8),
-                AppColor.gray200,
-              ],
-              stops: [0.0, 0.5, 1.0],
-              transform: GradientRotation(_animation.value * 0.5),
-            ).createShader(rect);
-          },
-          child: widget.child,
-        );
-      },
     );
   }
 }

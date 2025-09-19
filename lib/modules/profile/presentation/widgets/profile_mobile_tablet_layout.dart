@@ -26,21 +26,6 @@ class ProfileMobileTabletLayout extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            Container(
-              padding: EdgeInsets.all(16.sH),
-              child: TopBar(
-                items: const ['Home', 'Events', 'Profile', 'More'],
-                selectedIndex: 2, // Profile is selected
-                onItemTap: (index) {
-                  // Handle main app navigation
-                },
-                onLoginTap: () {},
-                showScanButton: true,
-                onScanTap: () {},
-                compactOnMobile: true,
-              ),
-            ),
-
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.sW),
               child: const ProfileHeaderWidget(),

@@ -265,6 +265,13 @@ class TextStyleHelper {
         fontWeight: FontWeight.w300,
         fontFamily: 'Inter',
       );
+  TextStyle get title18BoldInter =>
+      TextStyle(
+        fontSize: 18.sSp,
+        fontWeight: FontWeight.w700,
+        fontFamily: 'Inter',
+        color: AppColor.gray900,
+      );
   TextStyle get body12BoldInter =>
       TextStyle(
         fontSize: 12.sSp,
@@ -280,6 +287,20 @@ class TextStyleHelper {
     fontFamily: 'Inter',
     color: AppColor.gray900,
   );
+  TextStyle get title14BoldInter => TextStyle(
+    // fontSize: 14.fSize,
+    fontSize: 14.sSp,
+    fontWeight: FontWeight.w900,
+    fontFamily: 'Inter',
+    color: AppColor.gray900,
+  );
+  TextStyle get title14BlackRegularInter =>
+      TextStyle(
+        fontSize: 14.sSp,
+        fontWeight: FontWeight.w400,
+        fontFamily: 'Inter',
+        color: AppColor.black,
+      );
 
   TextStyle get title18MediumInter => TextStyle(
     fontSize: 18.sSp,
@@ -301,6 +322,19 @@ class TextStyleHelper {
     fontFamily: 'Inter',
     color: AppColor.gray700,
   );
+  TextStyle get body18MediumInter => TextStyle(
+    fontSize: 18.sSp,
+    fontWeight: FontWeight.w600,
+    fontFamily: 'Inter',
+    color: AppColor.gray700,
+  );
+
+  TextStyle get body14MediumInter => TextStyle(
+    fontSize: 14.sSp,
+    fontWeight: FontWeight.w600,
+    fontFamily: 'Inter',
+    color: AppColor.gray700,
+  );
 
   TextStyle get body16MediumInter => TextStyle(
     fontSize: 16.sSp,
@@ -318,6 +352,19 @@ class TextStyleHelper {
 
   TextStyle get caption12RegularInter => TextStyle(
     fontSize: 12.sSp,
+    fontWeight: FontWeight.w400,
+    fontFamily: 'Inter',
+    color: AppColor.gray600,
+  );
+  TextStyle get body9MediumInter => TextStyle(
+    fontSize: 9.sSp,
+    fontWeight: FontWeight.w600,
+    fontFamily: 'Inter',
+    color: AppColor.gray900,
+  );
+
+  TextStyle get caption9RegularInter => TextStyle(
+    fontSize: 9.sSp,
     fontWeight: FontWeight.w400,
     fontFamily: 'Inter',
     color: AppColor.gray600,

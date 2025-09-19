@@ -1,7 +1,21 @@
+// artworks_section.dart
+//
+// Artworks section:
+// - Mobile: HORIZONTAL list (reduced card width) — title/desc up to 3 lines
+// - Tablet: HORIZONTAL list (reduced card width) — title/desc up to 3 lines
+// - Desktop: HORIZONTAL list (wider cards) — title/desc up to 3 lines
+//
+// No outer padding. Right-side black separator on cards.
+// Capsule tag, favorite button, gradient overlay on images.
+// Loading + empty states for list-only layouts.
+
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart' hide DeviceType;
+
+import 'package:baseqat/core/responsive/responsive.dart';
+import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/core/components/custom_widgets/custom_image_view.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
-import 'package:baseqat/core/resourses/style_manager.dart';
 import 'package:baseqat/modules/home/data/models/artwork_model.dart';
 import 'package:baseqat/modules/home/presentation/widgets/section_header_widget.dart';
 
@@ -10,11 +24,8 @@ class ArtworksSection extends StatelessWidget {
   final String title;
   final EdgeInsetsGeometry? headerPadding;
   final VoidCallback? onSeeMore;
-
-  /// Index-based taps for card and favourite
   final void Function(int index)? onCardTap;
-  final void Function(int index)? onFavouiteTap;
-
+  final void Function(int index)? onFavoriteTap;
   final bool isLoading;
   final bool showSeeMoreButton;
   final String seeMoreButtonText;
@@ -26,7 +37,7 @@ class ArtworksSection extends StatelessWidget {
     this.headerPadding,
     this.onSeeMore,
     this.onCardTap,
-    this.onFavouiteTap,
+    this.onFavoriteTap,
     this.isLoading = false,
     this.showSeeMoreButton = true,
     this.seeMoreButtonText = 'See All',
@@ -34,232 +45,181 @@ class ArtworksSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const hp = 16.0;
+    final deviceType = Responsive.deviceTypeOf(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeaderWidget(
           title: title,
-          padding: headerPadding ?? const EdgeInsets.symmetric(horizontal: hp),
+          padding: headerPadding ?? EdgeInsets.zero, // no outer padding
           onSeeMore: onSeeMore,
           seeMoreButtonText: seeMoreButtonText,
-          showSeeMore: showSeeMoreButton,
+          showSeeMore:
+              showSeeMoreButton && onSeeMore != null && artworks.isNotEmpty,
         ),
-        const SizedBox(height: 16),
-
-        if (isLoading)
-          const _SkeletonGrid()
-        else if (artworks.isEmpty)
-          const _EmptyState()
-        else
-          _ResponsiveGrid(
-            artworks: artworks,
-            horizontalPadding: hp,
-            onCardTap: onCardTap,
-            onFavouiteTap: onFavouiteTap,
-          ),
+        SizedBox(
+          height: switch (deviceType) {
+            DeviceType.desktop => 24.0.sH,
+            DeviceType.tablet => 20.0.sH,
+            DeviceType.mobile => 16.0.sH,
+          },
+        ),
+        _buildBody(deviceType),
       ],
     );
   }
-}
 
-class _ResponsiveGrid extends StatelessWidget {
-  final List<Artwork> artworks;
-  final double horizontalPadding;
-  final void Function(int index)? onCardTap;
-  final void Function(int index)? onFavouiteTap;
+  Widget _buildBody(DeviceType deviceType) {
+    if (isLoading) return _buildLoading(deviceType);
+    if (artworks.isEmpty) return _buildEmpty(deviceType);
 
-  const _ResponsiveGrid({
-    required this.artworks,
-    required this.horizontalPadding,
-    this.onCardTap,
-    this.onFavouiteTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, c) {
-        final width = c.maxWidth == double.infinity
-            ? MediaQuery.of(context).size.width
-            : c.maxWidth;
-
-        // Small grid for mobile: 2 cols under 600px, then scale up
-        final isPhone = width < 600;
-        final spacing = isPhone ? 12.0 : 16.0;
-        final crossAxisCount = isPhone
-            ? 2
-            : width < 900
-            ? 3
-            : 4;
-        // Compact card aspect for “small grid” look (w/h)
-        final childAspectRatio = isPhone ? 1 / 1.25 : 1 / 1.30;
-
-        return Padding(
-          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-          child: GridView.builder(
-            itemCount: artworks.length,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
-              crossAxisSpacing: spacing,
-              mainAxisSpacing: spacing,
-              childAspectRatio: childAspectRatio,
-            ),
-            itemBuilder: (context, index) => ArtworkCardWidget(
-              artwork: artworks[index],
-              index: index,
-              onTap: onCardTap == null ? null : () => onCardTap!(index),
-              onFavouiteTap: onFavouiteTap == null
-                  ? null
-                  : () => onFavouiteTap!(index),
-            ),
+    switch (deviceType) {
+      // H O R I Z O N T A L  (reduced width + 3-line text)
+      case DeviceType.mobile:
+        return _HorizontalStrip(
+          height: 240.0.sH,
+          itemWidth: 210.0.sW, // decreased width (was ~260)
+          spacing: 12.0.sW,
+          itemCount: artworks.length,
+          itemBuilder: (context, i) => _HorizontalArtworkCard(
+            artwork: artworks[i],
+            index: i,
+            onTap: onCardTap,
+            onFavoriteTap: onFavoriteTap,
           ),
         );
-      },
-    );
-  }
-}
 
-class _SkeletonGrid extends StatelessWidget {
-  const _SkeletonGrid();
-
-  @override
-  Widget build(BuildContext context) {
-    const hp = 16.0;
-    return LayoutBuilder(
-      builder: (context, c) {
-        final width = c.maxWidth == double.infinity
-            ? MediaQuery.of(context)
-                  .size
-                  .width // fallback for rare cases
-            : c.maxWidth;
-        final isPhone = width < 600;
-        final spacing = isPhone ? 12.0 : 16.0;
-        final crossAxisCount = isPhone
-            ? 2
-            : width < 900
-            ? 3
-            : 4;
-        final childAspectRatio = isPhone ? 1 / 1.25 : 1 / 1.15;
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: hp),
-          child: GridView.builder(
-            itemCount: crossAxisCount * 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
-              crossAxisSpacing: spacing,
-              mainAxisSpacing: spacing,
-              childAspectRatio: childAspectRatio,
-            ),
-            itemBuilder: (_, __) => const _SkeletonCard(),
+      // H O R I Z O N T A L  (reduced width + 3-line text)
+      case DeviceType.tablet:
+        return _HorizontalStrip(
+          height: 300.0.sH,
+          itemWidth: 320.0.sW, // decreased width (was ~380)
+          spacing: 14.0.sW,
+          itemCount: artworks.length,
+          itemBuilder: (context, i) => _HorizontalArtworkCard(
+            artwork: artworks[i],
+            index: i,
+            onTap: onCardTap,
+            onFavoriteTap: onFavoriteTap,
           ),
         );
-      },
-    );
+
+      // H O R I Z O N T A L  (wider cards for desktop)
+      case DeviceType.desktop:
+        return _HorizontalStrip(
+          height: 340.0.sH,
+          itemWidth: 380.0.sW,
+          spacing: 16.0.sW,
+          itemCount: artworks.length,
+          itemBuilder: (context, i) => _HorizontalArtworkCard(
+            artwork: artworks[i],
+            index: i,
+            onTap: onCardTap,
+            onFavoriteTap: onFavoriteTap,
+          ),
+        );
+    }
   }
-}
 
-class _SkeletonCard extends StatelessWidget {
-  const _SkeletonCard();
+  // -------------------- Loading --------------------
+  Widget _buildLoading(DeviceType deviceType) {
+    switch (deviceType) {
+      case DeviceType.mobile:
+        return _HorizontalStrip(
+          height: 240.0.sH,
+          itemWidth: 210.0.sW,
+          spacing: 12.0.sW,
+          itemCount: 4,
+          itemBuilder: (_, __) =>
+              _LoadingBlock(width: 210.0.sW, height: 240.0.sH, radius: 16.0.r),
+        );
+      case DeviceType.tablet:
+        return _HorizontalStrip(
+          height: 300.0.sH,
+          itemWidth: 320.0.sW,
+          spacing: 14.0.sW,
+          itemCount: 5,
+          itemBuilder: (_, __) =>
+              _LoadingBlock(width: 320.0.sW, height: 300.0.sH, radius: 18.0.r),
+        );
+      case DeviceType.desktop:
+        return _HorizontalStrip(
+          height: 340.0.sH,
+          itemWidth: 380.0.sW,
+          spacing: 16.0.sW,
+          itemCount: 6,
+          itemBuilder: (_, __) =>
+              _LoadingBlock(width: 380.0.sW, height: 340.0.sH, radius: 18.0.r),
+        );
+    }
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    Widget bar(double h, double w, double r) => Container(
-      height: h,
-      width: w,
-      decoration: BoxDecoration(
-        color: AppColor.gray200,
-        borderRadius: BorderRadius.circular(r),
-      ),
-    );
+  // -------------------- Empty --------------------
+  Widget _buildEmpty(DeviceType deviceType) {
+    final iconSize = switch (deviceType) {
+      DeviceType.desktop => 48.0.sW,
+      DeviceType.tablet => 42.0.sW,
+      DeviceType.mobile => 36.0.sW,
+    };
+    final titleSize = switch (deviceType) {
+      DeviceType.desktop => 20.0.sSp,
+      DeviceType.tablet => 18.0.sSp,
+      DeviceType.mobile => 16.0.sSp,
+    };
+    final subtitleSize = switch (deviceType) {
+      DeviceType.desktop => 16.0.sSp,
+      DeviceType.tablet => 14.0.sSp,
+      DeviceType.mobile => 12.0.sSp,
+    };
 
     return Container(
-      decoration: BoxDecoration(
-        color: AppColor.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColor.gray100, width: 0.5),
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(
+        vertical: switch (deviceType) {
+          DeviceType.desktop => 48.0.sH,
+          DeviceType.tablet => 40.0.sH,
+          DeviceType.mobile => 32.0.sH,
+        },
       ),
-      padding: const EdgeInsets.all(10),
-      child: Column(
-        children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColor.gray100,
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Align(alignment: Alignment.centerLeft, child: bar(14, 120, 4)),
-          const SizedBox(height: 6),
-          Align(alignment: Alignment.centerLeft, child: bar(12, 180, 4)),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              bar(28, 28, 14),
-              const SizedBox(width: 8),
-              Expanded(child: bar(12, double.infinity, 4)),
-              const SizedBox(width: 8),
-              bar(28, 28, 14),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.symmetric(vertical: 32),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColor.gray50, AppColor.white],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-        borderRadius: BorderRadius.circular(12),
+        color: AppColor.gray50,
+        borderRadius: BorderRadius.circular(switch (deviceType) {
+          DeviceType.desktop => 20.0.r,
+          DeviceType.tablet => 18.0.r,
+          DeviceType.mobile => 16.0.r,
+        }),
         border: Border.all(color: AppColor.gray200, width: 1),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              color: AppColor.gray100,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
+          CircleAvatar(
+            radius: iconSize / 2,
+            backgroundColor: AppColor.gray100,
+            child: Icon(
               Icons.palette_outlined,
-              size: 40,
+              size: iconSize,
               color: AppColor.gray400,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 14.0.sH),
           Text(
             'No artworks available',
-            style: TextStyleHelper.instance.title18MediumInter.copyWith(
-              color: AppColor.gray700,
+            style: TextStyle(
+              fontSize: titleSize,
               fontWeight: FontWeight.w600,
+              fontFamily: 'Inter',
+              color: AppColor.gray700,
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6.0.sH),
           Text(
             'Check back later for new artworks',
-            style: TextStyleHelper.instance.body14RegularInter.copyWith(
+            style: TextStyle(
+              fontSize: subtitleSize,
+              fontWeight: FontWeight.w400,
+              fontFamily: 'Inter',
               color: AppColor.gray500,
             ),
           ),
@@ -269,144 +229,207 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-class ArtworkCardWidget extends StatelessWidget {
+// ============================================================================
+// HORIZONTAL STRIP (shared by all devices)
+// ============================================================================
+class _HorizontalStrip extends StatelessWidget {
+  const _HorizontalStrip({
+    required this.height,
+    required this.itemWidth,
+    required this.spacing,
+    required this.itemCount,
+    required this.itemBuilder,
+  });
+
+  final double height;
+  final double itemWidth;
+  final double spacing;
+  final int itemCount;
+  final Widget Function(BuildContext, int) itemBuilder;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: height,
+      child: ListView.separated(
+        padding: EdgeInsets.zero,
+        scrollDirection: Axis.horizontal,
+        itemCount: itemCount,
+        separatorBuilder: (_, __) => SizedBox(width: spacing),
+        itemBuilder: (context, index) => RepaintBoundary(
+          key: ValueKey('artwork-horizontal-$index'),
+          child: SizedBox(width: itemWidth, child: itemBuilder(context, index)),
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// HORIZONTAL CARD (mobile/tablet/desktop) — 3-line title/desc
+// ============================================================================
+class _HorizontalArtworkCard extends StatelessWidget {
   final Artwork artwork;
   final int index;
-  final VoidCallback? onTap;
-  final VoidCallback? onFavouiteTap;
+  final void Function(int index)? onTap;
+  final void Function(int index)? onFavoriteTap;
 
-  const ArtworkCardWidget({
+  const _HorizontalArtworkCard({
     super.key,
     required this.artwork,
     required this.index,
     this.onTap,
-    this.onFavouiteTap,
+    this.onFavoriteTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final radius = 12.0;
+    final radius = 16.0.r;
+    final deviceType = Responsive.deviceTypeOf(context);
 
-    return Material(
-      color: AppColor.white,
-      borderRadius: BorderRadius.circular(radius),
-      child: InkWell(
+    // Description sizing per device
+    final double descSize = switch (deviceType) {
+      DeviceType.mobile => 11.0.sSp,
+      DeviceType.tablet => 13.0.sSp,
+      DeviceType.desktop => 13.0.sSp,
+    };
+
+    return Semantics(
+      button: onTap != null,
+      label:
+          'View artwork ${artwork.name} by ${artwork.artistName ?? 'Unknown'}',
+      child: Material(
+        color: AppColor.white,
         borderRadius: BorderRadius.circular(radius),
-        onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColor.gray100, width: 0.75),
-            borderRadius: BorderRadius.circular(radius),
-            boxShadow: [
-              BoxShadow(
-                color: AppColor.black.withOpacity(0.04),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              // Image
-              ClipRRect(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(radius),
-                  topRight: Radius.circular(radius),
+        elevation: 3,
+        shadowColor: AppColor.black.withOpacity(0.08),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(radius),
+          onTap: onTap != null ? () => onTap!(index) : null,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(radius),
+              border: const Border(
+                right: BorderSide(
+                  color: Colors.black,
+                  width: 1, // right-side black separator
                 ),
-                child: Stack(
-                  children: [
-                    AspectRatio(
-                      aspectRatio: 4 / 3, // compact image ratio for small grid
-                      child: Container(
-                        color: AppColor.gray100,
-                        child: CustomImageView(
-                          imagePath: artwork.artistProfileImage ?? '',
+              ),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(radius),
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: Builder(
+                      builder: (_) {
+                        final String cover = (artwork.gallery.isNotEmpty)
+                            ? artwork.gallery.first
+                            : (artwork.artistProfileImage ?? '');
+                        return CustomImageView(
+                          imagePath: cover,
                           fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
+                        );
+                      },
+                    ),
+                  ),
+                  // gradient for text readability
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            AppColor.black.withOpacity(0.60),
+                          ],
                         ),
                       ),
                     ),
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: _FavButton(onPressed: onFavouiteTap),
+                  ),
+                  // favorite
+                  Positioned(
+                    right: 10.0.sW,
+                    top: 10.0.sH,
+                    child: _FavCircleButton(
+                      onPressed: onFavoriteTap != null
+                          ? () => onFavoriteTap!(index)
+                          : null,
+                      size: 36.0.sW,
+                      iconSize: 18.0.sW,
                     ),
-                  ],
-                ),
-              ),
-
-              // Content
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        artwork.name,
-                        style: TextStyleHelper.instance.body16MediumInter
-                            .copyWith(
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: -0.2,
-                              height: 1.2,
+                  ),
+                  // content (title + description up to 3 lines)
+                  Positioned(
+                    left: 12.0.sW,
+                    right: 12.0.sW,
+                    bottom: 12.0.sH,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _Capsule(text: 'Artwork'),
+                        SizedBox(height: 6.0.sH),
+                        Text(
+                          artwork.name,
+                          maxLines: 3, // increased to 3 lines
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16.0.sSp,
+                            color: Colors.white,
+                            height: 1.1,
+                          ),
+                        ),
+                        SizedBox(height: 6.0.sH),
+                        if ((artwork.description ?? '').isNotEmpty)
+                          Text(
+                            artwork.description!,
+                            maxLines: 3, // force 3 lines max
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontWeight: FontWeight.w400,
+                              fontSize: descSize,
+                              color: AppColor.gray100,
+                              height: 1.25,
                             ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        artwork.description ?? 'No description available',
-                        style: TextStyleHelper.instance.caption12RegularInter
-                            .copyWith(color: AppColor.gray700, height: 1.25),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const Spacer(),
-
-                      // Artist row
-                      Row(
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: AppColor.primaryColor.withOpacity(0.25),
-                                width: 1.5,
-                              ),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(14),
+                          ),
+                        SizedBox(height: 8.0.sH),
+                        Row(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8.0.r),
                               child: CustomImageView(
                                 imagePath: artwork.artistProfileImage ?? '',
-                                height: 28,
-                                width: 28,
+                                height: 18.0.sW,
+                                width: 18.0.sW,
                                 fit: BoxFit.cover,
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              artwork.artistName ?? 'Unknown Artist',
-                              style: TextStyleHelper
-                                  .instance
-                                  .caption12RegularInter
-                                  .copyWith(
-                                    color: AppColor.gray700,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            SizedBox(width: 8.0.sW),
+                            Expanded(
+                              child: Text(
+                                artwork.artistName ?? 'Unknown',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 11.0.sSp,
+                                  color: AppColor.gray100,
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -414,23 +437,93 @@ class ArtworkCardWidget extends StatelessWidget {
   }
 }
 
-class _FavButton extends StatelessWidget {
-  final VoidCallback? onPressed;
-  const _FavButton({this.onPressed});
+// ============================================================================
+// Small shared widgets
+// ============================================================================
+class _Capsule extends StatelessWidget {
+  final String text;
+  const _Capsule({required this.text});
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColor.white.withOpacity(0.95),
-      shape: const CircleBorder(),
-      elevation: 2,
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onPressed,
-        child: const Padding(
-          padding: EdgeInsets.all(8),
-          child: Icon(Icons.favorite_border, size: 18, color: AppColor.gray700),
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.0.sW, vertical: 4.0.sH),
+      decoration: BoxDecoration(
+        color: AppColor.gray100,
+        borderRadius: BorderRadius.circular(999.r),
+        border: Border.all(color: AppColor.gray200),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontFamily: 'Inter',
+          fontWeight: FontWeight.w600,
+          fontSize: 10.0.sSp,
+          color: AppColor.gray700,
         ),
+      ),
+    );
+  }
+}
+
+class _FavCircleButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+  final double size;
+  final double iconSize;
+
+  const _FavCircleButton({
+    required this.onPressed,
+    required this.size,
+    required this.iconSize,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Favorite artwork',
+      child: Material(
+        color: AppColor.white.withOpacity(0.95),
+        shape: const CircleBorder(),
+        elevation: 2,
+        shadowColor: AppColor.black.withOpacity(0.15),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onPressed,
+          child: SizedBox(
+            width: size,
+            height: size,
+            child: Icon(
+              Icons.favorite_border,
+              size: iconSize,
+              color: AppColor.gray700,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LoadingBlock extends StatelessWidget {
+  final double width;
+  final double height;
+  final double radius;
+  const _LoadingBlock({
+    required this.width,
+    required this.height,
+    required this.radius,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: AppColor.gray100,
+        borderRadius: BorderRadius.circular(radius),
+        border: const Border(right: BorderSide(color: Colors.black, width: 1)),
       ),
     );
   }

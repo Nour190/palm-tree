@@ -1,10 +1,11 @@
 import 'package:baseqat/core/resourses/navigation_manger.dart';
 import 'package:baseqat/modules/artist_details/presentation/view/artist_details_page.dart';
 import 'package:flutter/material.dart';
-import 'package:baseqat/core/responsive/size_utils.dart';
+import 'package:baseqat/core/responsive/size_utils.dart' hide DeviceType;
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/modules/home/data/models/artist_model.dart';
 import 'package:baseqat/modules/events/presentation/widgets/artist_widgets/artist_card_widget.dart';
+import 'package:baseqat/core/responsive/responsive.dart';
 
 enum ArtistViewType { list, grid }
 
@@ -35,11 +36,11 @@ class ArtistTabContent extends StatefulWidget {
 }
 
 class _ArtistTabContentState extends State<ArtistTabContent> {
-  bool get _isMobile => MediaQuery.of(context).size.width < 768;
+  DeviceType get _deviceType => Responsive.deviceTypeOf(context);
+  bool get _isDesktop => _deviceType == DeviceType.desktop;
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final items = widget.artists;
 
     return Column(
@@ -47,36 +48,67 @@ class _ArtistTabContentState extends State<ArtistTabContent> {
         Expanded(
           child: items.isEmpty
               ? _EmptyState(
-                  title: widget.emptyStateTitle ?? 'No artists available',
-                  subtitle:
-                      widget.emptyStateSubtitle ??
-                      'Check back later for new artists.',
-                  icon: widget.emptyStateIcon,
-                  isDark: isDark,
-                )
-              : _buildList(items),
+            title: widget.emptyStateTitle ?? 'No artists available',
+            subtitle:
+            widget.emptyStateSubtitle ??
+                'Check back later for new artists.',
+            icon: widget.emptyStateIcon,
+          )
+              : widget.onRefresh != null
+              ? RefreshIndicator(
+            onRefresh: widget.onRefresh!,
+            color: AppColor.primaryColor,
+            backgroundColor: AppColor.white,
+            child: _buildContent(items),
+          )
+              : _buildContent(items),
         ),
       ],
     );
   }
 
-  Widget _buildList(List<Artist> items) {
-    return ListView.separated(
+  Widget _buildContent(List<Artist> items) {
+    return _isDesktop ? _buildDesktopGrid(items) : _buildMobileList(items);
+  }
+
+  Widget _buildDesktopGrid(List<Artist> items) {
+    return GridView.builder(
       physics: const BouncingScrollPhysics(),
-      padding: EdgeInsets.symmetric(
-        horizontal: _isMobile ? 14.h : 20.h,
-        vertical: 8.h,
+      padding: EdgeInsets.symmetric(horizontal: 24.h, vertical: 16.h),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        childAspectRatio: 0.85,
+        crossAxisSpacing: 20.h,
+        mainAxisSpacing: 20.h,
       ),
       itemCount: items.length,
-      separatorBuilder: (_, __) => SizedBox(height: _isMobile ? 12.h : 16.h),
       itemBuilder: (context, i) {
-        final a = items[i];
+        final artist = items[i];
         return ArtistCardWidget(
-          artist: a,
+          artist: artist,
           onTap: () {
-            navigateTo(context, ArtistDetailsPage(artistId: a.id));
+            navigateTo(context, ArtistDetailsPage(artistId: artist.id));
           },
-          isGridView: false,
+          viewType: ArtistCardViewType.grid,
+        );
+      },
+    );
+  }
+
+  Widget _buildMobileList(List<Artist> items) {
+    return ListView.separated(
+      physics: const BouncingScrollPhysics(),
+      padding: EdgeInsets.symmetric(horizontal: 16.h, vertical: 12.h),
+      itemCount: items.length,
+      separatorBuilder: (_, __) => SizedBox(height: 16.h),
+      itemBuilder: (context, i) {
+        final artist = items[i];
+        return ArtistCardWidget(
+          artist: artist,
+          onTap: () {
+            navigateTo(context, ArtistDetailsPage(artistId: artist.id));
+          },
+          viewType: ArtistCardViewType.list,
         );
       },
     );
@@ -87,46 +119,44 @@ class _EmptyState extends StatelessWidget {
   final String title;
   final String subtitle;
   final Widget? icon;
-  final bool isDark;
 
   const _EmptyState({
     required this.title,
     required this.subtitle,
     this.icon,
-    required this.isDark,
   });
 
   @override
   Widget build(BuildContext context) {
-    final color = (isDark ? Colors.white : AppColor.gray900);
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(24.h),
+        padding: EdgeInsets.all(32.h),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             icon ??
                 Icon(
                   Icons.people_rounded,
-                  size: 72.h,
-                  color: color.withOpacity(0.3),
+                  size: 80.h,
+                  color: AppColor.gray400,
                 ),
-            SizedBox(height: 16.h),
+            SizedBox(height: 24.h),
             Text(
               title,
               style: TextStyle(
                 fontSize: 20.fSize,
                 fontWeight: FontWeight.w600,
-                color: color.withOpacity(0.9),
+                color: AppColor.gray900,
               ),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 8.h),
+            SizedBox(height: 12.h),
             Text(
               subtitle,
               style: TextStyle(
-                fontSize: 14.fSize,
-                color: color.withOpacity(0.65),
+                fontSize: 16.fSize,
+                color: AppColor.gray600,
+                height: 1.5,
               ),
               textAlign: TextAlign.center,
             ),

@@ -10,6 +10,8 @@ import 'package:baseqat/modules/home/data/repositories/home_repository.dart';
 import 'package:dartz/dartz.dart';
 import 'package:retry/retry.dart';
 
+import '../models/review_model.dart';
+
 class HomeRepositoryImpl implements HomeRepository {
   HomeRepositoryImpl(this.remote);
   final HomeRemoteDataSource remote;
@@ -70,12 +72,34 @@ class HomeRepositoryImpl implements HomeRepository {
         retryIf: (e) => e is Failure || e is Exception,
         onRetry: (e) => log.w('Retry info: $e'),
       );
-      if (info == null)
+      if (info == null) {
         return Left(const NotFoundFailure('No info row found.'));
+      }
       return Right(info);
     } catch (e, st) {
       final f = mapError(e, st);
       log.e('Info load failed', error: e, stackTrace: st);
+      return Left(f);
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<ReviewModel>>> getReviews({
+    int? limit,
+    int offset = 0,
+  }) async {
+    try {
+      final l = clampLimit(limit);
+      final list = await _r.retry(
+        () => remote.fetchReviews(limit: l, offset: offset),
+        // ignore: unnecessary_type_check
+        retryIf: (e) => e is Failure || e is Exception,
+        onRetry: (e) => log.w('Retry reviews: $e'),
+      );
+      return Right(list);
+    } catch (e, st) {
+      final f = mapError(e, st);
+      log.e('Reviews load failed', error: e, stackTrace: st);
       return Left(f);
     }
   }

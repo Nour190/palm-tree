@@ -127,7 +127,7 @@ class _MobileTopBar extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: 16.h, vertical: 8.h),
                 child: Row(
                   children: [
-                    _Brand(logoPath: logoPath, brand: brand),
+                    _CompactBrand(logoPath: logoPath, brand: brand),
                     const Spacer(),
                     _LoginButton(
                       onTap: () {
@@ -171,22 +171,22 @@ class _MobileTopBar extends StatelessWidget {
       children: [
         Expanded(
           child: Container(
-            height: 85.sH,
+            height: 60.sH,
             padding: EdgeInsets.symmetric(horizontal: 12.sSp),
             decoration: BoxDecoration(
               color: AppColor.white,
               border: Border.all(color: AppColor.gray900, width: 1.sW),
-              borderRadius: BorderRadius.circular(50.sH),
+              borderRadius: BorderRadius.circular(30.sH),
             ),
             child: Row(
               children: [
-                _Brand(logoPath: logoPath, brand: brand),
+                _CompactBrand(logoPath: logoPath, brand: brand),
                 const Spacer(),
                 // Selected tab label (context cue)
                 if (items.isNotEmpty)
                   Text(
                     items[selectedIndex.clamp(0, items.length - 1)],
-                    style: TextStyleHelper.instance.title16RegularInter,
+                    style: TextStyleHelper.instance.title18MediumInter,
                   ),
                 SizedBox(width: 8.sSp),
                 _MenuButton(onTap: () => _openMenu(context)),
@@ -195,7 +195,7 @@ class _MobileTopBar extends StatelessWidget {
           ),
         ),
         SizedBox(width: 12.sSp),
-        if (showScanButton) _ScanButton(onTap: onScanTap),
+        if (showScanButton) _CompactScanButton(onTap: onScanTap),
       ],
     );
   }
@@ -240,16 +240,16 @@ class _WideTopBar extends StatelessWidget {
       children: [
         Expanded(
           child: Container(
-            height: 72.sH,
-            padding: EdgeInsets.all(16.sSp),
+            height: 56.sH,
+            padding: EdgeInsets.all(12.sSp),
             decoration: BoxDecoration(
               color: AppColor.white,
               border: Border.all(color: AppColor.gray900, width: 1.sW),
-              borderRadius: BorderRadius.circular(50.sH),
+              borderRadius: BorderRadius.circular(28.sH),
             ),
             child: Row(
               children: [
-                _Brand(logoPath: logoPath, brand: brand),
+                _CompactBrand(logoPath: logoPath, brand: brand),
                 const Spacer(),
                 Row(
                   children: [
@@ -270,7 +270,7 @@ class _WideTopBar extends StatelessWidget {
                             onItemTap?.call(items.indexOf(label)),
                       ),
                     SizedBox(width: 16.sSp),
-                    _LoginButton(onTap: onLoginTap),
+                    _CompactLoginButton(onTap: onLoginTap),
                   ],
                 ),
               ],
@@ -278,8 +278,89 @@ class _WideTopBar extends StatelessWidget {
           ),
         ),
         SizedBox(width: 12.sSp),
-        if (showScanButton) _ScanButton(onTap: onScanTap),
+        if (showScanButton) _CompactScanButton(onTap: onScanTap),
       ],
+    );
+  }
+}
+
+class _CompactBrand extends StatelessWidget {
+  const _CompactBrand({required this.logoPath, required this.brand});
+  final String logoPath;
+  final String brand;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(100.sH),
+          child: Container(
+            width: 36.sW,
+            height: 36.sH,
+            color: AppColor.grey200,
+            child: Image.asset(logoPath, fit: BoxFit.cover),
+          ),
+        ),
+        SizedBox(width: 8.sSp),
+        Text(brand, style: TextStyleHelper.instance.headline20BoldInter),
+      ],
+    );
+  }
+}
+
+class _CompactLoginButton extends StatelessWidget {
+  const _CompactLoginButton({this.onTap});
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(18.sH),
+      onTap: onTap,
+      child: Container(
+        height: 36.sH,
+        padding: EdgeInsets.symmetric(horizontal: 20.sSp),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: AppColor.gray900,
+          borderRadius: BorderRadius.circular(18.sH),
+        ),
+        child: Text(
+          "Login",
+          style: TextStyleHelper.instance.title14MediumInter.copyWith(
+            color: AppColor.white,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CompactScanButton extends StatelessWidget {
+  const _CompactScanButton({this.onTap});
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkResponse(
+        onTap: onTap,
+        radius: 30.sH,
+        child: Container(
+          width: 48.sW,
+          height: 48.sH,
+          decoration: BoxDecoration(
+            color: AppColor.gray900,
+            borderRadius: BorderRadius.circular(100.sH),
+            border: Border.all(color: AppColor.gray900, width: 1.sW),
+          ),
+          child: const Center(
+            child: Icon(Icons.qr_code_scanner, color: AppColor.white, size: 20),
+          ),
+        ),
+      ),
     );
   }
 }

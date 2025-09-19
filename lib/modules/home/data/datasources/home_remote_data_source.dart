@@ -4,6 +4,8 @@ import 'package:baseqat/modules/home/data/models/artist_model.dart';
 import 'package:baseqat/modules/home/data/models/artwork_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../models/review_model.dart';
+
 abstract class HomeRemoteDataSource {
   Future<List<Artist>> fetchArtists({required int limit, required int offset});
   Future<List<Artwork>> fetchArtworks({
@@ -11,13 +13,17 @@ abstract class HomeRemoteDataSource {
     required int offset,
   });
   Future<InfoModel?> fetchInfoSingleOrNull();
+  // NEW: get reviews
+  Future<List<ReviewModel>> fetchReviews({
+    required int limit,
+    required int offset,
+  });
 }
 
 class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   HomeRemoteDataSourceImpl(this.client);
   final SupabaseClient client;
 
-  // NOTE: NO filters at all, just latest data
   @override
   Future<List<Artist>> fetchArtists({
     required int limit,
@@ -65,5 +71,22 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     if (res == null) return null;
     // ignore: unnecessary_cast
     return InfoModel.fromMap(res as Map<String, dynamic>);
+  }
+
+  @override
+  Future<List<ReviewModel>> fetchReviews({
+    required int limit,
+    required int offset,
+  }) async {
+    await ensureOnline();
+    final res = await client
+        .from('reviews')
+        .select()
+        .order('created_at', ascending: false)
+        .range(offset, offset + limit - 1)
+        .timeout(const Duration(seconds: 12));
+    return (res as List)
+        .map((e) => ReviewModel.fromMap(e as Map<String, dynamic>))
+        .toList();
   }
 }

@@ -54,6 +54,8 @@ class AppAssetsManager {
   // Custom Icon Button Screen
   // Custom Image View Screen
   static String imgImageNotFound = '${_basePath}image_not_found.png';
+//test
+  static String imgProfile = '${_basePath}img_with_wide_width.png';
 
   //Auth screens
   static String googleLogo = '${_basePath}google_Logo.png';

@@ -1,7 +1,10 @@
+import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/modules/artist_details/presentation/widgets/network_image_smart.dart';
 import 'package:flutter/material.dart';
 import 'package:baseqat/core/resourses/style_manager.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
+import 'package:baseqat/core/responsive/responsive.dart';
+import 'package:baseqat/core/responsive/size_utils.dart' hide DeviceType;
 
 class ArtistHeader extends StatefulWidget {
   final String name;
@@ -17,11 +20,6 @@ class _ArtistHeaderState extends State<ArtistHeader>
   final _text = TextStyleHelper.instance;
   late AnimationController _slideController;
   late Animation<Offset> _slideAnimation;
-
-  bool get _isMobile => MediaQuery.of(context).size.width < 768;
-  bool get _isTablet =>
-      MediaQuery.of(context).size.width >= 768 &&
-      MediaQuery.of(context).size.width < 1200;
 
   @override
   void initState() {
@@ -45,6 +43,10 @@ class _ArtistHeaderState extends State<ArtistHeader>
 
   @override
   Widget build(BuildContext context) {
+    final deviceType = Responsive.deviceTypeOf(context);
+    final isDesktop = deviceType == DeviceType.desktop;
+    final isMobile = deviceType == DeviceType.mobile;
+
     return SlideTransition(
       position: _slideAnimation,
       child: FadeTransition(
@@ -54,28 +56,30 @@ class _ArtistHeaderState extends State<ArtistHeader>
           children: [
             Text(
               widget.name,
-              style: _isMobile
-                  ? _text.headline32BoldInter.copyWith(fontSize: 28)
-                  : _text.headline32BoldInter.copyWith(fontSize: 40),
+              style: isMobile
+                  ? _text.headline32BoldInter.copyWith(fontSize: 28.h)
+                  : isDesktop
+                  ? _text.headline32BoldInter.copyWith(fontSize: 25.h)
+                  : _text.headline32BoldInter.copyWith(fontSize: 26.h),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8.h),
             Container(
-              height: 4,
-              width: 60,
+              height: 4.h,
+              width: 60.h,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [AppColor.gray900, AppColor.gray600],
                 ),
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(2.h),
               ),
             ),
-            SizedBox(height: _isMobile ? 20 : 32),
+            SizedBox(height: isMobile ? 20.h : isDesktop ? 40.h : 32.h),
             Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(_isMobile ? 20 : 28),
-                boxShadow: [
+                borderRadius: BorderRadius.circular(isMobile ? 20.h : 28.h),
+                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.15),
                     blurRadius: 30,
@@ -90,20 +94,24 @@ class _ArtistHeaderState extends State<ArtistHeader>
                 ],
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(_isMobile ? 20 : 28),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: _isMobile
-                      ? 280
-                      : _isTablet
-                      ? 380
-                      : 420,
+                borderRadius: BorderRadius.circular(isMobile ? 20.h : 28.h),
+                child: isDesktop
+                ? SizedBox(
+                height: 750.sH,
+                width: double.infinity,
+                child: NetworkImageSmart(
+                  path: widget.image,
+                  fit: BoxFit.cover,
+                  radius: BorderRadius.circular(20.h ),
+                ),
+              )
+                  : AspectRatio(
+            aspectRatio: isMobile ? 4 / 2 :  3/ 2,
                   child: NetworkImageSmart(
                     path: widget.image,
                     fit: BoxFit.cover,
-                    radius: BorderRadius.circular(_isMobile ? 20 : 28),
-                  ),
-                ),
+                    radius: BorderRadius.circular(isMobile ? 20.h : 28.h),
+                  ),),
               ),
             ),
           ],

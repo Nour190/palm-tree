@@ -551,8 +551,8 @@ class _EnhancedCategoryChipState extends State<EnhancedCategoryChip> {
             child: AnimatedContainer(
               duration: widget.animationDuration,
               padding: EdgeInsets.symmetric(
-                horizontal: widget.isWeb ? 20 : 16,
-                vertical: widget.isWeb ? 12 : 8,
+                horizontal: widget.isWeb ? 17 : 14,
+                vertical: widget.isWeb ? 11 : 6,
               ),
               decoration: BoxDecoration(
                 color: widget.category.isSelected
@@ -570,15 +570,17 @@ class _EnhancedCategoryChipState extends State<EnhancedCategoryChip> {
               ),
               child: Text(
                 widget.category.title,
-                style: TextStyle(
-                  color: widget.category.isSelected
-                      ? AppColor.white
-                      : AppColor.black,
-                  fontWeight: widget.category.isSelected
-                      ? FontWeight.w600
-                      : FontWeight.w500,
-                  fontSize: widget.isWeb ? 14 : 13,
-                ),
+                style:widget.category.isSelected?TextStyleHelper.instance.body9MediumInter.copyWith(color: AppColor.white,)
+               :TextStyleHelper.instance.caption9RegularInter.copyWith(color:AppColor.black )
+                // TextStyle(
+                //   color: widget.category.isSelected
+                //       ? AppColor.white
+                //       : AppColor.black,
+                //   fontWeight: widget.category.isSelected
+                //       ? FontWeight.w600
+                //       : FontWeight.w500,
+                //   fontSize: widget.isWeb ? 14 : 13,
+                // ),
               ),
             ),
           ),

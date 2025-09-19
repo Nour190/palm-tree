@@ -1,20 +1,25 @@
-import 'package:baseqat/core/resourses/style_manager.dart';
+import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/modules/home/data/models/speaker_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
-import 'package:baseqat/core/responsive/size_utils.dart';
+
+import '../../../../../core/resourses/navigation_manger.dart';
+import '../../../../../core/resourses/style_manager.dart';
+import '../../view/speakers_info_view.dart';
 
 class SessionCard extends StatelessWidget {
   final Speaker speaker;
   final int index;
   final void Function(int index)? onTap;
+  final bool isDesktop;
 
   const SessionCard({
     super.key,
     required this.speaker,
     required this.index,
     this.onTap,
+    this.isDesktop = false,
   });
 
   String _formatTimeLocal(DateTime utc) =>
@@ -37,79 +42,193 @@ class SessionCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        if (onTap != null) {
-          onTap!(index);
-        }
+        navigateTo(
+          context,
+            SpeakersInfoScreen(speaker: speaker,));
       },
       child: Container(
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(16.h),
+          borderRadius: BorderRadius.circular(isDesktop ? 16 : 12),
           border: Border.all(color: border),
           boxShadow: [
             BoxShadow(
               color: AppColor.black.withOpacity(0.05),
-              blurRadius: 10.h,
+              blurRadius: 10,
               offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Padding(
-          padding: EdgeInsets.all(16.h),
-          child: Row(
+          padding: EdgeInsets.all(isDesktop ? 20 : 16),
+          child: isDesktop
+              ? _buildDesktopLayout(timeLabel, title, summary, fg, isHighlighted)
+              : _buildMobileLayout(timeLabel, title, summary, fg, isHighlighted),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopLayout(String timeLabel, String title, String summary, Color fg, bool isHighlighted) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Time section
+        Container(
+          width: 120,
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: EdgeInsets.only(top: 4.h, right: 12.h),
-                child: Icon(
-                  isHighlighted ? Icons.podcasts : Icons.schedule,
-                  size: 16.h,
-                  color: fg.withOpacity(0.8),
-                ),
+              Row(
+                children: [
+                  Icon(
+                    isHighlighted ? Icons.podcasts : Icons.schedule,
+                    size: 18,
+                    color: fg.withOpacity(0.8),
+                  ),
+                  const SizedBox(width: 8),
+                  if (isHighlighted)
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                ],
               ),
+              const SizedBox(height: 4),
               Text(
                 timeLabel,
-                style: TextStyleHelper.instance.headline24BoldInter.copyWith(
+                style: TextStyleHelper.instance.title16BoldInter.copyWith(
+                  fontSize: 18,
                   color: fg,
-                ),
-              ),
-              SizedBox(width: 16.h),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyleHelper.instance.title16BoldInter.copyWith(
-                        color: fg,
-                      ),
-                    ),
-                    SizedBox(height: 6.h),
-                    Text(
-                      summary,
-                      style: TextStyleHelper.instance.title16RegularInter
-                          .copyWith(color: fg.withOpacity(0.85)),
-                    ),
-                    SizedBox(height: 8.h),
-                    if (speaker.city != null || speaker.country != null)
-                      Text(
-                        [
-                          speaker.city,
-                          speaker.country,
-                        ].where((e) => (e ?? '').isNotEmpty).join(', '),
-                        style: TextStyleHelper.instance.title16RegularInter
-                            .copyWith(
-                              fontSize: 12.fSize,
-                              color: fg.withOpacity(0.7),
-                            ),
-                      ),
-                  ],
                 ),
               ),
             ],
           ),
         ),
-      ),
+
+         SizedBox(width: 1.sW),
+
+        // Content section
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyleHelper.instance.headline20BoldInter.copyWith(
+                  fontSize: 20.sSp,
+                  color: fg,
+                ),
+              ),
+               SizedBox(height: 8.sH),
+              Text(
+                summary,
+                style: TextStyleHelper.instance.title14BlackRegularInter.copyWith(
+                  color: fg.withOpacity(0.85),
+                  height: 1.2,
+                ),maxLines: 6,overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 12),
+              if (speaker.city != null || speaker.country != null)
+                Row(
+                  children: [
+                    Icon(
+                      Icons.location_on,
+                      size: 16,
+                      color: fg.withOpacity(0.7),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      [
+                        speaker.city,
+                        speaker.country,
+                      ].where((e) => (e ?? '').isNotEmpty).join(', '),
+                      style: TextStyleHelper.instance.body14RegularInter.copyWith(
+                        color: fg.withOpacity(0.7),
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+
+        // Action section
+        if (isHighlighted && speaker.url != null)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.red,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              'Join Live',
+              style: TextStyleHelper.instance.body14MediumInter.copyWith(
+                color: Colors.white,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout(String timeLabel, String title, String summary, Color fg, bool isHighlighted) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 4, right: 12),
+          child: Icon(
+            isHighlighted ? Icons.podcasts : Icons.schedule,
+            size: 16,
+            color: fg.withOpacity(0.8),
+          ),
+        ),
+        Text(
+          timeLabel,
+          style: TextStyleHelper.instance.title16BoldInter.copyWith(
+            color: fg,
+          ),
+        ),
+         SizedBox(width: 16.sW),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyleHelper.instance.title14BoldInter.copyWith(
+                  color: fg,
+                ),
+              ),
+               SizedBox(height: 6.sH),
+              Text(
+                summary,
+                style: TextStyleHelper.instance.body12MediumInter
+                    .copyWith(color: fg.withOpacity(0.85)
+                ),
+              maxLines: 4,overflow: TextOverflow.ellipsis,),
+              const SizedBox(height: 8),
+              if (speaker.city != null || speaker.country != null)
+                Text(
+                  [
+                    speaker.city,
+                    speaker.country,
+                  ].where((e) => (e ?? '').isNotEmpty).join(', '),
+                  style: TextStyleHelper.instance.title16RegularInter
+                      .copyWith(
+                    fontSize: 12,
+                    color: fg.withOpacity(0.7),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

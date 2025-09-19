@@ -28,7 +28,7 @@ class ProfileDesktopLayout extends StatelessWidget {
         children: [
           // Left Sidebar - Profile Info & Navigation
           Container(
-            width: 320.sW,
+            width: 280.sW,
             decoration: BoxDecoration(
               color: AppColor.white,
               border: Border(
@@ -46,95 +46,99 @@ class ProfileDesktopLayout extends StatelessWidget {
               ],
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.max,
               children: [
+
+                // Profile Header Section
                 // Profile Header Section
                 Container(
                   padding: EdgeInsets.all(32.sSp),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start, // <-- important: align children to start
                     children: [
-                      // Profile Avatar
-                      Container(
-                        width: 120.sW,
-                        height: 120.sH,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColor.primaryColor.withOpacity(0.2),
-                            width: 3.sW,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColor.primaryColor.withOpacity(0.1),
-                              blurRadius: 20.sW,
-                              spreadRadius: 2.sW,
+                      // Profile Avatar centered
+                      Center(
+                        child: Container(
+                          width: 100.sW,
+                          height: 120.sH,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppColor.primaryColor.withOpacity(0.2),
+                              width: 3.sW,
                             ),
-                          ],
-                        ),
-                        child: ClipOval(
-                          child: Image.asset(
-                            AppAssetsManager.imgPhoto,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: AppColor.primaryColor.withOpacity(0.1),
-                                ),
-                                child: Icon(
-                                  Icons.person,
-                                  size: 60.sW,
-                                  color: AppColor.primaryColor,
-                                ),
-                              );
-                            },
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColor.primaryColor.withOpacity(0.1),
+                                blurRadius: 20.sW,
+                                spreadRadius: 2.sW,
+                              ),
+                            ],
+                          ),
+                          child: ClipOval(
+                            child: Image.asset(
+                              AppAssetsManager.imgEllipse13,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: AppColor.primaryColor.withOpacity(0.1),
+                                  ),
+                                  child: Icon(
+                                    Icons.person,
+                                    size: 60.sW,
+                                    color: AppColor.primaryColor,
+                                  ),
+                                );
+                              },
+                            ),
                           ),
                         ),
                       ),
 
                       SizedBox(height: 20.sH),
 
-                      // User Name
-                      Text(
-                        'John Doe',
-                        style: TextStyleHelper.instance.headline24BoldInter.copyWith(
-                          color: AppColor.black,
+                      // User Name centered
+                      Center(
+                        child: Text(
+                          'John Doe',
+                          style: TextStyleHelper.instance.headline32BoldInter.copyWith(
+                            color: AppColor.black,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
                       ),
 
-                      // SizedBox(height: 8.sH),
-                      //
-                      // // User Email/Handle
-                      // Text(
-                      //   '@johndoe',
-                      //   style: TextStyleHelper.instance.title16RegularInter.copyWith(
-                      //     color: AppColor.gray,
-                      //   ),
-                      // ),
-                      //
-                      // SizedBox(height: 24.sH),
-                      //
-                      // // Stats Row
-                      // Row(
-                      //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      //   children: [
-                      //     _buildStatItem('Posts', '124'),
-                      //     Container(
-                      //       width: 1.sW,
-                      //       height: 40.sH,
-                      //       color: AppColor.gray.withOpacity(0.3),
-                      //     ),
-                      //     _buildStatItem('Following', '256'),
-                      //     Container(
-                      //       width: 1.sW,
-                      //       height: 40.sH,
-                      //       color: AppColor.gray.withOpacity(0.3),
-                      //     ),
-                      //     _buildStatItem('Followers', '1.2K'),
-                      //   ],
-                      // ),
+                      SizedBox(height: 8.sH),
+
+                      // "Profile" aligned to start (left in LTR, right in RTL)
+                      Row(
+                        children: [
+                          SizedBox(width: 12.sW),
+                          Text(
+                            'Profile',
+                            style: TextStyleHelper.instance.headline20BoldInter,
+                            textAlign: TextAlign.start,
+                          ),
+                        ],
+                      ),
+
+                      SizedBox(height: 15.sH),
+
+                      // "MANAGE" also aligned to start
+                      Text(
+                        'MANAGE',
+                        style: TextStyleHelper.instance.caption12RegularInter.copyWith(
+                          color: AppColor.gray500,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
                     ],
                   ),
                 ),
+
 
                 // Navigation Tabs
                 Expanded(
@@ -160,20 +164,6 @@ class ProfileDesktopLayout extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: EdgeInsets.all(16.sH),
-                    child: TopBar(
-                      items: const ['Home', 'Events', 'Profile', 'More'],
-                      selectedIndex: 2, // Profile is selected
-                      onItemTap: (index) {
-                        // Handle main app navigation
-                      },
-                      onLoginTap: () {},
-                      showScanButton: true,
-                      onScanTap: () {},
-                      compactOnMobile: true,
-                    ),
-                  ),
 
                   // Content Header
                   Container(
@@ -195,21 +185,21 @@ class ProfileDesktopLayout extends StatelessWidget {
                   // Tab Content
                   Expanded(
                     child: Container(
-                      decoration: BoxDecoration(
-                        color: AppColor.white,
-                        borderRadius: BorderRadius.circular(12.sW),
-                        border: Border.all(
-                          color: AppColor.gray.withOpacity(0.2),
-                          width: 1.sW,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColor.black.withOpacity(0.05),
-                            blurRadius: 10.sW,
-                            spreadRadius: 1.sW,
-                          ),
-                        ],
-                      ),
+                      // decoration: BoxDecoration(
+                      //   color: AppColor.white,
+                      //   borderRadius: BorderRadius.circular(12.sW),
+                      //   border: Border.all(
+                      //     color: AppColor.gray.withOpacity(0.2),
+                      //     width: 1.sW,
+                      //   ),
+                      //   boxShadow: [
+                      //     BoxShadow(
+                      //       color: AppColor.black.withOpacity(0.05),
+                      //       blurRadius: 10.sW,
+                      //       spreadRadius: 1.sW,
+                      //     ),
+                      //   ],
+                      // ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12.sW),
                         child: _buildTabContent(selectedTabIndex),
@@ -279,12 +269,12 @@ class ProfileDesktopLayout extends StatelessWidget {
                 Icon(
                   icon,
                   color: isSelected ? AppColor.primaryColor : AppColor.gray,
-                  size: 24.sW,
+                  size: 20.sW,
                 ),
-                SizedBox(width: 16.sW),
+                SizedBox(width: 12.sW),
                 Text(
                   title,
-                  style: TextStyleHelper.instance.title16MediumInter.copyWith(
+                  style: TextStyleHelper.instance.title16RegularInter.copyWith(
                     color: isSelected ? AppColor.primaryColor : AppColor.gray,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                   ),
