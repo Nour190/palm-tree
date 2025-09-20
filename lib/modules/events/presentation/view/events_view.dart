@@ -21,6 +21,9 @@ import 'package:baseqat/modules/events/presentation/view/speakers_tab.dart';
 
 import 'package:baseqat/modules/events/presentation/manger/events_cubit.dart';
 import 'package:baseqat/modules/events/presentation/manger/events_state.dart';
+import 'package:baseqat/modules/events/presentation/manger/search_cubit.dart';
+import 'package:baseqat/modules/events/presentation/manger/search_state.dart';
+import 'package:baseqat/modules/events/presentation/widgets/search_filter_panel.dart';
 import '../../data/datasources/events_remote_data_source.dart';
 import '../../data/repositories/events_repository_impl.dart';
 
@@ -96,6 +99,7 @@ class _EventsScreenState extends State<EventsScreen> {
         );
       }
     });
+    context.read<SearchCubit>().updateTabIndex(index);
   }
 
   final TextEditingController searchController = TextEditingController();
@@ -104,89 +108,140 @@ class _EventsScreenState extends State<EventsScreen> {
     final client = Supabase.instance.client;
     final repo = EventsRepositoryImpl(EventsRemoteDataSourceImpl(client));
 
-    return BlocProvider(
-      create: (_) => EventsCubit(repo)..loadAll(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => EventsCubit(repo)..loadAll(),
+        ),
+        BlocProvider(
+          create: (_) => SearchCubit(),
+        ),
+      ],
       child: Scaffold(
         backgroundColor: AppColor.white,
         body: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-
+          child: Stack(
             children: [
-              SizedBox(height: 20.h),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: 24.h,
                 children: [
-                  EventsSearchHeader(
-                    title: 'Discover',
-                    subtitle: 'What do you want to see today?',
-                    controller: searchController,
-                    searchFieldBuilder: (context, ctrl, onCh, onSub, hint) {
-                      return CustomSearchView(
-                        controller: ctrl,
-                        onChanged: onCh,
-                        hintText: hint,
-                        prefixIcon: AppAssetsManager.imgSearch,
-                        fillColor: AppColor.white,
-                        borderColor: AppColor.gray400,
-                      );
-                    },
-                    style: SearchHeaderStyle(
-                      breakpoint: 840,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
+                  SizedBox(height: 20.h),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    spacing: 24.h,
+                    children: [
+                      BlocBuilder<SearchCubit, SearchState>(
+                        builder: (context, searchState) {
+                          final isSearchBarVisible = searchState is SearchLoaded
+                              ? searchState.isSearchBarVisible
+                              : _selectedIndex != 2; // Hide for speakers tab
+
+                          if (!isSearchBarVisible) {
+                            return const SizedBox.shrink();
+                          }
+
+                          return EventsSearchHeader(
+                            title: 'Discover',
+                            subtitle: 'What do you want to see today?',
+                            controller: searchController,
+                            searchFieldBuilder: (context, ctrl, onCh, onSub, hint) {
+                              return CustomSearchView(
+                                controller: ctrl,
+                                onChanged: (value) {
+                                  context.read<SearchCubit>().updateSearchQuery(value);
+                                  onCh?.call(value);
+                                },
+                                hintText: hint,
+                                prefixIcon: AppAssetsManager.imgSearch,
+                                fillColor: AppColor.white,
+                                borderColor: AppColor.gray400,
+                              );
+                            },
+                            style: SearchHeaderStyle(
+                              breakpoint: 840,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              borderColor: AppColor.gray400,
+                              fillColor: Colors.transparent,
+                              prefixIcon: Image.asset(
+                                AppAssetsManager.imgSearch,
+                                width: 20,
+                                height: 20,
+                              ),
+                              borderRadius: const BorderRadius.all(Radius.circular(12)),
+                            ),
+                            actions: [
+                              IconButton(
+                                onPressed: () {
+                                  context.read<SearchCubit>().toggleFilter();
+                                },
+                                icon: Icon(
+                                  Icons.tune,
+                                  color: searchState is SearchLoaded && searchState.isFilterVisible
+                                      ? AppColor.primaryColor
+                                      : AppColor.gray600,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
-                      borderColor: AppColor.gray400,
-                      fillColor: Colors.transparent,
-                      prefixIcon: Image.asset(
-                        AppAssetsManager.imgSearch,
-                        width: 20,
-                        height: 20,
-                      ),
-                      borderRadius: const BorderRadius.all(Radius.circular(12)),
-                    ),
-                    actions: [
-                      IconButton(
-                        onPressed: () {},
-                        icon: const Icon(Icons.tune),
+                      EventsCategoryChips(
+                        categories: _categories,
+                        onTap: _onCategoryTap,
+                        enableScrollIndicators: true,
+                        animationDuration: const Duration(milliseconds: 250),
+                        height: 60,
                       ),
                     ],
                   ),
-                  EventsCategoryChips(
-                    categories: _categories,
-                    onTap: _onCategoryTap,
+                  SizedBox(height: 20.h),
 
-                    enableScrollIndicators: true,
-                    animationDuration: const Duration(milliseconds: 250),
-                    height: 60,
+                  Expanded(
+                    child: BlocConsumer<EventsCubit, EventsState>(
+                      listener: (context, state) {
+                        if (state is EventsError) {
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text(state.message)));
+                        }
+                        if (state is EventsLoaded) {
+                          context.read<SearchCubit>().initializeData(
+                            artists: state.artists,
+                            artworks: state.artworks,
+                            speakers: state.speakers,
+                            gallery: state.gallery,
+                          );
+                        }
+                      },
+                      builder: (context, state) {
+                        if (state is EventsInitial || state is EventsLoading) {
+                          return const _LoadingView();
+                        }
+                        if (state is EventsError) {
+                          return _ErrorView(
+                            message: state.message,
+                            onRetry: () => context.read<EventsCubit>().loadAll(),
+                          );
+                        }
+                        final s = state as EventsLoaded;
+                        return _buildTabBody(s);
+                      },
+                    ),
                   ),
                 ],
               ),
-              SizedBox(height: 20.h),
 
-              Expanded(
-                child: BlocConsumer<EventsCubit, EventsState>(
-                  listener: (context, state) {
-                    if (state is EventsError) {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text(state.message)));
-                    }
-                  },
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                child: BlocBuilder<SearchCubit, SearchState>(
                   builder: (context, state) {
-                    if (state is EventsInitial || state is EventsLoading) {
-                      return const _LoadingView();
-                    }
-                    if (state is EventsError) {
-                      return _ErrorView(
-                        message: state.message,
-                        onRetry: () => context.read<EventsCubit>().loadAll(),
-                      );
-                    }
-                    final s = state as EventsLoaded;
-                    return _buildTabBody(s);
+                    final isFilterVisible = state is SearchLoaded ? state.isFilterVisible : false;
+                    return isFilterVisible ? const SearchFilterPanel() : const SizedBox.shrink();
                   },
                 ),
               ),
@@ -198,23 +253,53 @@ class _EventsScreenState extends State<EventsScreen> {
   }
 
   Widget _buildTabBody(EventsLoaded s) {
-    switch (_selectedIndex) {
-      case 0:
-        return ArtWorksGalleryContent(
-          artworks: s.artworks,
-          onArtworkTap: (art) {},
-        );
-      case 1:
-        return ArtistTabContent(artists: s.artists);
-      case 2:
-        return SpeakersInfoScreen(speaker: s.speakers[0]);
-      case 3:
-        return GalleryGrid(items: s.gallery, onTap: (item) {});
-      case 4:
-        return const ComingSoon('Virtual Tour');
-      default:
-        return const SizedBox.shrink();
-    }
+    return BlocBuilder<SearchCubit, SearchState>(
+      builder: (context, searchState) {
+        if (searchState is SearchLoaded) {
+          switch (_selectedIndex) {
+            case 0:
+              return ArtWorksGalleryContent(
+                artworks: searchState.isSearching ? searchState.filteredArtworks : s.artworks,
+                onArtworkTap: (art) {},
+              );
+            case 1:
+              return ArtistTabContent(
+                artists: searchState.isSearching ? searchState.filteredArtists : s.artists,
+              );
+            case 2:
+              return SpeakersInfoScreen(speaker: s.speakers[0]);
+            case 3:
+              return GalleryGrid(
+                items: searchState.isSearching ? searchState.filteredGallery : s.gallery,
+                onTap: (item) {},
+              );
+            case 4:
+              return const ComingSoon('Virtual Tour');
+            default:
+              return const SizedBox.shrink();
+          }
+        }
+
+        // Fallback to original data
+        switch (_selectedIndex) {
+          case 0:
+            return ArtWorksGalleryContent(
+              artworks: s.artworks,
+              onArtworkTap: (art) {},
+            );
+          case 1:
+            return ArtistTabContent(artists: s.artists);
+          case 2:
+            return SpeakersInfoScreen(speaker: s.speakers[0]);
+          case 3:
+            return GalleryGrid(items: s.gallery, onTap: (item) {});
+          case 4:
+            return const ComingSoon('Virtual Tour');
+          default:
+            return const SizedBox.shrink();
+        }
+      },
+    );
   }
 }
 

@@ -294,6 +294,13 @@ class TextStyleHelper {
     fontFamily: 'Inter',
     color: AppColor.gray900,
   );
+  TextStyle get body14LightInter =>
+      TextStyle(
+        fontSize: 14.sSp,
+        fontWeight: FontWeight.w300,
+        fontFamily: 'Inter',
+        color: AppColor.gray900,
+      );
   TextStyle get title14BlackRegularInter =>
       TextStyle(
         fontSize: 14.sSp,

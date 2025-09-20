@@ -1,206 +1,469 @@
+// chat_cubit.dart
 import 'dart:async';
+import 'package:baseqat/modules/artwork_details/data/models/conversation_models.dart';
+import 'package:baseqat/modules/artwork_details/data/repositories/chat_repository.dart';
 import 'package:baseqat/modules/artwork_details/presentation/view/manger/chat/chat_states.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../../../../data/repositories/artwork_repository.dart';
-import 'package:baseqat/modules/artwork_details/data/models/chat_models.dart';
+import 'package:translator/translator.dart';
 
 class ChatCubit extends Cubit<ChatState> {
-  final ArtworkDetailsRepository repo;
-  StreamSubscription<List<ChatMessage>>? _chatSub;
+  final ChatRepository _repo;
+  final int _pageSize;
+  final GoogleTranslator _translator;
 
-  ChatCubit(this.repo) : super(const ChatState());
+  Timer? _streamTranslateDebouncer;
 
-  /// Load latest chat page (or older page if [before] is provided).
-  Future<void> loadHistory({
-    required String artworkId,
+  ChatCubit(this._repo, {int pageSize = 50, GoogleTranslator? translator})
+    : _pageSize = pageSize,
+      _translator = translator ?? GoogleTranslator(),
+      super(const ChatState());
+
+  // ============================
+  // Init / Load
+  // ============================
+  Future<void> init({
     required String userId,
-    int limit = 50,
-    DateTime? before,
-    bool appendOlder = false,
-  }) async {
-    emit(state.copyWith(status: ChatStatus.loadingHistory, clearError: true));
-
-    final either = await repo.getChatHistory(
-      artworkId: artworkId,
-      userId: userId,
-      limit: limit,
-      // NOTE: add `before` to repository if you support cursor paging there
-    );
-
-    either.fold(
-      (f) => emit(state.copyWith(status: ChatStatus.error, error: f.message)),
-      (msgs) {
-        final merged = appendOlder ? [...msgs, ...state.messages] : msgs;
-        final oldest = merged.isNotEmpty
-            ? merged.first.createdAt
-            : state.oldestCursor;
-        final hasMore = msgs.length >= limit;
-
-        emit(
-          state.copyWith(
-            status: state.status == ChatStatus.streaming
-                ? ChatStatus.streaming
-                : ChatStatus.idle,
-            messages: merged,
-            oldestCursor: oldest,
-            hasMore: hasMore,
-            clearError: true,
-          ),
-        );
-      },
-    );
-  }
-
-  /// Start realtime stream after initial history load.
-  Future<void> startStream({
     required String artworkId,
-    required String userId,
+    String? sessionLabel,
+    Map<String, dynamic>? metadata,
+    bool singleActive = false,
+    int? initialLimit,
+
+    // NEW: denormalized artwork snapshot (stored only when a new conversation is created)
+    String? artworkName,
+    List<String>? artworkGallery,
+    String? artworkDescription,
   }) async {
-    await _chatSub?.cancel();
-    emit(state.copyWith(status: ChatStatus.streaming, clearError: true));
+    emit(state.copyWith(status: ChatStatus.loading, clearError: true));
 
-    _chatSub = repo
-        .watchChat(artworkId: artworkId, userId: userId)
-        .listen(
-          (list) {
-            final oldest = list.isNotEmpty
-                ? list.first.createdAt
-                : state.oldestCursor;
-            emit(
-              state.copyWith(
-                messages: list,
-                oldestCursor: oldest,
-                status: ChatStatus.streaming,
-                clearError: true,
-              ),
-            );
-          },
-          onError: (e, _) => emit(
-            state.copyWith(status: ChatStatus.error, error: e.toString()),
-          ),
-          cancelOnError: false,
-        );
-  }
+    try {
+      final conv = await _repo.initConversation(
+        userId: userId,
+        artworkId: artworkId,
+        sessionLabel: sessionLabel,
+        metadata: metadata,
+        singleActive: singleActive,
+        artworkName: artworkName,
+        artworkGallery: artworkGallery,
+        artworkDescription: artworkDescription,
+      );
 
-  Future<void> stopStream() async {
-    await _chatSub?.cancel();
-    _chatSub = null;
-    emit(state.copyWith(status: ChatStatus.idle));
-  }
+      final limit = initialLimit ?? _pageSize;
+      final msgs = await _repo.getHistory(
+        conversationId: conv.id,
+        limit: limit,
+      );
 
-  Future<void> sendMessage({
-    required String artworkId,
-    required String userId,
-    String? text,
-    List<UploadBlob> files = const [],
-  }) async {
-    emit(state.copyWith(status: ChatStatus.sendingMessage, clearError: true));
+      msgs.sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
-    final either = await repo.sendChatMessage(
-      artworkId: artworkId,
-      userId: userId,
-      text: text,
-      files: files,
-    );
-
-    either.fold(
-      (f) => emit(state.copyWith(status: ChatStatus.error, error: f.message)),
-      (_) => emit(
+      emit(
         state.copyWith(
-          status: _chatSub == null ? ChatStatus.idle : ChatStatus.streaming,
+          status: ChatStatus.ready,
+          conversation: conv,
+          messages: msgs,
+          hasMore: msgs.length >= limit,
+          anchorBefore: msgs.isNotEmpty ? msgs.first.createdAt : null,
+          clearError: true,
         ),
+      );
+    } catch (e) {
+      emit(state.copyWith(status: ChatStatus.error, error: e.toString()));
+    }
+  }
+
+  /// Convenience: list all conversations for this user (optionally by artwork).
+  Future<List<ConversationRecord>> listUserConversations({
+    required String userId,
+    String? artworkId,
+    int limit = 20,
+    int offset = 0,
+    bool activeOnly = false,
+  }) async {
+    try {
+      return await _repo.listConversations(
+        userId: userId,
+        artworkId: artworkId,
+        limit: limit,
+        offset: offset,
+        activeOnly: activeOnly,
+      );
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+      rethrow;
+    }
+  }
+
+  Future<void> refresh() async {
+    final conv = state.conversation;
+    if (conv == null) return;
+
+    try {
+      final msgs = await _repo.getHistory(
+        conversationId: conv.id,
+        limit: _pageSize,
+      );
+      msgs.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
+      emit(
+        state.copyWith(
+          status: ChatStatus.ready,
+          messages: msgs,
+          hasMore: msgs.length >= _pageSize,
+          anchorBefore: msgs.isNotEmpty ? msgs.first.createdAt : null,
+          clearError: true,
+        ),
+      );
+    } catch (e) {
+      emit(state.copyWith(status: ChatStatus.error, error: e.toString()));
+    }
+  }
+
+  Future<void> loadMore() async {
+    final conv = state.conversation;
+    if (conv == null || state.isLoadingMore || !state.hasMore) return;
+
+    emit(state.copyWith(isLoadingMore: true, clearError: true));
+    try {
+      final older = await _repo.getHistory(
+        conversationId: conv.id,
+        before: state.anchorBefore,
+        limit: _pageSize,
+      );
+      older.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
+      final merged = <MessageRecord>[...older, ...state.messages];
+      final newAnchor = merged.isNotEmpty
+          ? merged.first.createdAt
+          : state.anchorBefore;
+
+      emit(
+        state.copyWith(
+          isLoadingMore: false,
+          messages: merged,
+          anchorBefore: newAnchor,
+          hasMore: older.length >= _pageSize,
+        ),
+      );
+    } catch (e) {
+      emit(state.copyWith(isLoadingMore: false, error: e.toString()));
+    }
+  }
+
+  // ============================
+  // TTS / Translation Locale (header)
+  // ============================
+  void setTtsLocale(String locale) {
+    // e.g., 'en-US', 'ar-SA', 'fr-FR', 'es-ES', 'zh-CN'
+    emit(state.copyWith(ttsLocale: locale));
+  }
+
+  String get currentTargetLang => _translatorCodeForLocale(state.ttsLocale);
+
+  /// For your `_speak(text)` in UI: call this to get translated text for speech.
+  Future<String> translateForSpeech(String text) async {
+    final to = currentTargetLang;
+    try {
+      final res = await _translator.translate(text, to: to);
+      return res.text;
+    } catch (_) {
+      return text;
+    }
+  }
+
+  String _translatorCodeForLocale(String code) {
+    final lower = code.toLowerCase();
+    if (lower.startsWith('en')) return 'en';
+    if (lower.startsWith('ar')) return 'ar';
+    if (lower.startsWith('fr')) return 'fr';
+    if (lower.startsWith('es')) return 'es';
+    if (lower.startsWith('zh')) return 'zh-cn'; // Simplified
+    return 'en';
+  }
+
+  // ============================
+  // Send / Save messages
+  // ============================
+  Future<void> sendUserMessage({
+    required String content,
+    bool isVoice = false,
+    Duration? voiceDuration,
+    String? languageCode,
+    bool showTranslation = false,
+    String? translationText,
+    String? translationLang,
+    String? ttsLang,
+    Map<String, dynamic>? extras,
+  }) async {
+    final conv = state.conversation;
+    if (conv == null) return;
+
+    emit(state.copyWith(isSending: true, clearError: true));
+    try {
+      // Enforce "voice notes are not translated" rule
+      if (isVoice) {
+        showTranslation = false;
+        translationText = null;
+        translationLang = null;
+      }
+
+      final created = await _repo.sendUserMessage(
+        content: content,
+        isVoice: isVoice,
+        voiceDurationS: voiceDuration?.inSeconds,
+        languageCode: languageCode,
+        showTranslation: showTranslation,
+        translationText: translationText,
+        translationLang: translationLang,
+        ttsLang: ttsLang,
+        extras: extras,
+      );
+
+      final next = [...state.messages, created]
+        ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
+      emit(state.copyWith(isSending: false, messages: next));
+    } catch (e) {
+      emit(state.copyWith(isSending: false, error: e.toString()));
+    }
+  }
+
+  Future<void> saveModelMessage({
+    required String content,
+    String? languageCode,
+    bool showTranslation = false,
+    String? translationText,
+    String? translationLang,
+    String? ttsLang,
+    Map<String, dynamic>? extras,
+  }) async {
+    final conv = state.conversation;
+    if (conv == null) return;
+
+    try {
+      final created = await _repo.saveModelMessage(
+        content: content,
+        languageCode: languageCode,
+        showTranslation: showTranslation,
+        translationText: translationText,
+        translationLang: translationLang,
+        ttsLang: ttsLang,
+        extras: extras,
+      );
+
+      final next = [...state.messages, created]
+        ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
+      emit(state.copyWith(messages: next, clearError: true));
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+
+  // ============================
+  // Streaming model message (for Gemini)
+  // ============================
+  void beginModelStream({bool showTranslation = false}) {
+    // Create a temp "local" message id
+    final tempId = 'local-${DateTime.now().microsecondsSinceEpoch}';
+
+    emit(
+      state.copyWith(
+        streamingMessageId: tempId,
+        streamingText: '',
+        streamingShowTranslation: showTranslation,
+        streamingTranslationText: '',
+        streamingTranslationCode: currentTargetLang,
+        clearError: true,
       ),
     );
   }
 
-  /// Upload files without sending a message (for compose UI).
-  Future<EitherUpload> uploadFilesOnly({
-    required String artworkId,
-    required String userId,
-    required List<UploadBlob> files,
-    bool useSignedUrls = false,
-    Duration signedUrlTTL = const Duration(hours: 1),
+  void appendModelChunk(String chunk) {
+    final id = state.streamingMessageId;
+    if (id == null) return;
+
+    final newText = state.streamingText + (chunk.isNotEmpty ? chunk : '');
+    // Update streaming text (UI can show partials if desired)
+    emit(state.copyWith(streamingText: newText));
+
+    // Debounced translation while streaming if toggle ON
+    if (state.streamingShowTranslation && newText.trim().isNotEmpty) {
+      _streamTranslateDebouncer?.cancel();
+      _streamTranslateDebouncer = Timer(
+        const Duration(milliseconds: 350),
+        () async {
+          final to = currentTargetLang;
+          try {
+            final res = await _translator.translate(newText, to: to);
+            // Only apply if still same streaming id
+            if (state.streamingMessageId == id) {
+              emit(
+                state.copyWith(
+                  streamingTranslationText: res.text,
+                  streamingTranslationCode: to,
+                ),
+              );
+            }
+          } catch (_) {
+            // keep silent; UI can retry by toggling later
+          }
+        },
+      );
+    }
+  }
+
+  /// Finalize: save the streamed text as a persisted model message.
+  Future<void> endModelStream({
+    String? languageCode,
+    String? ttsLang,
+    Map<String, dynamic>? extras,
   }) async {
-    emit(state.copyWith(status: ChatStatus.uploadingFiles, clearError: true));
+    final id = state.streamingMessageId;
+    if (id == null) return;
 
-    final either = await repo.uploadFiles(
-      artworkId: artworkId,
-      userId: userId,
-      files: files,
-      useSignedUrls: useSignedUrls,
-      signedUrlTTL: signedUrlTTL,
-    );
+    _streamTranslateDebouncer?.cancel();
 
-    return either.fold(
-      (f) {
-        emit(state.copyWith(status: ChatStatus.error, error: f.message));
-        return EitherUpload.left(f.message);
-      },
-      (atts) {
-        emit(
-          state.copyWith(
-            status: _chatSub == null ? ChatStatus.idle : ChatStatus.streaming,
-          ),
+    final finalText = state.streamingText.trim();
+    final showTr = state.streamingShowTranslation && finalText.isNotEmpty;
+
+    try {
+      final saved = await _repo.saveModelMessage(
+        content: finalText,
+        languageCode: languageCode,
+        showTranslation: showTr,
+        translationText: showTr ? state.streamingTranslationText : null,
+        translationLang: showTr ? state.streamingTranslationCode : null,
+        ttsLang: ttsLang,
+        extras: extras,
+      );
+
+      final next = [...state.messages, saved]
+        ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
+      emit(
+        state.copyWith(
+          messages: next,
+          streamingMessageId: null,
+          streamingText: '',
+          streamingShowTranslation: false,
+          streamingTranslationText: '',
+          clearError: true,
+        ),
+      );
+    } catch (e) {
+      // do not drop partials silently; just clear streaming state and surface error
+      emit(
+        state.copyWith(
+          error: e.toString(),
+          streamingMessageId: null,
+          streamingText: '',
+          streamingShowTranslation: false,
+          streamingTranslationText: '',
+        ),
+      );
+    }
+  }
+
+  // ============================
+  // Per-message translation toggle (persisted)
+  // ============================
+  Future<void> toggleMessageTranslation(String messageId) async {
+    // Find message
+    final idx = state.messages.indexWhere((m) => m.id == messageId);
+    if (idx == -1) return;
+
+    final m = state.messages[idx];
+    // Voice notes: blocked
+    if (m.isVoice == true) {
+      // No state change; UI can show a snack
+      return;
+    }
+
+    final nowTranslating = Set<String>.from(state.translatingIds);
+
+    // If ON -> turn OFF (and persist)
+    if (m.showTranslation) {
+      // optimistic off
+      final updated = MessageRecord(
+        id: m.id,
+        conversationId: m.conversationId,
+        role: m.role,
+        content: m.content,
+        isVoice: m.isVoice,
+        voiceDurationS: m.voiceDurationS,
+        languageCode: m.languageCode,
+        showTranslation: false,
+        translationText: null,
+        translationLang: null,
+        ttsLang: m.ttsLang,
+        extras: m.extras,
+        createdAt: m.createdAt,
+      );
+      final patched = [...state.messages]..[idx] = updated;
+      emit(state.copyWith(messages: patched));
+
+      try {
+        await _repo.setMessageTranslation(
+          messageId: m.id,
+          showTranslation: false,
+          translationText: null,
+          translationLang: null,
         );
-        return EitherUpload.right(atts);
-      },
-    );
+      } catch (e) {
+        // rollback
+        final rollback = [...state.messages]..[idx] = m;
+        emit(state.copyWith(messages: rollback, error: e.toString()));
+      }
+      return;
+    }
+
+    // If OFF -> turn ON: translate and persist
+    nowTranslating.add(m.id);
+    emit(state.copyWith(translatingIds: nowTranslating));
+
+    try {
+      final to = currentTargetLang;
+      final res = await _translator.translate(m.content, to: to);
+
+      final updated = MessageRecord(
+        id: m.id,
+        conversationId: m.conversationId,
+        role: m.role,
+        content: m.content,
+        isVoice: m.isVoice,
+        voiceDurationS: m.voiceDurationS,
+        languageCode: m.languageCode,
+        showTranslation: true,
+        translationText: res.text,
+        translationLang: to,
+        ttsLang: m.ttsLang,
+        extras: m.extras,
+        createdAt: m.createdAt,
+      );
+
+      final patched = [...state.messages]..[idx] = updated;
+      nowTranslating.remove(m.id);
+
+      emit(state.copyWith(messages: patched, translatingIds: nowTranslating));
+
+      await _repo.setMessageTranslation(
+        messageId: m.id,
+        showTranslation: true,
+        translationText: res.text,
+        translationLang: to,
+      );
+    } catch (e) {
+      nowTranslating.remove(m.id);
+      emit(state.copyWith(translatingIds: nowTranslating, error: e.toString()));
+    }
   }
 
-  Future<void> deleteMessage({
-    required String messageId,
-    required String userId,
-  }) async {
-    emit(state.copyWith(status: ChatStatus.deletingMessage, clearError: true));
-
-    final either = await repo.deleteMessage(
-      messageId: messageId,
-      userId: userId,
-    );
-
-    either.fold(
-      (f) => emit(state.copyWith(status: ChatStatus.error, error: f.message)),
-      (_) {
-        if (_chatSub == null) {
-          final pruned = state.messages
-              .where((m) => m.id != messageId)
-              .toList();
-          emit(state.copyWith(messages: pruned, status: ChatStatus.idle));
-        } else {
-          emit(state.copyWith(status: ChatStatus.streaming));
-        }
-      },
-    );
+  // ============================
+  // Utilities
+  // ============================
+  void consumeError() {
+    if (state.error != null) {
+      emit(state.copyWith(clearError: true));
+    }
   }
-
-  Future<void> deleteAttachment(String storagePath) async {
-    final either = await repo.deleteAttachment(storagePath: storagePath);
-    either.fold(
-      (f) => emit(state.copyWith(status: ChatStatus.error, error: f.message)),
-      (_) {},
-    );
-  }
-
-  @override
-  Future<void> close() async {
-    await _chatSub?.cancel();
-    _chatSub = null;
-    return super.close();
-  }
-}
-
-/// Same helper you had, kept local for convenience.
-class EitherUpload {
-  final String? _left;
-  final List<ChatAttachment>? _right;
-  bool get isLeft => _left != null;
-  bool get isRight => _right != null;
-  String get left => _left!;
-  List<ChatAttachment> get right => _right!;
-
-  EitherUpload._(this._left, this._right);
-  factory EitherUpload.left(String message) => EitherUpload._(message, null);
-  factory EitherUpload.right(List<ChatAttachment> atts) =>
-      EitherUpload._(null, atts);
 }

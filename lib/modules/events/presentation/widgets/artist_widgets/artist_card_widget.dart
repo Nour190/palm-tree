@@ -70,8 +70,8 @@ class ArtistCardWidget extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(12.h),
             child: Container(
-              width: 80.sW,
-              height: 80.sH,
+              width: 70.sW,
+              height: 90.sH,
               decoration: BoxDecoration(
                 color: AppColor.gray100,
                 borderRadius: BorderRadius.circular(15.r),
@@ -80,6 +80,7 @@ class ArtistCardWidget extends StatelessWidget {
                   ? Image.network(
                 artist.profileImage!,
                 fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
                 errorBuilder: (_, __, ___) => _buildPlaceholderAvatar(),
               )
                   : _buildPlaceholderAvatar(),
@@ -178,6 +179,7 @@ class ArtistCardWidget extends StatelessWidget {
                       ? Image.network(
                     artist.profileImage!,
                     fit: BoxFit.cover,
+                    alignment: Alignment.center,
                     errorBuilder: (_, __, ___) => _buildPlaceholderImage(),
                   )
                       : _buildPlaceholderImage(),

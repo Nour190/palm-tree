@@ -136,7 +136,7 @@ class _SignUpFormState extends State<loginForm> {
             /// Social Logins
             BlocBuilder<LoginCubit, LoginStates>(
               builder: (context, state) {
-                final isGoogleLoading = state is LoginLoadingState;
+                final isGoogleLoading = state is LoginWithGoogleLoadingState;
                 return SocialButton(
                   text: isGoogleLoading ? 'Signing in with Google...' : 'login with Google',
                   imageAsset: AppAssetsManager.googleLogo,

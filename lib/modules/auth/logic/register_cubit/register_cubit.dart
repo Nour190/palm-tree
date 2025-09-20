@@ -37,23 +37,33 @@ class RegisterCubit extends Cubit<RegisterStates> {
         createUserResult.fold(
               (failure) => emit(RegisterErrorState('Account created but profile setup failed: ${failure.errorMessage}')),
               (_) {
-                _saveTokensIfAvailable(accessToken:userModel.accessToken,refreshToken: userModel.refreshToken );
+                _saveTokensIfAvailable(accessToken:userModel.accessToken,
+                    refreshToken: userModel.refreshToken,
+                  userId: userModel.id,
+                  name: userModel.name,
+                );
                 emit(RegisterSuccessState(userModel));
               }
         );
       },
     );
   }
-  Future<void> _saveTokensIfAvailable({String? accessToken, String? refreshToken}) async {
+  Future<void> _saveTokensIfAvailable({String? accessToken, String? refreshToken, String? name,String? userId}) async {
     if (accessToken != null && accessToken.isNotEmpty) {
       await _storage.setData(key: AppConstants.accessTokenKey, value: accessToken);
     }
     if (refreshToken != null && refreshToken.isNotEmpty) {
       await _storage.setData(key: AppConstants.tokenKey, value: refreshToken);
     }
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      await _storage.setData(key: AppConstants.userName, value: refreshToken);
+    }
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      await _storage.setData(key: AppConstants.userId, value: refreshToken);
+    }
   }
   Future<void> signUpWithGoogle() async {
-    emit(RegisterLoadingState());
+    emit(RegisterWithGoogleLoadingState());
 
     if (kIsWeb) {
       // For web, initiate OAuth flow
@@ -92,6 +102,9 @@ class RegisterCubit extends Cubit<RegisterStates> {
   Future<void> _clearTokens() async {
     await _storage.removeData(AppConstants.accessTokenKey);
     await _storage.removeData(AppConstants.tokenKey);
+    await _storage.removeData(AppConstants.userId);
+    await _storage.removeData(AppConstants.userName);
+
   }
   Future<void> checkInitialAuthState() async {
     if (!kIsWeb) return;
@@ -114,7 +127,7 @@ class RegisterCubit extends Cubit<RegisterStates> {
   }
 
   Future<void> _handleOAuthSuccess(Session session) async {
-    emit(RegisterLoadingState());
+    emit(RegisterWithGoogleLoadingState());
     final user = session.user;
     final userModel = UserModel(
       id: user.id,
@@ -129,7 +142,11 @@ class RegisterCubit extends Cubit<RegisterStates> {
           (_) async {
         final refresh = session.refreshToken ?? '';
         if (refresh.isNotEmpty) {
-          _saveTokensIfAvailable(accessToken:session.accessToken,refreshToken: session.refreshToken );
+          _saveTokensIfAvailable(accessToken:session.accessToken,
+              refreshToken: session.refreshToken,
+            userId: session.user.id,
+            name: session.user.userMetadata?['full_name'] ?? session.user.userMetadata?['name'] ?? '',
+          );
         }
         emit(RegisterSuccessState(userModel));
       },

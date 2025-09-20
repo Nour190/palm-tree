@@ -144,7 +144,7 @@ class _ReviewsState extends State<Reviews> {
             if (widget.isLoading)
               Padding(
                 padding: EdgeInsets.only(bottom: 8.sH),
-                child: const LinearProgressIndicator(minHeight: 2),
+                child:  LinearProgressIndicator(minHeight: 2,color: AppColor.primaryColor,),
               ),
             SizedBox(
               height: _getContentHeight(context),
@@ -254,9 +254,7 @@ class _HeaderRow extends StatelessWidget {
             'What people are saying',
             textAlign: TextAlign.left,
             style:
-                (isDesktop
-                        ? (styles.headline28BoldInter)
-                        : styles.headline20BoldInter)
+                (styles.headline20BoldInter)
                     .copyWith(color: AppColor.whiteCustom, height: 1.15),
           ),
         ),
@@ -523,36 +521,52 @@ class _DesktopLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     final avatarSize = 80.sH;
 
-    return Row(
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         _ReviewAvatar(
           name: review.name,
           gender: review.gender,
           avatarUrl: review.avatarUrl,
-          overrideSize: avatarSize,
         ),
-        SizedBox(width: 18.sW),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Wrap(
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 10.sW,
-                runSpacing: 6.sH,
-                children: [
-                  _ReviewerName(name: review.name, alignLeft: true),
-                  _RatingStars(rating: review.rating),
-                ],
-              ),
-              SizedBox(height: 12.sH),
-              _QuoteText(text: review.textEn, alignLeft: true, maxLines: 4),
-            ],
-          ),
-        ),
+        SizedBox(height: 14.sH),
+        _ReviewerName(name: review.name),
+        SizedBox(height: 10.sH),
+        _RatingStars(rating: review.rating),
+        SizedBox(height: 16.sH),
+        _QuoteText(text: review.textEn, maxLines: 5),
       ],
     );
+    //   Row(
+    //   children: [
+    //     _ReviewAvatar(
+    //       name: review.name,
+    //       gender: review.gender,
+    //       avatarUrl: review.avatarUrl,
+    //       overrideSize: avatarSize,
+    //     ),
+    //     SizedBox(width: 18.sW),
+    //     Expanded(
+    //       child: Column(
+    //         crossAxisAlignment: CrossAxisAlignment.start,
+    //         mainAxisAlignment: MainAxisAlignment.center,
+    //         children: [
+    //           Wrap(
+    //             crossAxisAlignment: WrapCrossAlignment.center,
+    //             spacing: 10.sW,
+    //             runSpacing: 6.sH,
+    //             children: [
+    //               _ReviewerName(name: review.name, alignLeft: true),
+    //               _RatingStars(rating: review.rating),
+    //             ],
+    //           ),
+    //           SizedBox(height: 12.sH),
+    //           _QuoteText(text: review.textEn, alignLeft: true, maxLines: 4),
+    //         ],
+    //       ),
+    //     ),
+    //   ],
+    // );
   }
 }
 
@@ -571,36 +585,36 @@ class _ReviewAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size =
-        overrideSize ?? (Responsive.isDesktop(context) ? 120.sH : 100.sH);
+   final size =
+        overrideSize ?? (Responsive.isDesktop(context) ? 100.sH : 80.sH);
 
     return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: Colors.white,
-          width: Responsive.isDesktop(context) ? 4.sW : 3.sW,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 20.sH,
-            offset: Offset(0, 10.sH),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Image.network(
-        avatarUrl,
-        fit: BoxFit.cover,
-        // Graceful fallback to initials if network image fails
-        errorBuilder: (context, error, stackTrace) => _fallback(size, context),
-        // Let the framework cache; avoid aggressive filters here
-        // You can add headers if you host behind auth/CDN later.
-      ),
-    );
+   width: 65.sW,
+   height: 90.sH,
+   decoration: BoxDecoration(
+     shape: BoxShape.circle,
+     // border: Border.all(
+     //   color: Colors.white,
+     //   //width: Responsive.isDesktop(context) ? 1.sW : 1.sW,
+     // ),
+     boxShadow: [
+       BoxShadow(
+         color: Colors.black.withOpacity(0.3),
+         blurRadius: 20.sH,
+         offset: Offset(0, 10.sH),
+       ),
+     ],
+   ),
+   child: ClipOval(
+     child: Image.network(
+       avatarUrl,
+       fit: BoxFit.cover,
+       errorBuilder: (context, error, stackTrace) =>
+           _fallback(size, context),
+     ),
+   ),
+   );
+
   }
 
   Widget _fallback(double size, BuildContext context) {
@@ -645,9 +659,8 @@ class _ReviewerName extends StatelessWidget {
     final styles = TextStyleHelper.instance;
     final desktop = Responsive.isDesktop(context);
 
-    final style = desktop
-        ? (styles.headline28BoldInter)
-        : styles.headline20BoldInter;
+    final style =
+      styles.title18BoldInter;
 
     return Text(
       name,
@@ -673,10 +686,7 @@ class _QuoteText extends StatelessWidget {
     final styles = TextStyleHelper.instance;
     final desktop = Responsive.isDesktop(context);
 
-    final base = desktop
-        ? (styles.body18MediumInter)
-        : (styles.body18MediumInter);
-
+    final base = styles.body14MediumInter;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

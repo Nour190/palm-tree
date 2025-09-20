@@ -25,43 +25,68 @@ class TabsViewScreen extends StatelessWidget {
 class _TabsViewBody extends StatelessWidget {
   const _TabsViewBody();
 
+  int _selectedIndexFrom(BuildContext context, TabsState state) {
+    // Prefer the value carried by the state; fall back to cubit's field.
+    if (state is SelectedIndexChanged) return state.selectedIndex;
+    return context.read<TabsCubit>().selectedIndex;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            SizedBox(height: Responsive.deviceTypeOf(context) == DeviceType.desktop ? 0 : 16.h),
+            SizedBox(
+              height: Responsive.deviceTypeOf(context) == DeviceType.desktop
+                  ? 0
+                  : 16.h,
+            ),
 
             // ---------------- Top element in the view ----------------
             BlocBuilder<TabsCubit, TabsState>(
-              buildWhen: (p, c) => p.topIndex != c.topIndex,
               builder: (context, state) {
                 final devType = Responsive.deviceTypeOf(context);
+                final selectedIndex = _selectedIndexFrom(context, state);
 
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     devType == DeviceType.desktop
                         ? DesktopTopBar(
-                      items: const ['Home', 'Events', 'Maps', 'Language',"Profile"],
-                      selectedIndex: state.topIndex,
-                      onItemTap: context.read<TabsCubit>().selectTop,
-                      onLoginTap: () {},
-                      showScanButton: true,
-                      onScanTap: () {},
-                    )
+                            items: const [
+                              'Home',
+                              'Events',
+                              'Maps',
+                              'Language',
+                              'Profile',
+                            ],
+                            selectedIndex: selectedIndex,
+                            onItemTap: context
+                                .read<TabsCubit>()
+                                .changeSelectedIndex,
+                            onLoginTap: () {},
+                            showScanButton: true,
+                            onScanTap: () {},
+                          )
                         : Padding(
-                          padding:  EdgeInsets.symmetric(horizontal: 8.0.sW),
-                          child: TopBar(
-                                                items: const ['Home', 'Events', 'Maps', 'Language'],
-                                                selectedIndex: state.topIndex,
-                                                onItemTap: context.read<TabsCubit>().selectTop,
-                                                onLoginTap: () {},
-                                                showScanButton: true,
-                                                onScanTap: () {},
-                                              ),
-                        ),
+                            padding: EdgeInsets.symmetric(horizontal: 8.0.sW),
+                            child: TopBar(
+                              items: const [
+                                'Home',
+                                'Events',
+                                'Maps',
+                                'Language',
+                              ],
+                              selectedIndex: selectedIndex,
+                              onItemTap: context
+                                  .read<TabsCubit>()
+                                  .changeSelectedIndex,
+                              onLoginTap: () {},
+                              showScanButton: true,
+                              onScanTap: () {},
+                            ),
+                          ),
                     if (devType != DeviceType.desktop)
                       Divider(
                         height: 1,
@@ -73,12 +98,12 @@ class _TabsViewBody extends StatelessWidget {
               },
             ),
 
-            // ---------------- Body switches by topIndex ----------------
+            // ---------------- Body switches by selectedIndex ----------------
             Expanded(
               child: BlocBuilder<TabsCubit, TabsState>(
-                buildWhen: (p, c) => p.topIndex != c.topIndex,
                 builder: (context, state) {
-                  return _bodyForTopIndex(state.topIndex);
+                  final selectedIndex = _selectedIndexFrom(context, state);
+                  return _bodyForSelectedIndex(selectedIndex);
                 },
               ),
             ),
@@ -89,17 +114,17 @@ class _TabsViewBody extends StatelessWidget {
   }
 }
 
-Widget _bodyForTopIndex(int topIndex) {
-  switch (topIndex) {
+Widget _bodyForSelectedIndex(int selectedIndex) {
+  switch (selectedIndex) {
     case 0: // Home
-      return HomeView();
+      return const HomeView();
     case 1: // Events
       return const EventsScreenResponsive();
     case 2: // Maps
       return const SizedBox.shrink();
     case 3: // Language
       return const SizedBox.shrink();
-    case 4: // Language
+    case 4: // Profile (desktop-only item)
       return const ProfileScreen();
     default:
       return const HomeView();

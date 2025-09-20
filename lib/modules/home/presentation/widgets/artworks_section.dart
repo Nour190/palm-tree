@@ -233,7 +233,7 @@ class ArtworksSection extends StatelessWidget {
 // HORIZONTAL STRIP (shared by all devices)
 // ============================================================================
 class _HorizontalStrip extends StatelessWidget {
-  const _HorizontalStrip({
+   _HorizontalStrip({
     required this.height,
     required this.itemWidth,
     required this.spacing,
@@ -246,19 +246,26 @@ class _HorizontalStrip extends StatelessWidget {
   final double spacing;
   final int itemCount;
   final Widget Function(BuildContext, int) itemBuilder;
+   final ScrollController _scrollController = ScrollController();
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: height,
-      child: ListView.separated(
-        padding: EdgeInsets.zero,
-        scrollDirection: Axis.horizontal,
-        itemCount: itemCount,
-        separatorBuilder: (_, __) => SizedBox(width: spacing),
-        itemBuilder: (context, index) => RepaintBoundary(
-          key: ValueKey('artwork-horizontal-$index'),
-          child: SizedBox(width: itemWidth, child: itemBuilder(context, index)),
+      child: Scrollbar(
+        controller: _scrollController,
+        thumbVisibility: true,
+        child: ListView.separated(
+          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+          controller: _scrollController,
+          padding: EdgeInsets.zero,
+          scrollDirection: Axis.horizontal,
+          itemCount: itemCount,
+          separatorBuilder: (_, __) => SizedBox(width: spacing),
+          itemBuilder: (context, index) => RepaintBoundary(
+            key: ValueKey('artwork-horizontal-$index'),
+            child: SizedBox(width: itemWidth, child: itemBuilder(context, index)),
+          ),
         ),
       ),
     );

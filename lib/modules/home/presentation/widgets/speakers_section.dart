@@ -92,18 +92,18 @@ class SpeakersSection extends StatelessWidget {
             ? 20.sW
             : 16.sW;
         final heroImageHeight = isDesktop
-            ? 420.sH
+            ? 330.sH
             : isTablet
-            ? 380.sH
-            : 320.sH;
+            ? 300.sH
+            : 280.sH;
         final emblemSize = isDesktop
-            ? 82.sH
+            ? 75.sH
             : isTablet
-            ? 76.sH
-            : 72.sH;
+            ? 55.sH
+            : 50.sH;
 
         final gap = 16.sW;
-        final wrapCtaToColumn = w < 520; // tight phones
+       // final wrapCtaToColumn = w < 520; // tight phones
 
         return Column(
           children: [
@@ -146,7 +146,7 @@ class SpeakersSection extends StatelessWidget {
                       desktop: true,
                     ),
                   ),
-                  SizedBox(width: gap),
+                 SizedBox(width: gap),
                   Expanded(
                     flex: 2,
                     child: ClipRRect(
@@ -155,7 +155,7 @@ class SpeakersSection extends StatelessWidget {
                         imagePath: _sidePath,
                         height: heroImageHeight,
                         width: double.infinity,
-                        fit: BoxFit.cover,
+                        fit: BoxFit.contain,
                       ),
                     ),
                   ),
@@ -215,6 +215,8 @@ class _HeroTextCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final devType = Responsive.deviceTypeOf(context);
+
     return Container(
       padding: EdgeInsets.all(paddingAll),
       decoration: BoxDecoration(
@@ -226,24 +228,26 @@ class _HeroTextCard extends StatelessWidget {
         children: [
           // Emblem
           Padding(
-            padding: EdgeInsets.only(top: desktop ? 40.sH : 28.sH, left: 10.sW),
+            padding: EdgeInsets.only(top:  devType == DeviceType.desktop ?  40.sH : 35.sH, left:  devType == DeviceType.desktop ? 10.sW:0),
             child: CustomImageView(
               imagePath: emblemPath,
               height: emblemSize,
               width: emblemSize,
             ),
           ),
-          SizedBox(height: desktop ? 28.sH : 22.sH),
+          SizedBox(height:  devType == DeviceType.desktop ?  28.sH : 20.sH),
 
           // Headline (constrained for readability on wide layouts)
           ConstrainedBox(
             constraints: BoxConstraints(maxWidth: desktop ? 560.sW : 520.sW),
             child: Text(
               headline,
-              style: TextStyleHelper.instance.headline32MediumInter.copyWith(
-                height: 1.35,
+              style: TextStyleHelper.instance.headline24MediumInter.copyWith(
+                height: 1.3,
+                color: Colors.white,
+                  fontSize:  devType == DeviceType.desktop ? 24.sSp : 16.sSp
                 // Optional: use Responsive.responsiveFontSize if you want extra tuning
-                fontSize: Responsive.responsiveFontSize(context, 32).sSp,
+                //fontSize: Responsive.responsiveFontSize(context, 32).sSp,
               ),
             ),
           ),
@@ -251,16 +255,17 @@ class _HeroTextCard extends StatelessWidget {
 
           // Body
           ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: desktop ? 640.sW : 560.sW),
+            constraints: BoxConstraints(maxWidth:  devType == DeviceType.desktop ?  640.sW : 560.sW),
             child: Text(
               body,
-              style: TextStyleHelper.instance.title16LightInter.copyWith(
+              style: TextStyleHelper.instance.body14LightInter.copyWith(
                 color: AppColor.whiteCustom,
                 height: 1.5,
+                fontSize:  devType == DeviceType.desktop ? 14.sSp:12.sSp
               ),
             ),
           ),
-          SizedBox(height: desktop ? 40.sH : 28.sH),
+          SizedBox(height:  devType == DeviceType.desktop  ? 40.sH : 15.sH),
         ],
       ),
     );

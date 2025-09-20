@@ -166,25 +166,29 @@ class _ArtistsSectionState extends State<ArtistsSection> {
       onExit: (_) => widget.enableAutoPlay ? _startAutoPlay() : null,
       child: SizedBox(
         height: h,
-        child: ListView.separated(
+        child: Scrollbar(
           controller: _scrollController,
-          padding: EdgeInsets.symmetric(horizontal: 16.0.sW),
-          scrollDirection: Axis.horizontal,
-          itemCount: widget.artists.length,
-          physics: const BouncingScrollPhysics(
-            parent: AlwaysScrollableScrollPhysics(),
-          ),
-          separatorBuilder: (_, __) => SizedBox(width: _spacing(d)),
-          itemBuilder: (context, index) => RepaintBoundary(
-            key: ValueKey('artist-${widget.artists[index].id}-$index'),
-            child: _EnhancedArtistCard(
-              artist: widget.artists[index],
-              index: index,
-              width: w,
-              height: h,
-              avatarSize: _avatarSize(d),
-              onTap: widget.onArtistTap,
-              deviceType: d,
+          thumbVisibility: true, // for desktop to always show
+          child: ListView.separated(
+            controller: _scrollController,
+            padding: EdgeInsets.symmetric(horizontal: 16.0.sW),
+            scrollDirection: Axis.horizontal,
+            itemCount: widget.artists.length,
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+            ),
+            separatorBuilder: (_, __) => SizedBox(width: _spacing(d)),
+            itemBuilder: (context, index) => RepaintBoundary(
+              key: ValueKey('artist-${widget.artists[index].id}-$index'),
+              child: _EnhancedArtistCard(
+                artist: widget.artists[index],
+                index: index,
+                width: w,
+                height: h,
+                avatarSize: _avatarSize(d),
+                onTap: widget.onArtistTap,
+                deviceType: d,
+              ),
             ),
           ),
         ),

@@ -6,12 +6,13 @@ class NetworkImageSmart extends StatelessWidget {
   final String? path;
   final BoxFit fit;
   final BorderRadius? radius;
-
+  final Alignment? alignment;
   const NetworkImageSmart({
     super.key,
     required this.path,
     this.fit = BoxFit.cover,
     this.radius,
+    this.alignment=Alignment.center
   });
 
   bool _isNet(String p) => p.startsWith('http://') || p.startsWith('https://');
@@ -26,6 +27,7 @@ class NetworkImageSmart extends StatelessWidget {
       borderRadius: r,
       child: _isNet(src)
           ? Image.network(
+        alignment: alignment??Alignment.center,
               src,
               fit: fit,
               loadingBuilder: (context, child, loadingProgress) {
@@ -35,6 +37,7 @@ class NetworkImageSmart extends StatelessWidget {
               errorBuilder: (context, error, stackTrace) => _errorIcon(),
             )
           : Image.asset(src, fit: fit),
+
     );
   }
 

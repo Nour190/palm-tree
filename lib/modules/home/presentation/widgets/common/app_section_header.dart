@@ -42,7 +42,7 @@ class AppSectionHeader extends StatelessWidget {
           letterSpacing: -0.02,
         );
       } else if (isTablet) {
-        titleStyle = styles.headline32BoldInter.copyWith(
+        titleStyle = styles.headline24BoldInter.copyWith(
           color: AppColor.gray900,
           height: 1.2,
           letterSpacing: -0.01,
@@ -83,23 +83,23 @@ class AppSectionHeader extends StatelessWidget {
     // Enhanced subtitle styles with better line height and spacing
     final TextStyle subtitleStyle;
     if (isDesktop) {
-      subtitleStyle = styles.title18LightInter.copyWith(
+      subtitleStyle = styles.title16LightInter.copyWith(
         color: AppColor.gray700,
         height: 1.6,
         letterSpacing: 0.01,
       );
     } else if (isTablet) {
-      subtitleStyle = styles.title18LightInter.copyWith(
+      subtitleStyle = styles.body14LightInter.copyWith(
         color: AppColor.gray700,
         height: 1.55,
-        fontSize: 17.0,
+      //  fontSize: 17.0,
       );
     } else {
       final fontSize = screenWidth < 375 ? 15.0 : 16.0;
-      subtitleStyle = styles.title18LightInter.copyWith(
+      subtitleStyle = styles.body14LightInter.copyWith(
         color: AppColor.gray700,
         height: 1.5,
-        fontSize: fontSize,
+    //    fontSize: fontSize,
       );
     }
 
@@ -127,7 +127,7 @@ class AppSectionHeader extends StatelessWidget {
             child: Text(
               subtitle!,
               style: subtitleStyle,
-              maxLines: 5,
+              maxLines: 4,
               overflow: TextOverflow.ellipsis,
             ),
           ),

@@ -7,6 +7,7 @@ import 'package:baseqat/modules/profile/presentation/widgets/likes_tab_widget.da
 import 'package:baseqat/modules/profile/presentation/widgets/chat_tab_widget.dart';
 import 'package:baseqat/modules/profile/presentation/widgets/notification_tab_widget.dart';
 import 'package:baseqat/modules/profile/presentation/widgets/settings_tab_widget.dart';
+import 'package:baseqat/modules/profile/presentation/widgets/privacy_tab_widget.dart';
 import 'package:flutter/material.dart';
 
 class ProfileMobileTabletLayout extends StatelessWidget {
@@ -36,7 +37,7 @@ class ProfileMobileTabletLayout extends StatelessWidget {
             ProfileTabNavigationWidget(
               selectedTabIndex: selectedTabIndex,
               onTabTap: onTabChanged,
-              tabs: const ['Likes', 'Chat', 'Notification', 'Settings'],
+              tabs: const ['Likes', 'Chat', 'Notification', 'Privacy', 'Settings'],
             ),
 
             Expanded(
@@ -63,7 +64,8 @@ class ProfileMobileTabletLayout extends StatelessWidget {
       case 0: return const LikesTabWidget();
       case 1: return const ChatTabWidget();
       case 2: return const NotificationTabWidget();
-      case 3: return const SettingsTabWidget();
+      case 3: return const PrivacyTabWidget();
+      case 4: return const SettingsTabWidget();
       default: return const SizedBox.shrink();
     }
   }

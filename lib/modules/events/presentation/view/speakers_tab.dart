@@ -359,7 +359,7 @@ class _SliceHeader extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: onPrev7,
-                    icon: const Icon(Icons.chevron_left, size: 16),
+                    icon: const Icon(Icons.chevron_left, size: 16,color:AppColor.blueGray100),
                     label:  Text('Prev 7',style: TextStyleHelper.instance.body14RegularInter,),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -398,7 +398,7 @@ class _SliceHeader extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: onPrev7,
                   icon: const Icon(Icons.chevron_left, size: 16),
-                  label: const Text('Prev 7'),
+                  label:  Text('Prev 7',style: TextStyleHelper.instance.body14RegularInter,),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     side: BorderSide(color: AppColor.blueGray100),
@@ -410,7 +410,7 @@ class _SliceHeader extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: onNext7,
                   icon: const Icon(Icons.chevron_right, size: 16),
-                  label: const Text('Next 7'),
+                  label:  Text('Next 7',style: TextStyleHelper.instance.body14RegularInter,),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     side: BorderSide(color: AppColor.blueGray100),

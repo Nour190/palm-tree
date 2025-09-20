@@ -42,7 +42,7 @@ class _ArtistTabContentState extends State<ArtistTabContent> {
   @override
   Widget build(BuildContext context) {
     final items = widget.artists;
-
+    Responsive.init(context);
     return Column(
       children: [
         Expanded(
@@ -70,14 +70,35 @@ class _ArtistTabContentState extends State<ArtistTabContent> {
   Widget _buildContent(List<Artist> items) {
     return _isDesktop ? _buildDesktopGrid(items) : _buildMobileList(items);
   }
+  double _gridChildAspectRatio(BuildContext context) {
+    final w = MediaQuery.of(context).size.width;
+
+    if (Responsive.isDesktop(context)) {
+      if (w >= 1400) {
+        return 0.95;
+      } else if (w >= 1200) {
+        return 0.85;
+      } else if (w >= 1000) {
+        return 0.75;
+      } else {
+        return 0.55;
+      }
+    } else if (Responsive.isTablet(context)) {
+      if (w >= 900) return 0.85;
+      return 0.95;
+    } else {
+      return 0.9;
+    }
+  }
 
   Widget _buildDesktopGrid(List<Artist> items) {
+    final aspect = _gridChildAspectRatio(context);
     return GridView.builder(
       physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.symmetric(horizontal: 24.h, vertical: 16.h),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
-        childAspectRatio: 0.85,
+        childAspectRatio: aspect,
         crossAxisSpacing: 20.h,
         mainAxisSpacing: 20.h,
       ),

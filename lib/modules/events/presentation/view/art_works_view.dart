@@ -99,7 +99,7 @@ class _ArtWorksGalleryContentState extends State<ArtWorksGalleryContent>
                     ArtWorkDetailsScreen(
                       artworkId: a.id,
                       userId: "d0030cf6-3830-47e8-9ca4-a2d00d51427a",
-                      onBack: () => Navigator.pop(context),
+                  //    onBack: () => Navigator.pop(context),
                     ),
                   );
                 },
@@ -135,7 +135,7 @@ class _ArtWorksGalleryContentState extends State<ArtWorksGalleryContent>
                     ArtWorkDetailsScreen(
                       artworkId: a.id,
                       userId: "d0030cf6-3830-47e8-9ca4-a2d00d51427a",
-                      onBack: () => Navigator.pop(context),
+                      //onBack: () => Navigator.pop(context),
                     ),
                   );
                 },

@@ -155,7 +155,11 @@ class LoginCubit extends Cubit<LoginStates> {
     result.fold(
           (failure) => emit(LoginErrorState(failure.errorMessage)),
           (session) async {
-        await _saveTokensIfAvailable(accessToken: session.accessToken, refreshToken: session.refreshToken);
+        await _saveTokensIfAvailable(accessToken: session.accessToken,
+            refreshToken: session.refreshToken,
+          userId: session.user.id,
+          name: session.user.userMetadata?['full_name'] ?? session.user.userMetadata?['name'] ?? '',
+        );
         emit(LoginSuccessState(session.refreshToken!));
       },
     );
@@ -173,7 +177,7 @@ class LoginCubit extends Cubit<LoginStates> {
           },
         );
       } else {
-        emit(LoginLoadingState());
+        emit(LoginWithGoogleLoadingState());
         final res = await authRepo.mobileGoogleSignIn();
         res.fold(
               (failure) => emit(LoginErrorState(failure.errorMessage)),
@@ -181,6 +185,8 @@ class LoginCubit extends Cubit<LoginStates> {
             await _saveTokensIfAvailable(
               accessToken: session.accessToken,
               refreshToken: session.refreshToken,
+              userId: session.user.id,
+              name:  session.user.userMetadata?['full_name'] ?? session.user.userMetadata?['name'] ?? '',
             );
             emit(LoginSuccessState(session.refreshToken ?? ''));
           },
@@ -212,6 +218,8 @@ class LoginCubit extends Cubit<LoginStates> {
     await _saveTokensIfAvailable(
       accessToken: session.accessToken,
       refreshToken: session.refreshToken,
+      userId: session.user.id,
+      name: session.user.userMetadata?['full_name'] ?? session.user.userMetadata?['name'] ?? '',
     );
     emit(LoginSuccessState(session.refreshToken ?? ''));
   }
@@ -238,25 +246,36 @@ class LoginCubit extends Cubit<LoginStates> {
   }
 
   // ------------ Token storage helpers ------------
-  Future<void> _saveTokensIfAvailable({String? accessToken, String? refreshToken}) async {
+  Future<void> _saveTokensIfAvailable({String? accessToken,String? refreshToken, String? userId, String? name}) async {
     if (accessToken != null && accessToken.isNotEmpty) {
       await _storage.setData(key: AppConstants.accessTokenKey, value: accessToken);
     }
     if (refreshToken != null && refreshToken.isNotEmpty) {
       await _storage.setData(key: AppConstants.tokenKey, value: refreshToken);
     }
+
+if (refreshToken != null && refreshToken.isNotEmpty) {
+await _storage.setData(key: AppConstants.userName, value: refreshToken);
+}
+if (refreshToken != null && refreshToken.isNotEmpty) {
+await _storage.setData(key: AppConstants.userId, value: refreshToken);
+}
+
+
   }
 
   Future<void> _clearTokens() async {
     await _storage.removeData(AppConstants.accessTokenKey);
     await _storage.removeData(AppConstants.tokenKey);
+    await _storage.removeData(AppConstants.userId);
+    await _storage.removeData(AppConstants.userName);
   }
 
   /// Public for manual saving (if needed)
-  Future<void> saveTokenDirectly(String token) async {
-    await _storage.setData(key: AppConstants.tokenKey, value: token);
-    emit(LoginSuccessState(token));
-  }
+  // Future<void> saveTokenDirectly(String token) async {
+  //   await _storage.setData(key: AppConstants.tokenKey, value: token);
+  //   emit(LoginSuccessState(token));
+  // }
 
   void resetState() => emit(LoginInitialState());
 

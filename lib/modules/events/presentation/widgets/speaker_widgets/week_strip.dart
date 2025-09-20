@@ -67,7 +67,7 @@ class WeekStrip extends StatelessWidget {
                     onTap: () => onDaySelected(i),
                     child: Container(
                       padding: EdgeInsets.symmetric(
-                        horizontal: isDesktop ? 16 : 12,
+                        horizontal: isDesktop ? 14 : 12,
                         vertical: isDesktop ? 12 : 8,
                       ),
                       decoration: BoxDecoration(
@@ -89,7 +89,7 @@ class WeekStrip extends StatelessWidget {
                       child: Text(
                         '${week.dates[i]}',
                         style: TextStyleHelper.instance.body14MediumInter.copyWith(
-                         // fontSize: isDesktop ? 16 : 14,
+                         fontSize: isDesktop ? 9 : 14,
                           color: isSelected ? Colors.white : AppColor.black,
                         ),
                       ),

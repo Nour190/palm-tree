@@ -3,6 +3,8 @@ abstract class LoginStates {}
 class LoginInitialState extends LoginStates {}
 
 class LoginLoadingState extends LoginStates {}
+class LoginWithGoogleLoadingState extends LoginStates {}
+
 class LoginRedirectingState extends LoginStates {}
 class LoginSuccessState extends LoginStates {
   final String token;

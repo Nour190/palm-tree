@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:baseqat/core/resourses/style_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:baseqat/core/responsive/responsive.dart';
@@ -102,7 +103,7 @@ class _ResponsiveGalleryState extends State<ResponsiveGallery>
                       onPressed: widget.onSeeMore,
                       child: Text(
                         'See more',
-                        style: TextStyle(fontSize: 14.sSp),
+                        style: TextStyleHelper.instance.body14RegularInter,
                       ),
                     ),
                 ],
@@ -125,7 +126,6 @@ class _ResponsiveGalleryState extends State<ResponsiveGallery>
                 final url = widget.imageUrls[index];
                 final heroTag = _heroTag(url, index);
                 final isHovered = _hoveredIndex == index;
-
                 return MouseRegion(
                   onEnter: (_) => setState(() => _hoveredIndex = index),
                   onExit: (_) => setState(() => _hoveredIndex = null),

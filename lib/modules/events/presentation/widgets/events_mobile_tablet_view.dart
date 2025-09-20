@@ -19,6 +19,9 @@ import '../view/speakers_info_view.dart';
 import '../view/speakers_tab.dart';
 import '../view/gallery_tav_view.dart';
 import 'month_data.dart';
+import '../manger/search_cubit.dart';
+import '../manger/search_state.dart';
+import 'search_filter_panel.dart';
 
 class EventsMobileTabletView extends StatefulWidget {
   const EventsMobileTabletView({super.key});
@@ -50,6 +53,7 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
         );
       }
     });
+    context.read<SearchCubit>().updateTabIndex(index);
   }
 
   @override
@@ -57,8 +61,11 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
     final client = Supabase.instance.client;
     final repo = EventsRepositoryImpl(EventsRemoteDataSourceImpl(client));
 
-    return BlocProvider(
-      create: (_) => EventsCubit(repo)..loadAll(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => EventsCubit(repo)..loadAll()),
+        BlocProvider(create: (_) => SearchCubit()),
+      ],
       child: Container(
         color: AppColor.white,
         child: SafeArea(
@@ -66,80 +73,75 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: 16.h),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.h),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Column(
-                    //   crossAxisAlignment: CrossAxisAlignment.start,
-                    //   children: [
-                    //     Text(
-                    //       'Discover',
-                    //       style: TextStyle(
-                    //         fontSize: 28.fSize,
-                    //         fontWeight: FontWeight.bold,
-                    //         color: AppColor.gray900,
-                    //         height: 1.2,
-                    //       ),
-                    //     ),
-                    //     SizedBox(height: 4.h),
-                    //     Text(
-                    //       'What do you want to see today?',
-                    //       style: TextStyle(
-                    //         fontSize: 16.fSize,
-                    //         color: AppColor.gray600,
-                    //         height: 1.4,
-                    //       ),
-                    //     ),
-                    //   ],
-                    // ),
-                    // SizedBox(height: 20.h),
-                    Container(
-                      height: 60.sH,
-                      decoration: BoxDecoration(
-                        color: AppColor.gray50,
-                        borderRadius: BorderRadius.circular(20.r),
-                        border: Border.all(
-                          color: AppColor.gray200,
-                          width: 1,
-                        ),
-                      ),
-                      child: TextField(
-                        controller: searchController,
-                        decoration: InputDecoration(
-                          hintText: 'Search events, artists, artworks...',
-                          hintStyle: TextStyle(
-                            color: AppColor.gray500,
-                            fontSize: 14.sSp,
-                          ),
-                          prefixIcon: Padding(
-                            padding: EdgeInsets.all(12.h),
-                            child: Image.asset(
-                              AppAssetsManager.imgSearch,
-                              width: 15.sW,
-                              height: 15.sH,
-                              color: AppColor.gray500,
+              BlocBuilder<SearchCubit, SearchState>(
+                builder: (context, searchState) {
+                  final isSearchVisible = searchState is SearchLoaded
+                      ? searchState.isSearchBarVisible
+                      : _selectedIndex != 2; // Hide for speakers tab
+
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    height: isSearchVisible ? null : 0,
+                    child: isSearchVisible ? Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.h),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            height: 60.sH,
+                            decoration: BoxDecoration(
+                              color: AppColor.gray50,
+                              borderRadius: BorderRadius.circular(20.r),
+                              border: Border.all(
+                                color: AppColor.gray200,
+                                width: 1,
+                              ),
+                            ),
+                            child: TextField(
+                              controller: searchController,
+                              onChanged: (query) {
+                                context.read<SearchCubit>().updateSearchQuery(query);
+                              },
+                              decoration: InputDecoration(
+                                hintText: 'Search events, artists, artworks...',
+                                hintStyle: TextStyle(
+                                  color: AppColor.gray500,
+                                  fontSize: 14.sSp,
+                                ),
+                                prefixIcon: Padding(
+                                  padding: EdgeInsets.all(12.h),
+                                  child: Image.asset(
+                                    AppAssetsManager.imgSearch,
+                                    width: 15.sW,
+                                    height: 15.sH,
+                                    color: AppColor.gray500,
+                                  ),
+                                ),
+                                suffixIcon: IconButton(
+                                  onPressed: () {
+                                    SearchFilterPanel.showFilterBottomSheet(context);
+                                  },
+                                  icon: Icon(
+                                    Icons.tune,
+                                    color: searchState is SearchLoaded && searchState.isFilterVisible
+                                        ? AppColor.primaryColor
+                                        : AppColor.gray500,
+                                    size: 15.sSp,
+                                  ),
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16.sW,
+                                  vertical: 28.sH,
+                                ),
+                              ),
                             ),
                           ),
-                          suffixIcon: IconButton(
-                            onPressed: () {},
-                            icon: Icon(
-                              Icons.tune,
-                              color: AppColor.gray500,
-                              size: 15.sSp,
-                            ),
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 16.sW,
-                            vertical: 28.sH,
-                          ),
-                        ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
+                    ) : const SizedBox.shrink(),
+                  );
+                },
               ),
               SizedBox(height: 15.sH),
               EventsCategoryChips(
@@ -149,13 +151,20 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
                 animationDuration: const Duration(milliseconds: 250),
                 height: 60.sH,
               ),
-          //    SizedBox(height: 16.h),
               Expanded(
                 child: BlocConsumer<EventsCubit, EventsState>(
                   listener: (context, state) {
                     if (state is EventsError) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text(state.message)),
+                      );
+                    }
+                    if (state is EventsLoaded) {
+                      context.read<SearchCubit>().initializeData(
+                        artists: state.artists,
+                        artworks: state.artworks,
+                        speakers: state.speakers,
+                        gallery: state.gallery,
                       );
                     }
                   },
@@ -182,36 +191,75 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
   }
 
   Widget _buildTabBody(EventsLoaded s) {
-    switch (_selectedIndex) {
-      case 0:
-        return ArtWorksGalleryContent(
-          artworks: s.artworks,
-          onArtworkTap: (art) {},
-        );
-      case 1:
-        return ArtistTabContent(artists: s.artists);
-      case 2:
-        return MonthWidget(
-          builder: (context, monthData) {
-            return SpeakersTabContent(
-              headerTitle: "Festival Schedule",
-              monthLabel: monthData.monthLabel,
-              currentMonth: monthData.currentMonth,
-              week: monthData.week,
-              speakers: s.speakers,
-              ctaSubtitle: "Don't miss the exciting sessions on dates and palm cultivation.",ctaTitle: "We look forward to seeing youtomorrow",
-              onNextMonth: monthData.nextMonth,
-              onPrevMonth: monthData.prevMonth,
+    return BlocBuilder<SearchCubit, SearchState>(
+      builder: (context, searchState) {
+        if (searchState is SearchLoaded && searchState.isSearching) {
+          switch (_selectedIndex) {
+            case 0:
+              return ArtWorksGalleryContent(
+                artworks: searchState.filteredArtworks,
+                onArtworkTap: (art) {},
+              );
+            case 1:
+              return ArtistTabContent(artists: searchState.filteredArtists);
+            case 2:
+              return MonthWidget(
+                builder: (context, monthData) {
+                  return SpeakersTabContent(
+                    headerTitle: "Festival Schedule",
+                    monthLabel: monthData.monthLabel,
+                    currentMonth: monthData.currentMonth,
+                    week: monthData.week,
+                    speakers: searchState.filteredSpeakers,
+                    ctaSubtitle: "Don't miss the exciting sessions on dates and palm cultivation.",
+                    ctaTitle: "We look forward to seeing you tomorrow",
+                    onNextMonth: monthData.nextMonth,
+                    onPrevMonth: monthData.prevMonth,
+                  );
+                },
+              );
+            case 3:
+              return GalleryGrid(items: searchState.filteredGallery, onTap: (item) {});
+            case 4:
+              return const ComingSoon('Virtual Tour');
+            default:
+              return const SizedBox.shrink();
+          }
+        }
+
+        switch (_selectedIndex) {
+          case 0:
+            return ArtWorksGalleryContent(
+              artworks: s.artworks,
+              onArtworkTap: (art) {},
             );
-          },
-        );
-      case 3:
-        return GalleryGrid(items: s.gallery, onTap: (item) {});
-      case 4:
-        return const ComingSoon('Virtual Tour');
-      default:
-        return const SizedBox.shrink();
-    }
+          case 1:
+            return ArtistTabContent(artists: s.artists);
+          case 2:
+            return MonthWidget(
+              builder: (context, monthData) {
+                return SpeakersTabContent(
+                  headerTitle: "Festival Schedule",
+                  monthLabel: monthData.monthLabel,
+                  currentMonth: monthData.currentMonth,
+                  week: monthData.week,
+                  speakers: s.speakers,
+                  ctaSubtitle: "Don't miss the exciting sessions on dates and palm cultivation.",
+                  ctaTitle: "We look forward to seeing you tomorrow",
+                  onNextMonth: monthData.nextMonth,
+                  onPrevMonth: monthData.prevMonth,
+                );
+              },
+            );
+          case 3:
+            return GalleryGrid(items: s.gallery, onTap: (item) {});
+          case 4:
+            return const ComingSoon('Virtual Tour');
+          default:
+            return const SizedBox.shrink();
+        }
+      },
+    );
   }
 }
 

@@ -278,7 +278,9 @@ class HomeView extends StatelessWidget {
                                   artists: List.from(artistsSel),
                                   isLoading: isRefreshingSel,
                                   onSeeMore: () =>
-                                      context.read<TabsCubit>().selectTop(1),
+                                      context.read<TabsCubit>()
+                                          .changeSelectedIndex(1),
+                                  //.selectTop(1),
                                   seeMoreButtonText: 'Explore More',
                                   onArtistTap: (index) {
                                     navigateTo(
@@ -345,7 +347,9 @@ class HomeView extends StatelessWidget {
                                   showSeeMoreButton: true,
                                   seeMoreButtonText: 'Explore More',
                                   onSeeMore: () =>
-                                      context.read<TabsCubit>().selectTop(1),
+                                      context.read<TabsCubit>()
+                                      .changeSelectedIndex(1),
+                                          //.selectTop(1),
                                   onCardTap: (index) {
                                     navigateTo(
                                       context,
@@ -354,7 +358,7 @@ class HomeView extends StatelessWidget {
                                             (artworksSel[index] as dynamic).id,
                                         userId:
                                             'd0030cf6-3830-47e8-9ca4-a2d00d51427a',
-                                        onBack: () => Navigator.pop(context),
+                                        //onBack: () => Navigator.pop(context),
                                       ),
                                     );
                                   },
@@ -380,9 +384,13 @@ class HomeView extends StatelessWidget {
                         ),
                         child: SpeakersSection(
                           onSeeMore: () =>
-                              context.read<TabsCubit>().selectTop(1),
+                              context.read<TabsCubit>()
+                                  .changeSelectedIndex(1),
+                                  //.selectTop(1),
                           onJoinNow: () =>
-                              context.read<TabsCubit>().selectTop(1),
+                              context.read<TabsCubit>()
+                                  .changeSelectedIndex(1),
+                                  //.selectTop(1),
                           sideImagePath: AppAssetsManager.imgInfo,
                           topEmblemPath: AppAssetsManager.imgVectorWhiteA700,
                           leftEmblemPath: AppAssetsManager.imgGroup,
@@ -403,7 +411,7 @@ class HomeView extends StatelessWidget {
                           enableMarquee: true,
                           speed: 50.0,
                           gap: 50.0,
-                          height: 90.0,
+                          height: 80.0.sH,
                           backgroundColor: Colors.black,
                           showGlow: true,
                           showShimmer: true,
@@ -427,7 +435,9 @@ class HomeView extends StatelessWidget {
                               ResponsiveGallery(
                                 title: 'Gallery',
                                 onSeeMore: () =>
-                                    context.read<TabsCubit>().selectTop(1),
+                                    context.read<TabsCubit>()
+                                        .changeSelectedIndex(1),
+                                        //.selectTop(1),
                                 imageUrls: imagesSel,
                               ),
                               SizedBox(height: sectionGap),

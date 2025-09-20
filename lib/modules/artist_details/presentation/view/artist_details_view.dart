@@ -63,7 +63,7 @@ class _ArtistDetailsViewState extends State<ArtistDetailsView>
                     children: [
                       // Left side - Image
                       Expanded(
-                        flex: 5,
+                        flex: 2,
                         child: ArtistHeader(name: widget.name, image: widget.profileImage),
                       ),
                       SizedBox(width: 48.h),

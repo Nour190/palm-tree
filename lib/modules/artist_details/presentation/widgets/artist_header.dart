@@ -77,27 +77,27 @@ class _ArtistHeaderState extends State<ArtistHeader>
             ),
             SizedBox(height: isMobile ? 20.h : isDesktop ? 40.h : 32.h),
             Container(
-              decoration: BoxDecoration(
+             decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(isMobile ? 20.h : 28.h),
-                 boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
-                    blurRadius: 30,
-                    offset: const Offset(0, 15),
-                    spreadRadius: -5,
-                  ),
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 15,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
+               //  boxShadow: [
+                  // BoxShadow(
+                  //   color: Colors.black.withOpacity(0.15),
+                  //   blurRadius: 30,
+                  //   offset: const Offset(0, 15),
+                  //   spreadRadius: -5,
+                  // ),
+                  // BoxShadow(
+                  //   color: Colors.black.withOpacity(0.08),
+                  //   blurRadius: 15,
+                  //   offset: const Offset(0, 8),
+                  // ),
+               // ],
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(isMobile ? 20.h : 28.h),
                 child: isDesktop
                 ? SizedBox(
-                height: 750.sH,
+                height: 480.sH,
                 width: double.infinity,
                 child: NetworkImageSmart(
                   path: widget.image,
@@ -105,13 +105,19 @@ class _ArtistHeaderState extends State<ArtistHeader>
                   radius: BorderRadius.circular(20.h ),
                 ),
               )
-                  : AspectRatio(
-            aspectRatio: isMobile ? 4 / 2 :  3/ 2,
-                  child: NetworkImageSmart(
-                    path: widget.image,
-                    fit: BoxFit.cover,
-                    radius: BorderRadius.circular(isMobile ? 20.h : 28.h),
-                  ),),
+                  : Padding(
+                padding:   EdgeInsets.symmetric( horizontal: 75.0.sW, vertical: 20.sH),
+                    child: Container(
+                      width: double.infinity,
+                      height:  350.0.sH,
+                      child: NetworkImageSmart(
+                        path: widget.image,
+                        fit: BoxFit.cover,
+                        alignment: Alignment.topCenter,
+                        radius: BorderRadius.circular(isMobile ? 20.h : 28.h),
+                      ),
+                    ),
+                  ),
               ),
             ),
           ],

@@ -6,6 +6,7 @@ import 'package:baseqat/modules/profile/presentation/widgets/likes_tab_widget.da
 import 'package:baseqat/modules/profile/presentation/widgets/chat_tab_widget.dart';
 import 'package:baseqat/modules/profile/presentation/widgets/notification_tab_widget.dart';
 import 'package:baseqat/modules/profile/presentation/widgets/settings_tab_widget.dart';
+import 'package:baseqat/modules/profile/presentation/widgets/privacy_tab_widget.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/components/custom_widgets/custom_top_bar.dart';
@@ -142,15 +143,18 @@ class ProfileDesktopLayout extends StatelessWidget {
 
                 // Navigation Tabs
                 Expanded(
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16.sW),
-                    child: Column(
-                      children: [
-                        _buildNavItem(0, Icons.favorite_outline, 'Likes'),
-                        _buildNavItem(1, Icons.chat_bubble_outline, 'Chat'),
-                        _buildNavItem(2, Icons.notifications_outlined, 'Notifications'),
-                        _buildNavItem(3, Icons.settings_outlined, 'Settings'),
-                      ],
+                  child: SingleChildScrollView(
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 16.sW),
+                      child: Column(
+                        children: [
+                          _buildNavItem(0, Icons.favorite_outline, 'Likes'),
+                          _buildNavItem(1, Icons.chat_bubble_outline, 'Chat'),
+                          _buildNavItem(2, Icons.notifications_outlined, 'Notifications'),
+                          _buildNavItem(3, Icons.lock_outline, 'Privacy'),
+                          _buildNavItem(4, Icons.settings_outlined, 'Settings'),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -160,6 +164,7 @@ class ProfileDesktopLayout extends StatelessWidget {
           // Main Content Area
           Expanded(
             child: Container(
+              color: AppColor.white,
               padding: EdgeInsets.all(32.sSp),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,21 +190,6 @@ class ProfileDesktopLayout extends StatelessWidget {
                   // Tab Content
                   Expanded(
                     child: Container(
-                      // decoration: BoxDecoration(
-                      //   color: AppColor.white,
-                      //   borderRadius: BorderRadius.circular(12.sW),
-                      //   border: Border.all(
-                      //     color: AppColor.gray.withOpacity(0.2),
-                      //     width: 1.sW,
-                      //   ),
-                      //   boxShadow: [
-                      //     BoxShadow(
-                      //       color: AppColor.black.withOpacity(0.05),
-                      //       blurRadius: 10.sW,
-                      //       spreadRadius: 1.sW,
-                      //     ),
-                      //   ],
-                      // ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12.sW),
                         child: _buildTabContent(selectedTabIndex),
@@ -292,7 +282,8 @@ class ProfileDesktopLayout extends StatelessWidget {
       case 0: return 'Liked Posts';
       case 1: return 'Messages';
       case 2: return 'Notifications';
-      case 3: return 'Settings';
+      case 3: return 'Privacy';
+      case 4: return 'Settings';
       default: return 'Profile';
     }
   }
@@ -302,7 +293,8 @@ class ProfileDesktopLayout extends StatelessWidget {
       case 0: return const LikesTabWidget();
       case 1: return const ChatTabWidget();
       case 2: return const NotificationTabWidget();
-      case 3: return const SettingsTabWidget();
+      case 3: return const PrivacyTabWidget();
+      case 4: return const SettingsTabWidget();
       default: return const SizedBox.shrink();
     }
   }

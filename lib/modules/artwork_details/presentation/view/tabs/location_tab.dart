@@ -2,14 +2,26 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:baseqat/core/resourses/style_manager.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/core/responsive/size_utils.dart';
 
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:url_launcher/url_launcher.dart';
 
+/// Black‑primary, Google‑Maps‑like Location tab with no search bar.
+///
+///  • Destination is managed from props (lat/lon) or by **long‑pressing** on the map.
+///  • All controls live **outside** the map.
+///  • "3D" terrain & Satellite modes via tile‑layer switching (runtime) + a compass/bearing readout.
+///  • Info panel (Destination) replaces search: name, address, lat/lon, distance, ETA, bearing, road summary.
+///  • Responsive for mobile / tablet / web.
+///
+/// Notes:
+///  - The flutter_osm_plugin is a raster‑tile engine; real camera tilt / extruded 3D buildings are not supported.
+///    The "3D" switch uses OpenTopoMap terrain shading for a 3D‑ish effect.
+///  - Satellite uses Esri World Imagery tiles. Review their usage terms before production.
 class LocationTab extends StatefulWidget {
   const LocationTab({
     super.key,
@@ -23,7 +35,8 @@ class LocationTab extends StatefulWidget {
     this.latitude,
     this.longitude,
     this.mapImage, // deprecated (kept for API compatibility)
-    this.onStartNavigation,
+    this.onStartNavigation, // deprecated, no longer used
+    this.showHeader = true,
   });
 
   final String title;
@@ -40,174 +53,241 @@ class LocationTab extends StatefulWidget {
   /// Deprecated: replaced by live OSM map
   final String? mapImage;
 
+  /// Deprecated: navigation handoff removed
   final VoidCallback? onStartNavigation;
+
+  /// Show the sticky header (default: true)
+  final bool showHeader;
 
   @override
   State<LocationTab> createState() => _LocationTabState();
 }
 
+enum MapStyle { standard, terrain3D, satellite }
+
 class _LocationTabState extends State<LocationTab>
     with TickerProviderStateMixin {
-  late final MapController _mapController;
+  late MapController _mapController;
   GeoPoint? _dest;
+  SearchInfo?
+  _destInfo; // captures address text when set via long‑press reverse search (optional)
   bool _mapReady = false;
 
-  // Enhanced live tracking
+  // Base map style
+  MapStyle _style = MapStyle.standard;
+
+  // Live tracking
   StreamSubscription<Position>? _posSub;
   bool _tracking = false;
-  GeoPoint? _lastMyPoint;
   GeoPoint? _currentPosition;
-  double _currentSpeed = 0.0;
-  double _distanceToDestination = 0.0;
+  double _currentSpeed = 0.0; // m/s
+  double _distanceToDestination = 0.0; // meters
   String _estimatedTime = '--';
-  bool _isNavigating = false;
+  RoadInfo? _lastRoad; // from drawRoad()
 
-  // Tracking settings
-  Timer? _trackingTimer;
-  int _trackingDuration = 0;
-  final List<GeoPoint> _trackingPath = [];
+  // Elapsed tracker (stream driven)
+  DateTime? _trackingStart;
 
-  // Animation controllers for smooth UI updates
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
+  // Route management (throttled)
+  DateTime? _lastRouteRedrawAt;
+  static const Duration _minRouteRedraw = Duration(seconds: 5);
+  static const double _minMoveToRedraw = 20.0; // meters
+  double _accumulatedMoveSinceRedraw = 0.0;
+
+  // Speed-based zoom buckets to avoid spamming setZoom
+  int _zoomBucket = 0; // 0: very slow, 1: walk, 2: cycle, 3: drive
+
+  // Night overlay (tile dimming)
+  bool _nightOverlay = false;
+
+  // Pulse animation (UI flair; lightweight)
+  late final AnimationController _pulseController = AnimationController(
+    duration: const Duration(milliseconds: 900),
+    vsync: this,
+  )..repeat(reverse: true);
+  late final Animation<double> _pulse = CurvedAnimation(
+    parent: _pulseController,
+    curve: Curves.easeInOut,
+  );
+
+  // Predefined tile layers
+  CustomTile get _tileStandard => CustomTile(
+    sourceName: "osm",
+    tileExtension: ".png",
+    minZoomLevel: 2,
+    maxZoomLevel: 19,
+    urlsServers: [
+      TileURLs(url: "https://tile.openstreetmap.org/", subdomains: const []),
+    ],
+    tileSize: 256,
+  );
+  CustomTile get _tileTerrain3D => CustomTile(
+    sourceName: "opentopomap",
+    tileExtension: ".png",
+    minZoomLevel: 2,
+    maxZoomLevel: 17,
+    urlsServers: [
+      TileURLs(url: "https://tile.opentopomap.org/", subdomains: []),
+    ],
+    tileSize: 256,
+  );
+  CustomTile get _tileSatellite => CustomTile(
+    sourceName: "esri_world_imagery",
+    tileExtension: "", // ArcGIS path already includes {z}/{y}/{x}
+    minZoomLevel: 2,
+    maxZoomLevel: 19,
+    urlsServers: [
+      TileURLs(
+        url:
+            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/",
+        subdomains: [],
+      ),
+    ],
+    tileSize: 256,
+  );
 
   @override
   void initState() {
     super.initState();
+
     _dest = (widget.latitude != null && widget.longitude != null)
         ? GeoPoint(latitude: widget.latitude!, longitude: widget.longitude!)
         : null;
 
     _mapController = MapController(
-      initPosition:
-          _dest ?? GeoPoint(latitude: 24.7136, longitude: 46.6753), // fallback
+      initPosition: _dest ?? GeoPoint(latitude: 24.7136, longitude: 46.6753),
       areaLimit: const BoundingBox.world(),
     );
 
-    // Setup animations
-    _pulseController = AnimationController(
-      duration: const Duration(seconds: 1),
-      vsync: this,
-    );
-    _pulseAnimation = Tween<double>(begin: 0.8, end: 1.2).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
+    // Long‑press to set destination
+    _mapController.listenerMapLongTapping.addListener(() async {
+      final p = _mapController.listenerMapLongTapping.value;
+      if (p != null) {
+        await _setDestination(p);
+      }
+    });
 
-    // Calculate initial distance if destination is available
     if (_dest != null) {
-      _calculateInitialDistance();
+      // Put an initial marker and compute distance
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await _ensureDestMarker();
+        await _primeDistance();
+      });
     }
   }
 
   @override
   void dispose() {
     _posSub?.cancel();
-    _trackingTimer?.cancel();
     _pulseController.dispose();
     _mapController.dispose();
     super.dispose();
   }
 
-  // ---- Enhanced Location & Distance Calculations -------------------------
+  // ---------- Helpers ---------------------------------------------------------
 
-  Future<void> _calculateInitialDistance() async {
+  Future<void> _applyMapStyle(MapStyle style) async {
+    if (!_mapReady) return;
+    CustomTile tile;
+    switch (style) {
+      case MapStyle.terrain3D:
+        tile = _tileTerrain3D;
+        break;
+      case MapStyle.satellite:
+        tile = _tileSatellite;
+        break;
+      default:
+        tile = _tileStandard;
+    }
+    await _mapController.changeTileLayer(tileLayer: tile);
+  }
+
+  Future<void> _primeDistance() async {
     if (_dest == null) return;
+    if (!await _ensureLocationPermissions()) return;
+
     try {
-      final ok = await _ensureLocationPermissions();
-      if (!ok) return;
-
-      final position = await Geolocator.getCurrentPosition();
-      final currentPoint = GeoPoint(
-        latitude: position.latitude,
-        longitude: position.longitude,
-      );
-
-      final distance = Geolocator.distanceBetween(
-        currentPoint.latitude,
-        currentPoint.longitude,
+      final p = await Geolocator.getCurrentPosition();
+      final me = GeoPoint(latitude: p.latitude, longitude: p.longitude);
+      _currentPosition = me;
+      _distanceToDestination = Geolocator.distanceBetween(
+        me.latitude,
+        me.longitude,
         _dest!.latitude,
         _dest!.longitude,
       );
-
-      setState(() {
-        _distanceToDestination = distance;
-        _currentPosition = currentPoint;
-      });
+      if (_currentSpeed > 0) {
+        _estimatedTime = _eta(_distanceToDestination, _currentSpeed);
+      }
+      if (mounted) setState(() {});
     } catch (_) {
-      // ignore
+      // noop
     }
   }
 
-  String _formatDistance(double meters) {
-    if (meters < 1000) {
-      return '${meters.round()} m';
-    } else {
-      return '${(meters / 1000).toStringAsFixed(1)} km';
-    }
+  String _formatDistance(double meters) => meters < 1000
+      ? '${meters.round()} m'
+      : '${(meters / 1000).toStringAsFixed(1)} km';
+
+  String _formatLatLon(double x) => x.toStringAsFixed(6);
+
+  String _formatElapsed() {
+    if (_trackingStart == null) return '--:--';
+    final d = DateTime.now().difference(_trackingStart!);
+    final h = d.inHours;
+    final m = d.inMinutes % 60;
+    final s = d.inSeconds % 60;
+    return h > 0
+        ? '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}'
+        : '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
-  String _calculateETA(double distanceInMeters, double speedInMps) {
-    if (speedInMps <= 0 || distanceInMeters <= 0) return '--';
-
-    final timeInSeconds = distanceInMeters / speedInMps;
-    final minutes = (timeInSeconds / 60).round();
-
-    if (minutes < 60) {
-      return '${minutes}min';
-    } else {
-      final hours = minutes ~/ 60;
-      final remainingMinutes = minutes % 60;
-      return '${hours}h ${remainingMinutes}min';
-    }
+  String _eta(double meters, double mps) {
+    if (mps <= 0 || meters <= 0) return '--';
+    final secs = meters / mps;
+    final mins = (secs / 60).round();
+    if (mins < 60) return '${mins}min';
+    final h = mins ~/ 60, r = mins % 60;
+    return '${h}h ${r}min';
   }
 
-  // ---- Permissions & helpers -------------------------------------------------
+  double _bearingDeg(GeoPoint from, GeoPoint to) {
+    final lat1 = from.latitude * math.pi / 180;
+    final lon1 = from.longitude * math.pi / 180;
+    final lat2 = to.latitude * math.pi / 180;
+    final lon2 = to.longitude * math.pi / 180;
+    final dLon = lon2 - lon1;
+    final y = math.sin(dLon) * math.cos(lat2);
+    final x =
+        math.cos(lat1) * math.sin(lat2) -
+        math.sin(lat1) * math.cos(lat2) * math.cos(dLon);
+    final brng = math.atan2(y, x) * 180 / math.pi;
+    return (brng + 360) % 360;
+  }
+
+  String _bearingCardinal(double deg) {
+    const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    final idx = ((deg + 22.5) / 45).floor() % 8;
+    return dirs[idx];
+  }
 
   Future<bool> _ensureLocationPermissions() async {
-    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      _showLocationServiceDialog();
+    if (!await Geolocator.isLocationServiceEnabled()) {
+      _dialog(
+        'Location Service Disabled',
+        'Please enable location services to use live features.',
+      );
       return false;
     }
-
     var perm = await Geolocator.checkPermission();
     if (perm == LocationPermission.denied) {
       perm = await Geolocator.requestPermission();
     }
     if (perm == LocationPermission.denied ||
         perm == LocationPermission.deniedForever) {
-      _showPermissionDialog();
-      return false;
-    }
-    return true;
-  }
-
-  void _showLocationServiceDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Location Service Disabled'),
-        content: const Text(
-          'Please enable location services to use navigation features.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showPermissionDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Location Permission Required'),
-        content: const Text(
-          'Location permission is required for navigation features. Please grant permission in settings.',
-        ),
+      _dialog(
+        'Location Permission Required',
+        'Location permission is required for live features. Please grant permission in settings.',
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -221,115 +301,138 @@ class _LocationTabState extends State<LocationTab>
             child: const Text('Settings'),
           ),
         ],
+      );
+      return false;
+    }
+    return true;
+  }
+
+  void _dialog(String title, String body, {List<Widget>? actions}) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(title),
+        content: Text(body),
+        actions:
+            actions ??
+            [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
       ),
     );
   }
 
   Future<void> _centerOnMe({double? zoom}) async {
+    if (!await _ensureLocationPermissions()) return;
     try {
-      final ok = await _ensureLocationPermissions();
-      if (!ok) return;
       await _mapController.currentLocation();
-      if (zoom != null) {
-        await _mapController.setZoom(zoomLevel: zoom);
-      }
-      // cache last point (best-effort)
-      try {
-        final me = await _mapController.myLocation();
-        _lastMyPoint = me;
-        _currentPosition = me;
-      } catch (_) {
-        /* ignore */
-      }
+      if (zoom != null) await _mapController.setZoom(zoomLevel: zoom);
+      // cache last point best-effort
+      final me = await _mapController.myLocation();
+      _currentPosition = me;
+      if (mounted) setState(() {});
     } catch (_) {
       /* ignore */
     }
   }
 
-  Future<void> _addDestinationMarker() async {
-    if (_dest == null) return;
-    await _mapController.addMarker(
-      _dest!,
-      markerIcon: const MarkerIcon(
-        icon: Icon(Icons.location_pin, color: Colors.red, size: 64),
-      ),
-    );
-  }
-
-  Future<void> _drawRoadFromMe() async {
-    if (_dest == null) return;
+  Future<void> _ensureDestMarker() async {
+    if (_dest == null || !_mapReady) return;
     try {
-      final ok = await _ensureLocationPermissions();
-      if (!ok) throw Exception('perm');
-
-      final me = await _mapController.myLocation();
-      _lastMyPoint = me;
-      _currentPosition = me;
-
-      await _mapController.drawRoad(
-        me,
+      await _mapController.addMarker(
         _dest!,
-        roadType: RoadType.car,
-        roadOption: const RoadOption(
-          roadWidth: 10,
-          roadColor: Colors.blueAccent,
-          zoomInto: true,
+        markerIcon: const MarkerIcon(
+          icon: Icon(Icons.location_pin, color: Colors.red, size: 64),
         ),
       );
-
-      // Calculate distance after drawing route
-      final distance = Geolocator.distanceBetween(
-        me.latitude,
-        me.longitude,
-        _dest!.latitude,
-        _dest!.longitude,
-      );
-      setState(() {
-        _distanceToDestination = distance;
-      });
     } catch (_) {
-      // If we can't get "me", at least zoom to destination
-      await _mapController.goToLocation(_dest!);
-      await _mapController.setZoom(zoomLevel: 15);
+      /* ignore */
     }
   }
 
-  // ---- Enhanced Live tracking -----------------------------------------------
+  // ---------- Routing & tracking ---------------------------------------------
 
-  Future<void> _startEnhancedTracking() async {
+  int _bucketForSpeed(double mps) {
+    if (mps > 25) return 3; // driving
+    if (mps > 10) return 2; // cycling
+    if (mps > 2) return 1; // walking
+    return 0; // very slow / standing
+  }
+
+  double _zoomForBucket(int b) {
+    switch (b) {
+      case 3:
+        return 15;
+      case 2:
+        return 16;
+      case 1:
+        return 17;
+      default:
+        return 18;
+    }
+  }
+
+  Future<void> _fitRouteBounds() async {
+    if (_currentPosition == null || _dest == null) return;
+    final box = BoundingBox.fromGeoPoints([_currentPosition!, _dest!]);
+    await _mapController.zoomToBoundingBox(box, paddinInPixel: 36);
+  }
+
+  Future<void> _drawRoadThrottled(GeoPoint from) async {
+    if (_dest == null) return;
+    final now = DateTime.now();
+    if (_lastRouteRedrawAt != null &&
+        now.difference(_lastRouteRedrawAt!) < _minRouteRedraw) {
+      return;
+    }
+    if (_accumulatedMoveSinceRedraw < _minMoveToRedraw &&
+        _lastRouteRedrawAt != null) {
+      return;
+    }
+    try {
+      _lastRoad = await _mapController.drawRoad(
+        from,
+        _dest!,
+        roadType: RoadType.car,
+        roadOption: RoadOption(
+          roadWidth: 8,
+          roadColor: _tracking ? Colors.green : Colors.black,
+          roadBorderColor: Colors.white,
+          roadBorderWidth: 2,
+          zoomInto: false,
+        ),
+      );
+      _lastRouteRedrawAt = now;
+      _accumulatedMoveSinceRedraw = 0.0;
+    } catch (_) {
+      /* ignore transient */
+    }
+  }
+
+  Future<void> _startTracking() async {
     if (_tracking) return;
-    final ok = await _ensureLocationPermissions();
-    if (!ok) return;
+    if (!await _ensureLocationPermissions()) return;
 
-    setState(() {
-      _tracking = true;
-      _isNavigating = true;
-      _trackingDuration = 0;
-    });
+    HapticFeedback.lightImpact();
 
-    // Start pulse animation
-    _pulseController.repeat(reverse: true);
+    _tracking = true;
+    _trackingStart = DateTime.now();
+    _currentSpeed = 0;
+    _accumulatedMoveSinceRedraw = 0;
+    _lastRouteRedrawAt = null;
 
-    // First center once
+    setState(() {});
     await _centerOnMe(zoom: 16);
 
-    // Start tracking timer
-    _trackingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (mounted) {
-        setState(() {
-          _trackingDuration++;
-        });
-      }
-    });
-
-    // Subscribe to high-accuracy location updates
     _posSub?.cancel();
     _posSub =
         Geolocator.getPositionStream(
           locationSettings: const LocationSettings(
             accuracy: LocationAccuracy.bestForNavigation,
-            distanceFilter: 5, // Update every 5 meters
-            timeLimit: Duration(seconds: 5),
+            distanceFilter: 3,
           ),
         ).listen((pos) async {
           if (!mounted) return;
@@ -339,209 +442,426 @@ class _LocationTabState extends State<LocationTab>
             longitude: pos.longitude,
           );
 
-          // Calculate speed and distance
-          double speed = pos.speed; // m/s
+          // movement & speed
+          double newSpeed = pos.speed.isFinite && pos.speed >= 0
+              ? pos.speed
+              : 0.0; // m/s
           if (_currentPosition != null) {
-            final distance = Geolocator.distanceBetween(
+            final moved = Geolocator.distanceBetween(
               _currentPosition!.latitude,
               _currentPosition!.longitude,
               newPoint.latitude,
               newPoint.longitude,
             );
+            _accumulatedMoveSinceRedraw += moved;
 
-            // Add to tracking path
-            _trackingPath.add(newPoint);
-            if (_trackingPath.length > 100) {
-              _trackingPath.removeAt(0); // Keep only recent 100 points
+            // fallback speed if sensor returns 0
+            if (newSpeed == 0 && pos.timestamp != null) {
+              final dt =
+                  DateTime.now().difference(pos.timestamp!).inMilliseconds /
+                  1000.0;
+              if (dt > 0) newSpeed = moved / dt;
             }
           }
 
-          _lastMyPoint = newPoint;
           _currentPosition = newPoint;
 
-          // Calculate distance to destination
-          double distanceToDestination = 0;
+          // distance & ETA
+          double distToDest = _distanceToDestination;
           if (_dest != null) {
-            distanceToDestination = Geolocator.distanceBetween(
+            distToDest = Geolocator.distanceBetween(
               newPoint.latitude,
               newPoint.longitude,
               _dest!.latitude,
               _dest!.longitude,
             );
           }
+          final newEta = _eta(distToDest, newSpeed);
 
-          setState(() {
-            _currentSpeed = speed;
-            _distanceToDestination = distanceToDestination;
-            _estimatedTime = _calculateETA(distanceToDestination, speed);
-          });
-
-          // Smooth camera follow with adaptive zoom
+          // camera follow + zoom bucket (reduce setZoom churn)
           try {
             await _mapController.goToLocation(newPoint);
-
-            // Adjust zoom based on speed - closer when slower, further when faster
-            double targetZoom = 18.0;
-            if (speed > 2) targetZoom = 17.0; // Walking
-            if (speed > 10) targetZoom = 16.0; // Cycling
-            if (speed > 25) targetZoom = 15.0; // Driving
-
-            await _mapController.setZoom(zoomLevel: targetZoom);
+            final b = _bucketForSpeed(newSpeed);
+            if (b != _zoomBucket) {
+              _zoomBucket = b;
+              await _mapController.setZoom(zoomLevel: _zoomForBucket(b));
+            }
           } catch (_) {
-            // Ignore zoom errors
+            /* ignore */
           }
 
-          // Redraw route if destination exists
-          if (_dest != null && _tracking) {
-            try {
-              await _mapController.drawRoad(
-                newPoint,
-                _dest!,
-                roadType: RoadType.car,
-                roadOption: const RoadOption(
-                  roadWidth: 8,
-                  roadColor: Colors.green,
-                  zoomInto: false,
-                ),
-              );
-            } catch (_) {
-              /* ignore transient errors */
-            }
+          // throttle route redraw
+          if (_tracking && _dest != null) {
+            await _drawRoadThrottled(newPoint);
+          }
+
+          // State updates only if meaningfully changed
+          bool shouldRebuild = false;
+          if ((newSpeed - _currentSpeed).abs() > 0.2) {
+            _currentSpeed = newSpeed;
+            shouldRebuild = true;
+          }
+          if ((distToDest - _distanceToDestination).abs() > 1.0) {
+            _distanceToDestination = distToDest;
+            shouldRebuild = true;
+          }
+          if (newEta != _estimatedTime) {
+            _estimatedTime = newEta;
+            shouldRebuild = true;
+          }
+
+          if (shouldRebuild) {
+            setState(() {});
+          } else {
+            setState(() {}); // occasional refresh for elapsed clock
           }
         });
   }
 
-  void _stopTracking() {
-    _posSub?.cancel();
+  Future<void> _stopTracking() async {
+    await _posSub?.cancel();
     _posSub = null;
-    _trackingTimer?.cancel();
-    _trackingTimer = null;
-    _pulseController.stop();
+    _tracking = false;
+    _currentSpeed = 0;
+    _zoomBucket = 0;
+    _trackingStart = null;
+    _accumulatedMoveSinceRedraw = 0;
+    _lastRouteRedrawAt = null;
 
-    setState(() {
-      _tracking = false;
-      _isNavigating = false;
-      _trackingDuration = 0;
-      _currentSpeed = 0.0;
-    });
-
-    // Clear tracking path
-    _trackingPath.clear();
-  }
-
-  String _formatTrackingTime(int seconds) {
-    final hours = seconds ~/ 3600;
-    final minutes = (seconds % 3600) ~/ 60;
-    final secs = seconds % 60;
-
-    if (hours > 0) {
-      return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
-    } else {
-      return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+    try {
+      await _mapController.clearAllRoads();
+    } catch (_) {
+      /* ignore */
     }
+    if (mounted) setState(() {});
   }
 
-  // ---- Enhanced UI -----------------------------------------------------------
+  // -------------------- UI ----------------------------------------------------
 
-  Widget _buildTrackingInfo() {
+  Widget _trackingInfoCard(TextStyleHelper s) {
     if (!_tracking) return const SizedBox.shrink();
-
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
       padding: EdgeInsets.all(16.h),
       decoration: BoxDecoration(
-        color: Colors.green.withOpacity(0.1),
+        color: Colors.black.withOpacity(0.06),
         borderRadius: BorderRadius.circular(12.h),
-        border: Border.all(color: Colors.green.withOpacity(0.3)),
+        border: Border.all(color: Colors.black.withOpacity(0.18)),
       ),
       child: Column(
         children: [
           Row(
             children: [
-              AnimatedBuilder(
-                animation: _pulseAnimation,
-                builder: (context, child) {
-                  return Transform.scale(
-                    scale: _pulseAnimation.value,
-                    child: const Icon(
-                      Icons.radio_button_checked,
-                      color: Colors.green,
-                      size: 20,
-                    ),
-                  );
-                },
+              ScaleTransition(
+                scale: _pulse,
+                child: const Icon(
+                  Icons.radio_button_checked,
+                  color: Colors.black,
+                  size: 18,
+                ),
               ),
               SizedBox(width: 8.h),
               Text(
-                'Live Tracking Active',
-                style: TextStyleHelper.instance.title16MediumInter.copyWith(
-                  color: Colors.green.shade700,
-                ),
+                'Live Tracking',
+                style: s.title16MediumInter.copyWith(color: Colors.black),
               ),
               const Spacer(),
               Text(
-                _formatTrackingTime(_trackingDuration),
-                style: TextStyleHelper.instance.title16MediumInter.copyWith(
-                  color: Colors.green.shade700,
-                ),
+                _formatElapsed(),
+                style: s.title16MediumInter.copyWith(color: Colors.black),
               ),
             ],
           ),
-          if (_currentSpeed > 0 || _distanceToDestination > 0) ...[
-            SizedBox(height: 12.h),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                if (_currentSpeed > 0)
-                  Column(
-                    children: [
-                      Text(
-                        '${(_currentSpeed * 3.6).toStringAsFixed(1)} km/h',
-                        style: TextStyleHelper.instance.headline24BoldInter
-                            .copyWith(color: AppColor.gray900),
-                      ),
-                      Text(
-                        'Speed',
-                        style: TextStyleHelper.instance.body12LightInter
-                            .copyWith(color: AppColor.gray400),
-                      ),
-                    ],
-                  ),
-                if (_distanceToDestination > 0)
-                  Column(
-                    children: [
-                      Text(
-                        _formatDistance(_distanceToDestination),
-                        style: TextStyleHelper.instance.headline24BoldInter
-                            .copyWith(color: AppColor.gray900),
-                      ),
-                      Text(
-                        'Distance',
-                        style: TextStyleHelper.instance.body12LightInter
-                            .copyWith(color: AppColor.gray400),
-                      ),
-                    ],
-                  ),
-                if (_estimatedTime != '--')
-                  Column(
-                    children: [
-                      Text(
-                        _estimatedTime,
-                        style: TextStyleHelper.instance.headline24BoldInter
-                            .copyWith(color: AppColor.gray900),
-                      ),
-                      Text(
-                        'ETA',
-                        style: TextStyleHelper.instance.body12LightInter
-                            .copyWith(color: AppColor.gray400),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
-          ],
+          SizedBox(height: 12.h),
+          Wrap(
+            alignment: WrapAlignment.spaceEvenly,
+            spacing: 24.h,
+            runSpacing: 12.h,
+            children: [
+              _metric(
+                s,
+                '${(_currentSpeed * 3.6).toStringAsFixed(1)} km/h',
+                'Speed',
+              ),
+              _metric(s, _formatDistance(_distanceToDestination), 'Distance'),
+              if (_estimatedTime != '--') _metric(s, _estimatedTime, 'ETA'),
+            ],
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _metric(TextStyleHelper s, String v, String label) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(v, style: s.headline24BoldInter.copyWith(color: Colors.black)),
+        Text(
+          label,
+          style: s.body12LightInter.copyWith(color: AppColor.gray500),
+        ),
+      ],
+    );
+  }
+
+  Widget _header(TextStyleHelper s) {
+    if (!widget.showHeader) return const SizedBox.shrink();
+
+    final List<String?> parts = [
+      widget.addressLine,
+      [
+        widget.city,
+        widget.country,
+      ].where((e) => (e ?? '').isNotEmpty).join(', '),
+    ];
+    final subtitle = parts.where((e) => (e ?? '').isNotEmpty).join(' • ');
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: 16.h, vertical: 20.h),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(18.h),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.place, color: Colors.white, size: 22),
+          SizedBox(width: 10.h),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.title,
+                  style: s.headline24MediumInter.copyWith(color: Colors.white),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  subtitle.isEmpty ? widget.subtitle : subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: s.title16LightInter.copyWith(color: Colors.white70),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(width: 12.h),
+          Wrap(
+            spacing: 8.h,
+            children: [
+              _circleIcon(
+                icon: Icons.share_location,
+                onTap: () async {
+                  if (_dest == null) return;
+                  final uri =
+                      'https://www.openstreetmap.org/?mlat=${_dest!.latitude}&mlon=${_dest!.longitude}#map=16/${_dest!.latitude}/${_dest!.longitude}';
+                  await Clipboard.setData(ClipboardData(text: uri));
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Map link copied')),
+                  );
+                },
+              ),
+              _circleIcon(
+                icon: Icons.copy_all,
+                onTap: () async {
+                  if (_dest == null) return;
+                  await Clipboard.setData(
+                    ClipboardData(
+                      text: '${_dest!.latitude}, ${_dest!.longitude}',
+                    ),
+                  );
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Coordinates copied')),
+                  );
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _circleIcon({required IconData icon, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
+      child: Container(
+        width: 36.h,
+        height: 36.h,
+        decoration: const BoxDecoration(
+          color: Colors.white12,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: Colors.white, size: 18),
+      ),
+    );
+  }
+
+  Widget _infoKvp(String k, String v) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('$k: ', style: const TextStyle(fontWeight: FontWeight.w600)),
+        Text(v),
+      ],
+    );
+  }
+
+  Widget _styleChips({required bool isMobile}) {
+    final style = OutlinedButton.styleFrom(
+      foregroundColor: Colors.black,
+      side: const BorderSide(color: Colors.black12),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 10.h : 14.h,
+        vertical: isMobile ? 8.h : 10.h,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    );
+
+    Widget chip(String label, IconData icon, MapStyle target) {
+      final selected = _style == target;
+      return OutlinedButton.icon(
+        style: style.copyWith(
+          backgroundColor: MaterialStateProperty.all(
+            selected ? Colors.black : Colors.white,
+          ),
+          foregroundColor: MaterialStateProperty.all(
+            selected ? Colors.white : Colors.black,
+          ),
+          side: MaterialStateProperty.all(
+            BorderSide(color: selected ? Colors.black : Colors.black12),
+          ),
+        ),
+        icon: Icon(icon),
+        label: Text(label),
+        onPressed: () async {
+          if (_style == target) return;
+          setState(() => _style = target);
+          await _applyMapStyle(target);
+        },
+      );
+    }
+
+    return Wrap(
+      spacing: 8.h,
+      runSpacing: 8.h,
+      children: [
+        chip('Standard', Icons.map, MapStyle.standard),
+        chip('3D Terrain', Icons.terrain, MapStyle.terrain3D),
+        chip('Satellite', Icons.satellite_alt, MapStyle.satellite),
+      ],
+    );
+  }
+
+  Widget _controlsBar({required bool isMobile}) {
+    final buttonPadding = EdgeInsets.symmetric(
+      horizontal: isMobile ? 10.h : 14.h,
+      vertical: isMobile ? 10.h : 12.h,
+    );
+
+    ButtonStyle outlined = OutlinedButton.styleFrom(
+      foregroundColor: Colors.black,
+      side: const BorderSide(color: Colors.black),
+      padding: buttonPadding,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    );
+    ButtonStyle filled = ElevatedButton.styleFrom(
+      backgroundColor: Colors.black,
+      foregroundColor: Colors.white,
+      padding: buttonPadding,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    );
+
+    return Wrap(
+      spacing: 8.h,
+      runSpacing: 8.h,
+      children: [
+        OutlinedButton.icon(
+          icon: const Icon(Icons.my_location),
+          label: const Text('My location'),
+          onPressed: () => _centerOnMe(zoom: isMobile ? 16 : 15),
+          style: outlined,
+        ),
+        if (_dest != null)
+          OutlinedButton.icon(
+            icon: const Icon(Icons.location_pin),
+            label: const Text('Go to destination'),
+            onPressed: () async {
+              try {
+                await _mapController.goToLocation(_dest!);
+              } catch (_) {}
+            },
+            style: outlined,
+          ),
+        if (_dest != null)
+          OutlinedButton.icon(
+            icon: const Icon(Icons.alt_route),
+            label: const Text('Route'),
+            onPressed: () async {
+              if (_currentPosition != null) {
+                await _drawRoadThrottled(_currentPosition!);
+              } else {
+                await _centerOnMe(zoom: 16).then((_) async {
+                  if (_currentPosition != null) {
+                    await _drawRoadThrottled(_currentPosition!);
+                  }
+                });
+              }
+            },
+            style: outlined,
+          ),
+        OutlinedButton.icon(
+          icon: const Icon(Icons.add),
+          label: const Text('Zoom In'),
+          onPressed: () async => _mapController.zoomIn(),
+          style: outlined,
+        ),
+        OutlinedButton.icon(
+          icon: const Icon(Icons.remove),
+          label: const Text('Zoom Out'),
+          onPressed: () async => _mapController.zoomOut(),
+          style: outlined,
+        ),
+        OutlinedButton.icon(
+          icon: Icon(Icons.route),
+          label: Text('Fit Route'),
+          onPressed: _fitRouteBounds,
+          style: outlined,
+        ),
+        _tracking
+            ? ElevatedButton.icon(
+                icon: const Icon(Icons.stop),
+                label: const Text('Stop'),
+                onPressed: _stopTracking,
+                style: filled.copyWith(
+                  backgroundColor: MaterialStateProperty.all(Colors.red),
+                ),
+              )
+            : ElevatedButton.icon(
+                icon: const Icon(Icons.play_arrow),
+                label: const Text('Track'),
+                onPressed: _startTracking,
+                style: filled,
+              ),
+        OutlinedButton.icon(
+          icon: const Icon(Icons.clear_all),
+          label: const Text('Clear route'),
+          onPressed: () async {
+            try {
+              await _mapController.clearAllRoads();
+            } catch (_) {}
+            setState(() => _lastRoad = null);
+          },
+          style: outlined,
+        ),
+      ],
     );
   }
 
@@ -556,210 +876,116 @@ class _LocationTabState extends State<LocationTab>
         ? 64.h
         : (isTablet ? 32.h : 16.h);
     final double sectionGap = 16.h;
-    final double mapHeight = isDesktop ? 480.h : (isTablet ? 420.h : 365.h);
-    final double walkIconSize = isDesktop ? 36.h : 32.h;
-    final double walkIconBoxW = isDesktop ? 64.h : 59.h;
+    final double mapHeight = isDesktop ? 560.h : (isTablet ? 480.h : 400.h);
 
     final s = TextStyleHelper.instance;
 
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(
         horizontal: horizontalPadding,
-        vertical: 32.h,
+        vertical: 24.h,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            widget.title,
-            style: s.headline24MediumInter.copyWith(color: AppColor.gray900),
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            widget.subtitle,
-            style: s.title16LightInter.copyWith(color: AppColor.gray900),
-          ),
+          if (widget.showHeader) _header(s),
+          if (widget.showHeader) SizedBox(height: sectionGap),
 
+          // Style toggles
+          _styleChips(isMobile: isMobile),
           SizedBox(height: sectionGap),
 
-          // Enhanced tracking info
-          _buildTrackingInfo(),
-
-          // Distance Row + enhanced actions
-          Row(
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10.h),
-                child: SizedBox(
-                  width: walkIconBoxW,
-                  height: 64.h,
-                  child: Center(
-                    child: Icon(
-                      _tracking ? Icons.navigation : Icons.directions_walk,
-                      size: walkIconSize,
-                      color: _tracking ? Colors.green : AppColor.gray900,
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(width: 6.h),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _distanceToDestination > 0
-                          ? _formatDistance(_distanceToDestination)
-                          : widget.distanceLabel,
-                      style: s.headline24MediumInter.copyWith(
-                        color: AppColor.gray900,
-                      ),
-                    ),
-                    Text(
-                      widget.destinationLabel,
-                      style: s.title16LightInter.copyWith(
-                        color: AppColor.gray900,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Wrap(
-                spacing: 8,
-                children: [
-                  OutlinedButton.icon(
-                    icon: const Icon(Icons.my_location),
-                    label: const Text('My location'),
-                    onPressed: () => _centerOnMe(zoom: 16),
-                  ),
-                  if (_dest != null)
-                    OutlinedButton.icon(
-                      icon: const Icon(Icons.alt_route),
-                      label: const Text('Route'),
-                      onPressed: _drawRoadFromMe,
-                    ),
-                  if (_tracking)
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.stop),
-                      label: const Text('Stop'),
-                      onPressed: _stopTracking,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                      ),
-                    )
-                  else
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.play_arrow),
-                      label: const Text('Track'),
-                      onPressed: _startEnhancedTracking,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                ],
-              ),
-            ],
-          ),
-
+          // Live tracking stats
+          _trackingInfoCard(s),
           SizedBox(height: sectionGap),
 
-          // Enhanced OSM Map
+          // Controls bar (outside map)
+          _controlsBar(isMobile: isMobile),
+          SizedBox(height: sectionGap),
+
+          // Map
           ClipRRect(
             borderRadius: BorderRadius.circular(24.h),
             child: SizedBox(
               height: mapHeight,
               width: double.infinity,
-              child: OSMFlutter(
-                controller: _mapController,
-                osmOption: OSMOption(
-                  userTrackingOption: UserTrackingOption(
-                    enableTracking: _tracking,
-                    unFollowUser: false,
-                  ),
-                  zoomOption: const ZoomOption(
-                    initZoom: 12,
-                    minZoomLevel: 3,
-                    maxZoomLevel: 19,
-                    stepZoom: 1.0,
-                  ),
-                  userLocationMarker: UserLocationMaker(
-                    personMarker: MarkerIcon(
-                      icon: Icon(
-                        _tracking
-                            ? Icons.navigation
-                            : Icons.location_history_rounded,
-                        color: _tracking ? Colors.green : Colors.blue,
-                        size: 48,
-                      ),
-                    ),
-                    directionArrowMarker: MarkerIcon(
-                      icon: Icon(
-                        Icons.navigation,
-                        color: _tracking ? Colors.green : Colors.blue,
-                        size: 48,
-                      ),
-                    ),
-                  ),
-                  roadConfiguration: RoadOption(
-                    roadColor: _tracking ? Colors.green : Colors.blueAccent,
-                  ),
-                ),
-                onMapIsReady: (ready) async {
-                  if (!mounted) return;
-                  setState(() => _mapReady = ready);
-                  await _addDestinationMarker();
-                },
-              ),
-            ),
-          ),
-
-          SizedBox(height: sectionGap),
-
-          SizedBox(
-            width: double.infinity,
-            height: isMobile ? 64.h : 80.h,
-            child: ElevatedButton(
-              onPressed: () {
-                if (widget.onStartNavigation != null) {
-                  widget.onStartNavigation!();
-                } else if (_dest != null) {
-                  // Fallback: open external map app
-                  final lat = _dest!.latitude;
-                  final lon = _dest!.longitude;
-                  final uri = Uri.parse(
-                    'https://www.google.com/maps/dir/?api=1&destination=$lat,$lon&travelmode=walking',
-                  );
-                  launchUrl(uri, mode: LaunchMode.externalApplication);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _isNavigating
-                    ? Colors.green
-                    : AppColor.gray900,
-                foregroundColor: AppColor.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.h),
-                ),
-                padding: EdgeInsets.symmetric(horizontal: 32.h, vertical: 16.h),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: Stack(
                 children: [
-                  Icon(
-                    _isNavigating ? Icons.navigation : Icons.directions,
-                    size: isMobile ? 24.h : 28.h,
+                  OSMFlutter(
+                    controller: _mapController,
+                    osmOption: OSMOption(
+                      userTrackingOption: UserTrackingOption(
+                        enableTracking: _tracking,
+                        unFollowUser: false,
+                      ),
+                      zoomOption: const ZoomOption(
+                        initZoom: 12,
+                        minZoomLevel: 3,
+                        maxZoomLevel: 19,
+                        stepZoom: 1.0,
+                      ),
+                      userLocationMarker: UserLocationMaker(
+                        personMarker: MarkerIcon(
+                          icon: Icon(
+                            _tracking
+                                ? Icons.navigation
+                                : Icons.location_history_rounded,
+                            color: Colors.black,
+                            size: 48,
+                          ),
+                        ),
+                        directionArrowMarker: const MarkerIcon(
+                          icon: Icon(
+                            Icons.navigation,
+                            color: Colors.black,
+                            size: 48,
+                          ),
+                        ),
+                      ),
+                      roadConfiguration: RoadOption(
+                        roadColor: _tracking ? Colors.green : Colors.black,
+                      ),
+                    ),
+                    onMapIsReady: (ready) async {
+                      if (!mounted) return;
+                      _mapReady = ready;
+                      await _applyMapStyle(
+                        _style,
+                      ); // ensure chosen style is applied
+                      await _ensureDestMarker();
+                    },
                   ),
-                  SizedBox(width: 8.h),
-                  Text(
-                    _isNavigating ? 'Navigate Now' : 'Start Navigation',
-                    style:
-                        (isMobile
-                                ? s.headline24MediumInter
-                                : s.headline24MediumInter)
-                            .copyWith(color: AppColor.white),
-                  ),
+
+                  if (_nightOverlay)
+                    Container(color: Colors.black.withOpacity(0.18)),
+
+                  // Hint strip
+                  if (_dest == null)
+                    Positioned(
+                      left: 12,
+                      right: 12,
+                      bottom: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: const Text(
+                          'Long‑press anywhere on the map to set destination.',
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -767,5 +993,37 @@ class _LocationTabState extends State<LocationTab>
         ],
       ),
     );
+  }
+
+  // -------------------- Mutators ---------------------------------------------
+
+  Future<void> _setDestination(GeoPoint p, {SearchInfo? info}) async {
+    // If same as current dest, ignore
+    if (_dest != null &&
+        p.latitude == _dest!.latitude &&
+        p.longitude == _dest!.longitude) {
+      return;
+    }
+    // Clear old road & marker
+    try {
+      await _mapController.clearAllRoads();
+    } catch (_) {}
+    if (_dest != null) {
+      try {
+        await _mapController.removeMarker(_dest!);
+      } catch (_) {}
+    }
+
+    _dest = p;
+    _destInfo = info; // may be null when set by long‑press
+
+    // Add marker and recenter
+    await _ensureDestMarker();
+    try {
+      await _mapController.goToLocation(_dest!);
+    } catch (_) {}
+
+    await _primeDistance();
+    setState(() {});
   }
 }

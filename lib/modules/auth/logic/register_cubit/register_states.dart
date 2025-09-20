@@ -6,6 +6,7 @@ abstract class RegisterStates {}
 class RegisterInitialState extends RegisterStates {}
 
 class RegisterLoadingState extends RegisterStates {}
+class RegisterWithGoogleLoadingState extends RegisterStates {}
 
 class RegisterRedirectingState extends RegisterStates {}
 
