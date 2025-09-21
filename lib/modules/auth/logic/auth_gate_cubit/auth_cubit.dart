@@ -1,4 +1,5 @@
 // lib/core/auth/auth_cubit.dart
+// lib/core/auth/auth_cubit.dart
 import 'package:bloc/bloc.dart';
 import '../../../../core/resourses/app_secure_storage.dart';
 import 'auth_state.dart';
@@ -25,6 +26,22 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  Future<void> logout() async {
+    try {
+      emit(const AuthLoading());
+      // Clear all tokens from secure storage
+      await AppSecureStorage().removeData('token');
+      await AppSecureStorage().removeData('access_token');
+      // Clear all secure storage data
+      await AppSecureStorage().clear();
+      emit(const AuthUnauthenticated());
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
+  }
+}
+
+
   // Future<void> login(String token) async {
   //   try {
   //     emit(const AuthLoading());
@@ -44,4 +61,4 @@ class AuthCubit extends Cubit<AuthState> {
   //     emit(AuthError(e.toString()));
   //   }
   // }
-}
+

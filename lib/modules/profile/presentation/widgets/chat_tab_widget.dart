@@ -3,48 +3,96 @@ import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/core/resourses/style_manager.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:baseqat/modules/profile/presentation/cubit/conversations_cubit.dart';
+import 'package:intl/intl.dart';
+import 'package:baseqat/core/services_locator/dependency_injection.dart';
+
+import '../../../artwork_details/data/models/conversation_models.dart';
 
 class ChatTabWidget extends StatelessWidget {
-  const ChatTabWidget({super.key});
+  final String userId;
+
+  const ChatTabWidget({
+    super.key,
+    required this.userId,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final chatItems = [
-      {
-        'title': 'Clay Whispers',
-        'message': 'Pottery pieces that carry the warmth of craftsman...',
-        'time': '08:00 AM',
-        'image': AppAssetsManager.imgRectangle1,
-      },
-      {
-        'title': 'Whisper of the Horizon',
-        'message': 'A canvas capturing the gradient of the sky at sunset...',
-        'time': '09:00 AM',
-        'image': AppAssetsManager.imgRectangle2,
-      },
-      {
-        'title': 'Shadows of the Old City',
-        'message': 'A scene of a historic town painted with thick oil...',
-        'time': '10:00 AM',
-        'image': AppAssetsManager.imgRectangle4,
-      },
-      {
-        'title': 'Dance of Light',
-        'message': 'A painting that portrays sunlight shimmering across...',
-        'time': '11:00 AM',
-        'image': AppAssetsManager.imgEllipse13,
-      },
-    ];
+    return BlocProvider(
+      create: (context) => sl<ConversationsCubit>()..loadFirst(userId: userId),
+      child: BlocBuilder<ConversationsCubit, ConversationsState>(
+        builder: (context, state) {
+          if (state.status == ConversationsStatus.loading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(vertical: 16.sH),
-      child: Column(
-        children: chatItems.map((item) => _buildChatItem(item)).toList(),
+          if (state.status == ConversationsStatus.error) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Error loading conversations',
+                    style: TextStyleHelper.instance.body14RegularInter.copyWith(
+                      color: AppColor.red,
+                    ),
+                  ),
+                  SizedBox(height: 8.sH),
+                  ElevatedButton(
+                    onPressed: () => context.read<ConversationsCubit>().refresh(),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          if (state.items.isEmpty) {
+            return Center(
+              child: Text(
+                'No conversations yet',
+                style: TextStyleHelper.instance.body14RegularInter.copyWith(
+                  color: AppColor.gray700,
+                ),
+              ),
+            );
+          }
+
+          return RefreshIndicator(
+            onRefresh: () => context.read<ConversationsCubit>().refresh(),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(vertical: 16.sH),
+              child: Column(
+                children: [
+                  ...state.items.map((conversation) => _buildChatItem(conversation)),
+                  if (state.hasMore)
+                    Padding(
+                      padding: EdgeInsets.all(16.sH),
+                      child: state.isLoadingMore
+                          ? const CircularProgressIndicator()
+                          : ElevatedButton(
+                        onPressed: () => context.read<ConversationsCubit>().loadMore(),
+                        child: const Text('Load More'),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildChatItem(Map<String, String> item) {
+  Widget _buildChatItem(ConversationRecord conversation) {
+    final lastMessageTime = conversation.lastMessageAt != null
+        ? DateFormat('hh:mm a').format(conversation.lastMessageAt!)
+        : DateFormat('hh:mm a').format(conversation.startedAt);
+
     return Container(
       margin: EdgeInsets.only(bottom: 1.sH),
       padding: EdgeInsets.symmetric(vertical: 16.sH, horizontal: 16.sW),
@@ -56,7 +104,6 @@ class ChatTabWidget extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Chat Avatar
           Container(
             width: 60.sW,
             height: 60.sW,
@@ -64,22 +111,25 @@ class ChatTabWidget extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: ClipOval(
-              child: Image.asset(
-                item['image']!,
+              child: conversation.artworkGallery.isNotEmpty
+                  ? Image.network(
+                conversation.artworkGallery.first,
                 fit: BoxFit.cover,
-              ),
+                errorBuilder: (context, error, stackTrace) =>
+                    Image.asset(AppAssetsManager.imgRectangle1, fit: BoxFit.cover),
+              )
+                  : Image.asset(AppAssetsManager.imgRectangle1, fit: BoxFit.cover),
             ),
           ),
 
           SizedBox(width: 12.sW),
 
-          // Chat Details
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item['title']!,
+                  conversation.artworkName ?? 'Untitled Artwork',
                   style: TextStyleHelper.instance.title16BoldInter.copyWith(
                     color: AppColor.black,
                   ),
@@ -88,7 +138,10 @@ class ChatTabWidget extends StatelessWidget {
                 SizedBox(height: 4.sH),
 
                 Text(
-                  item['message']!,
+                  conversation.sessionLabel ??
+                      (conversation.messageCount > 0
+                          ? '${conversation.messageCount} messages'
+                          : 'Start a conversation...'),
                   style: TextStyleHelper.instance.body12LightInter.copyWith(
                     color: AppColor.gray700,
                   ),
@@ -99,12 +152,26 @@ class ChatTabWidget extends StatelessWidget {
             ),
           ),
 
-          // Time
-          Text(
-            item['time']!,
-            style: TextStyleHelper.instance.body12LightInter.copyWith(
-              color: AppColor.gray400,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                lastMessageTime,
+                style: TextStyleHelper.instance.body12LightInter.copyWith(
+                  color: AppColor.gray400,
+                ),
+              ),
+              if (conversation.isActive == true)
+                Container(
+                  margin: EdgeInsets.only(top: 4.sH),
+                  width: 8.sW,
+                  height: 8.sW,
+                  decoration: BoxDecoration(
+                    color: AppColor.green,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+            ],
           ),
         ],
       ),

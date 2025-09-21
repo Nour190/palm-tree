@@ -7,7 +7,6 @@ import 'package:baseqat/modules/profile/presentation/widgets/likes_tab_widget.da
 import 'package:baseqat/modules/profile/presentation/widgets/chat_tab_widget.dart';
 import 'package:baseqat/modules/profile/presentation/widgets/notification_tab_widget.dart';
 import 'package:baseqat/modules/profile/presentation/widgets/settings_tab_widget.dart';
-import 'package:baseqat/modules/profile/presentation/widgets/privacy_tab_widget.dart';
 import 'package:flutter/material.dart';
 
 class ProfileMobileTabletLayout extends StatelessWidget {
@@ -15,10 +14,12 @@ class ProfileMobileTabletLayout extends StatelessWidget {
     super.key,
     required this.selectedTabIndex,
     required this.onTabChanged,
+    required this.userId, // Adding userId parameter
   });
 
   final int selectedTabIndex;
   final Function(int) onTabChanged;
+  final String userId; // Adding userId field
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +38,7 @@ class ProfileMobileTabletLayout extends StatelessWidget {
             ProfileTabNavigationWidget(
               selectedTabIndex: selectedTabIndex,
               onTabTap: onTabChanged,
-              tabs: const ['Likes', 'Chat', 'Notification', 'Privacy', 'Settings'],
+              tabs: const ['Likes', 'Chat', 'Notification', 'Settings'],
             ),
 
             Expanded(
@@ -62,10 +63,9 @@ class ProfileMobileTabletLayout extends StatelessWidget {
   Widget _buildTabContent(int index) {
     switch (index) {
       case 0: return const LikesTabWidget();
-      case 1: return const ChatTabWidget();
+      case 1: return ChatTabWidget(userId: userId); // Passing userId to ChatTabWidget
       case 2: return const NotificationTabWidget();
-      case 3: return const PrivacyTabWidget();
-      case 4: return const SettingsTabWidget();
+      case 3: return const SettingsTabWidget();
       default: return const SizedBox.shrink();
     }
   }

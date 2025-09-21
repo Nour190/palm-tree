@@ -755,7 +755,7 @@ class _LocationTabState extends State<LocationTab>
       children: [
         chip('Standard', Icons.map, MapStyle.standard),
         chip('3D Terrain', Icons.terrain, MapStyle.terrain3D),
-        chip('Satellite', Icons.satellite_alt, MapStyle.satellite),
+        // chip('Satellite', Icons.satellite_alt, MapStyle.satellite),
       ],
     );
   }

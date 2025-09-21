@@ -332,10 +332,10 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (hero != null && hero.isNotEmpty) ...[
-                HeroImage(height: _isMobile ? 200 : 320, path: hero),
-                SizedBox(height: 16.sH),
-              ],
+              // if (hero != null && hero.isNotEmpty) ...[
+              //   HeroImage(height: _isMobile ? 200 : 320, path: hero),
+              //   SizedBox(height: 16.sH),
+              // ],
               Text(
                 artwork?.name ?? artist?.name ?? 'Artwork',
                 style: _isMobile

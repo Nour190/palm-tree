@@ -1,116 +1,159 @@
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/core/resourses/style_manager.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
+import 'package:baseqat/core/responsive/size_utils.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../cubit/notification_settings_cubit.dart';
+import '../cubit/notification_settings_state.dart';
 import 'package:flutter/material.dart';
+import '../service/notification_settings_service.dart';
+import '../view/notification_settings_screen.dart';
 
-class NotificationTabWidget extends StatefulWidget {
+class NotificationTabWidget extends StatelessWidget {
   const NotificationTabWidget({super.key});
 
   @override
-  State<NotificationTabWidget> createState() => _NotificationTabWidgetState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => NotificationSettingsCubit(NotificationSettingsService.instance),
+      child: const _NotificationTabView(),
+    );
+  }
 }
 
-class _NotificationTabWidgetState extends State<NotificationTabWidget> {
-  bool _pushNotifications = true;
-  bool _emailNotifications = false;
-  bool _artworkUpdates = true;
-  bool _exhibitionReminders = true;
-  bool _auctionAlerts = false;
-  bool _messageNotifications = true;
-  bool _followNotifications = true;
+class _NotificationTabView extends StatelessWidget {
+  const _NotificationTabView();
 
   @override
   Widget build(BuildContext context) {
+    return BlocBuilder<NotificationSettingsCubit, NotificationSettingsState>(
+      builder: (context, state) {
+        if (state.status == NotificationSettingsStatus.loading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (!state.isPushEnabled) {
+          return _buildNotificationsDisabledView(context);
+        }
+
+        bool hasNotifications = false; // This would come from your notification data
+
+        if (!hasNotifications) {
+          return _buildNoNotificationsView();
+        }
+
+        return _buildNotificationsView();
+      },
+    );
+  }
+
+  Widget _buildNotificationsDisabledView(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(32.sW),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.notifications_off,
+              size: 80.sSp,
+              color: AppColor.gray400,
+            ),
+            SizedBox(height: 24.sH),
+            Text(
+              'Notifications are turned off',
+              style: TextStyleHelper.instance.headline20BoldInter.copyWith(
+                color: AppColor.black,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 12.sH),
+            Text(
+              'Enable notifications in your profile settings to receive updates about artworks, events, and more.',
+              style: TextStyleHelper.instance.title16RegularInter.copyWith(
+                color: AppColor.gray400,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 24.sH),
+            // ElevatedButton(
+            //   onPressed: () {
+            //     // Navigator.push(
+            //     //   context,
+            //     //   MaterialPageRoute(
+            //     //     builder: (context) => const NotificationSettingsScreen(),
+            //     //   ),
+            //     // );
+            //     Navigator.push(
+            //       context,
+            //       MaterialPageRoute(
+            //         builder: (context) => BlocProvider.value(
+            //           value: context.read<NotificationSettingsCubit>(),
+            //           child: const NotificationSettingsScreen(),
+            //         ),
+            //       ),
+            //     );
+            //
+            //   },
+            //   style: ElevatedButton.styleFrom(
+            //     backgroundColor: AppColor.primaryColor,
+            //     padding: EdgeInsets.symmetric(horizontal: 24.sW, vertical: 12.sH),
+            //     shape: RoundedRectangleBorder(
+            //       borderRadius: BorderRadius.circular(8.r),
+            //     ),
+            //   ),
+            //   child: Text(
+            //     'Turn on notifications',
+            //     style: TextStyleHelper.instance.title14BoldInter.copyWith(
+            //       color: AppColor.white,
+            //     ),
+            //   ),
+            // ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNoNotificationsView() {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(32.sW),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.notifications_none,
+              size: 80.sSp,
+              color: AppColor.gray400,
+            ),
+            SizedBox(height: 24.sH),
+            Text(
+              'No notifications yet',
+              style: TextStyleHelper.instance.headline20BoldInter.copyWith(
+                color: AppColor.black,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 12.sH),
+            Text(
+              'When you receive notifications about artworks, events, and updates, they\'ll appear here.',
+              style: TextStyleHelper.instance.title16RegularInter.copyWith(
+                color: AppColor.gray400,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotificationsView() {
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(vertical: 16.sH),
       child: Column(
         children: [
-          Container(
-            margin: EdgeInsets.symmetric(horizontal: 16.sW, vertical: 8.sH),
-            padding: EdgeInsets.all(16.sW),
-            decoration: BoxDecoration(
-              color: AppColor.primaryColor.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(12.sW),
-              border: Border.all(
-                color: AppColor.primaryColor.withOpacity(0.1),
-                width: 1.sW,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.settings,
-                      color: AppColor.primaryColor,
-                      size: 24.sSp,
-                    ),
-                    SizedBox(width: 12.sW),
-                    Text(
-                      'Notification Settings',
-                      style: TextStyleHelper.instance.title18BoldInter.copyWith(
-                        color: AppColor.black,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 16.sH),
-
-                _buildNotificationToggle(
-                  'Push Notifications',
-                  'Receive notifications on your device',
-                  _pushNotifications,
-                      (value) => setState(() => _pushNotifications = value),
-                ),
-
-                _buildNotificationToggle(
-                  'Email Notifications',
-                  'Get updates via email',
-                  _emailNotifications,
-                      (value) => setState(() => _emailNotifications = value),
-                ),
-
-                _buildNotificationToggle(
-                  'Artwork Updates',
-                  'New artworks from followed artists',
-                  _artworkUpdates,
-                      (value) => setState(() => _artworkUpdates = value),
-                ),
-
-                _buildNotificationToggle(
-                  'Exhibition Reminders',
-                  'Upcoming exhibitions and events',
-                  _exhibitionReminders,
-                      (value) => setState(() => _exhibitionReminders = value),
-                ),
-
-                _buildNotificationToggle(
-                  'Auction Alerts',
-                  'Bidding updates and auction starts',
-                  _auctionAlerts,
-                      (value) => setState(() => _auctionAlerts = value),
-                ),
-
-                _buildNotificationToggle(
-                  'Messages',
-                  'New messages and chat updates',
-                  _messageNotifications,
-                      (value) => setState(() => _messageNotifications = value),
-                ),
-
-                _buildNotificationToggle(
-                  'Follow Activity',
-                  'New followers and follow requests',
-                  _followNotifications,
-                      (value) => setState(() => _followNotifications = value),
-                ),
-              ],
-            ),
-          ),
-
-          SizedBox(height: 16.sH),
-
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.sW),
             child: Row(
@@ -140,49 +183,6 @@ class _NotificationTabWidgetState extends State<NotificationTabWidget> {
           SizedBox(height: 8.sH),
 
           ...notifications.map((notification) => _buildNotificationItem(notification)).toList(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNotificationToggle(
-      String title,
-      String description,
-      bool value,
-      Function(bool) onChanged,
-      ) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8.sH),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyleHelper.instance.title14BoldInter.copyWith(
-                    color: AppColor.black,
-                  ),
-                ),
-                SizedBox(height: 2.sH),
-                Text(
-                  description,
-                  style: TextStyleHelper.instance.body12MediumInter.copyWith(
-                    color: AppColor.gray600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(width: 16.sW),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeColor: AppColor.primaryColor,
-            inactiveThumbColor: AppColor.gray400,
-            inactiveTrackColor: AppColor.gray200,
-          ),
         ],
       ),
     );
@@ -233,7 +233,6 @@ class _NotificationTabWidgetState extends State<NotificationTabWidget> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Notification Icon
           Container(
             width: 48.sW,
             height: 48.sW,
@@ -250,7 +249,6 @@ class _NotificationTabWidgetState extends State<NotificationTabWidget> {
 
           SizedBox(width: 12.sW),
 
-          // Notification Details
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

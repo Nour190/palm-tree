@@ -19,10 +19,10 @@ class Responsive {
   static double responsiveFontSize(BuildContext context, double baseSize) {
     final w = MediaQuery.of(context).size.width;
 
-    if (w <= 600) {
+    if (w <= 400) {
       // mobile: use base
       return baseSize;
-    } else if (w <= 1024) {
+    } else if (w <= 800) {
       // tablet: small increase
       return (baseSize * 1.05).roundToDouble();
     } else {

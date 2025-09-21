@@ -38,7 +38,7 @@ class _GalleryTabState extends State<GalleryTab> {
   @override
   Widget build(BuildContext context) {
     final w = SizeUtils.width;
-    final crossAxisCount = w >= 1200 ? 4 : (w >= 840 ? 3 : 2);
+    final crossAxisCount = w >= 1200 ? 4 : (w >= 840 ? 3 : 3);
     final radius = 14.h;
 
     if (_items.isEmpty) {

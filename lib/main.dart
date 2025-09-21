@@ -138,10 +138,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'modules/auth/auth/presentation/auth_gate.dart';
 import 'modules/auth/logic/auth_gate_cubit/auth_cubit.dart';
 import 'modules/auth/logic/login_cubit/login_cubit.dart';
+import 'modules/profile/data/datasources/favorites_remote_data_source.dart';
+import 'modules/profile/data/repositories/favorites_repository.dart';
+import 'modules/profile/presentation/cubit/favorites_cubit.dart';
+import 'modules/profile/presentation/cubit/notification_settings_cubit.dart';
+import 'modules/profile/presentation/service/notification_settings_service.dart';
 
 void main() async {
   runZonedGuarded(() async {
@@ -231,6 +237,8 @@ class MyApp extends StatelessWidget {
             BlocProvider(create: (_) => sl<LoginCubit>()),
             BlocProvider(create: (_) => TabsCubit()),
             BlocProvider(create: (_) => AuthCubit()),
+           // BlocProvider(create: (_) => sl<FavoritesCubit>()),
+
           ],
           child: Sizer(
             builder: (context, orientation, deviceType) {

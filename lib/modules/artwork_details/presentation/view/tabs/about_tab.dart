@@ -51,9 +51,10 @@ class _AboutTabState extends State<AboutTab> {
   Widget build(BuildContext context) {
     final s = TextStyleHelper.instance;
     final w = SizeUtils.width;
-    final isDesktop = w >= 1200;
+    final isDesktop = w >= 600;
     final isTablet = w >= 840 && w < 1200;
     final isMobile = w < 840;
+
 
     final double gap = 16.h;
     final double heroH = isDesktop ? 460.h : (isTablet ? 380.h : 240.h);

@@ -6,7 +6,6 @@ import 'package:baseqat/modules/profile/presentation/widgets/likes_tab_widget.da
 import 'package:baseqat/modules/profile/presentation/widgets/chat_tab_widget.dart';
 import 'package:baseqat/modules/profile/presentation/widgets/notification_tab_widget.dart';
 import 'package:baseqat/modules/profile/presentation/widgets/settings_tab_widget.dart';
-import 'package:baseqat/modules/profile/presentation/widgets/privacy_tab_widget.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/components/custom_widgets/custom_top_bar.dart';
@@ -16,10 +15,12 @@ class ProfileDesktopLayout extends StatelessWidget {
     super.key,
     required this.selectedTabIndex,
     required this.onTabChanged,
+    required this.userId, // Adding userId parameter
   });
 
   final int selectedTabIndex;
   final Function(int) onTabChanged;
+  final String userId; // Adding userId field
 
   @override
   Widget build(BuildContext context) {
@@ -151,8 +152,7 @@ class ProfileDesktopLayout extends StatelessWidget {
                           _buildNavItem(0, Icons.favorite_outline, 'Likes'),
                           _buildNavItem(1, Icons.chat_bubble_outline, 'Chat'),
                           _buildNavItem(2, Icons.notifications_outlined, 'Notifications'),
-                          _buildNavItem(3, Icons.lock_outline, 'Privacy'),
-                          _buildNavItem(4, Icons.settings_outlined, 'Settings'),
+                          _buildNavItem(3, Icons.settings_outlined, 'Settings'),
                         ],
                       ),
                     ),
@@ -282,8 +282,7 @@ class ProfileDesktopLayout extends StatelessWidget {
       case 0: return 'Liked Posts';
       case 1: return 'Messages';
       case 2: return 'Notifications';
-      case 3: return 'Privacy';
-      case 4: return 'Settings';
+      case 3: return 'Settings';
       default: return 'Profile';
     }
   }
@@ -291,10 +290,9 @@ class ProfileDesktopLayout extends StatelessWidget {
   Widget _buildTabContent(int index) {
     switch (index) {
       case 0: return const LikesTabWidget();
-      case 1: return const ChatTabWidget();
+      case 1: return ChatTabWidget(userId: userId); // Passing userId to ChatTabWidget
       case 2: return const NotificationTabWidget();
-      case 3: return const PrivacyTabWidget();
-      case 4: return const SettingsTabWidget();
+      case 3: return const SettingsTabWidget();
       default: return const SizedBox.shrink();
     }
   }

@@ -33,7 +33,7 @@ class DesktopNavigationBar extends StatelessWidget {
               ),
             ],
           ),
-          
+
           SizedBox(height: 32.sH),
           
           Text(
@@ -111,45 +111,59 @@ class DesktopNavigationBar extends StatelessWidget {
               },
             ),
           ),
-          
           Container(
             padding: EdgeInsets.all(16.sW),
             decoration: BoxDecoration(
-              color: AppColor.gray50,
-              borderRadius: BorderRadius.circular(12.sW),
+              border: Border(
+                top: BorderSide(color: AppColor.gray200, width: 1.sW),
+              ),
             ),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 16.sW,
-                  backgroundColor: AppColor.primaryColor,
-                  child: Icon(
-                    Icons.person,
-                    size: 16.sW,
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(width: 12.sW),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Welcome',
-                        style: TextStyleHelper.instance.caption12RegularInter
-                            .copyWith(color: AppColor.gray600),
-                      ),
-                      Text(
-                        'Explorer',
-                        style: TextStyleHelper.instance.body14RegularInter
-                            .copyWith(fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Version 1.0.0',
+              style: TextStyleHelper.instance.caption12RegularInter.copyWith(
+                color: AppColor.gray400,
+              ),
             ),
-          ),
+          )
+          // Container(
+          //   padding: EdgeInsets.all(16.sW),
+          //   decoration: BoxDecoration(
+          //     color: AppColor.gray50,
+          //     borderRadius: BorderRadius.circular(12.sW),
+          //   ),
+          //   child: Row(
+          //     children: [
+          //       CircleAvatar(
+          //         radius: 16.sW,
+          //         backgroundColor: AppColor.primaryColor,
+          //         child: Icon(
+          //           Icons.person,
+          //           size: 16.sW,
+          //           color: Colors.white,
+          //         ),
+          //       ),
+          //       SizedBox(width: 12.sW),
+          //       Expanded(
+          //         child: Column(
+          //           crossAxisAlignment: CrossAxisAlignment.start,
+          //           children: [
+          //             Text(
+          //               'Welcome',
+          //               style: TextStyleHelper.instance.caption12RegularInter
+          //                   .copyWith(color: AppColor.gray600),
+          //             ),
+          //             Text(
+          //               'Explorer',
+          //               style: TextStyleHelper.instance.body14RegularInter
+          //                   .copyWith(fontWeight: FontWeight.w600),
+          //             ),
+          //           ],
+          //         ),
+          //       ),
+          //     ],
+          //   ),
+          // ),
         ],
       ),
     );

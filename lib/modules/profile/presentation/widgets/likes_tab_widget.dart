@@ -3,44 +3,110 @@ import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/core/resourses/style_manager.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:baseqat/modules/profile/presentation/cubit/favorites_cubit.dart';
+import 'package:baseqat/modules/profile/presentation/cubit/favorites_state.dart';
+import 'package:baseqat/modules/profile/data/models/favorite_item.dart';
+
+import '../../../events/data/models/fav_extension.dart';
 
 class LikesTabWidget extends StatelessWidget {
   const LikesTabWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final likedItems = [
-      {
-        'title': 'Clay Whispers',
-        'description': 'Pottery pieces that carry the warmth of craftsmanship and the touch of nature, each creation telling a story of patience, tradition, and artistry. From the shaping of raw clay to the final glaze, these pieces embody the harmony between human hands and the earth, bringing soulful beauty and a sense of calm to any home or space',
-        'image': AppAssetsManager.imgRectangle1,
-      },
-      {
-        'title': 'Fasel Asaad',
-        'description': 'Pottery pieces that carry the warmth of craftsmanship and the touch of nature, each creation telling a story of patience, tradition, and artistry. From the shaping of raw clay to the final glaze, these pieces embody the harmony between human hands and the earth, bringing soulful beauty and a sense of calm to any home or space',
-        'image': AppAssetsManager.imgEllipse13,
-      },
-      {
-        'title': 'Roots Entrance',
-        'description': 'This room is dedicated to showcasing artworks created with oil paints, highlighting the rich details and layered depth that distinguish this medium. Designed to offer visitors a calm and focused visual experience, the space features balanced lighting that enhances the beauty of colors and brush textures. Here, visitors can explore the diversity of artistic',
-        'image': AppAssetsManager.imgRectangle2,
-      },
-      {
-        'title': 'The aromry show',
-        'description': 'Kiaf SEOUL 2025 takes place from September 3rd to September 7th at COEX Hall, Seoul. Browse a selection of fresh works by Hye-Eun Kang, Son Seock, JUNSEOK KANG at the fair on Artsy and collect from our partner galleries including Gallery Dasun, Mark Hachem Gallery, PIGMENT Gallery, and more.',
-        'image': AppAssetsManager.imgRectangle4,
-      },
-    ];
+    return BlocBuilder<FavoritesCubit, FavoritesState>(
+      builder: (context, state) {
+        switch (state.status) {
+          case FavoritesStatus.loading:
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(vertical: 16.sH),
-      child: Column(
-        children: likedItems.map((item) => _buildLikedItem(item)).toList(),
-      ),
+          case FavoritesStatus.error:
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 48.sSp,
+                    color: AppColor.gray400,
+                  ),
+                  SizedBox(height: 16.sH),
+                  Text(
+                    'Error loading favorites',
+                    style: TextStyleHelper.instance.title16BoldInter.copyWith(
+                      color: AppColor.gray700,
+                    ),
+                  ),
+                  if (state.error != null) ...[
+                    SizedBox(height: 8.sH),
+                    Text(
+                      state.error!,
+                      style: TextStyleHelper.instance.body12LightInter.copyWith(
+                        color: AppColor.gray400,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                  SizedBox(height: 16.sH),
+                  ElevatedButton(
+                    onPressed: () => context.read<FavoritesCubit>().load(),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+
+          case FavoritesStatus.success:
+            if (state.items.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.favorite_border,
+                      size: 48.sSp,
+                      color: AppColor.gray400,
+                    ),
+                    SizedBox(height: 16.sH),
+                    Text(
+                      'No favorites yet',
+                      style: TextStyleHelper.instance.title16BoldInter.copyWith(
+                        color: AppColor.gray700,
+                      ),
+                    ),
+                    SizedBox(height: 8.sH),
+                    Text(
+                      'Start exploring and add items to your favorites',
+                      style: TextStyleHelper.instance.body12LightInter.copyWith(
+                        color: AppColor.gray400,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return SingleChildScrollView(
+              padding: EdgeInsets.symmetric(vertical: 16.sH),
+              child: Column(
+                children: state.items.map((item) => _buildLikedItem(context, item, state)).toList(),
+              ),
+            );
+
+          default:
+            return const SizedBox.shrink();
+        }
+      },
     );
   }
 
-  Widget _buildLikedItem(Map<String, String> item) {
+  Widget _buildLikedItem(BuildContext context, FavoriteItem item, FavoritesState state) {
+    final isRemoving = state.removingKeys.contains('${item.entityKind}::${item.entityId}');
+
     return Container(
       margin: EdgeInsets.only(bottom: 16.sH),
       padding: EdgeInsets.all(16.sW),
@@ -61,9 +127,28 @@ class LikesTabWidget extends StatelessWidget {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8.sW),
-              child: Image.asset(
-                item['image']!,
+              child: item.imageUrl != null
+                  ? Image.network(
+                item.imageUrl!,
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: AppColor.gray400.withOpacity(0.3),
+                    child: Icon(
+                      Icons.image_not_supported,
+                      color: AppColor.gray400,
+                      size: 24.sSp,
+                    ),
+                  );
+                },
+              )
+                  : Container(
+                color: AppColor.gray400.withOpacity(0.3),
+                child: Icon(
+                  Icons.image,
+                  color: AppColor.gray400,
+                  size: 24.sSp,
+                ),
               ),
             ),
           ),
@@ -76,7 +161,7 @@ class LikesTabWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item['title']!,
+                  item.title ?? 'Untitled',
                   style: TextStyleHelper.instance.title16BoldInter.copyWith(
                     color: AppColor.black,
                   ),
@@ -85,33 +170,83 @@ class LikesTabWidget extends StatelessWidget {
                 SizedBox(height: 8.sH),
 
                 Text(
-                  item['description']!,
+                  item.description ?? 'No description available',
                   style: TextStyleHelper.instance.body12LightInter.copyWith(
                     color: AppColor.gray700,
                   ),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
+
+                SizedBox(height: 8.sH),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.sW, vertical: 4.sH),
+                  decoration: BoxDecoration(
+                    color: AppColor.gray400.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(4.sW),
+                  ),
+                  child: Text(
+                    item.entityKind.toUpperCase(),
+                    style: TextStyleHelper.instance.body12LightInter.copyWith(
+                      color: AppColor.gray700,
+                      fontSize: 10.sSp,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
 
-          // Heart Icon
-          Container(
-            width: 40.sW,
-            height: 40.sW,
-            decoration: BoxDecoration(
-              color: AppColor.gray400,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.favorite,
-              color: AppColor.white,
-              size: 20.sSp,
+          GestureDetector(
+            onTap: isRemoving ? null : () async {
+              // Parse entityKind from string to EntityKind enum
+              final entityKind = _parseEntityKind(item.entityKind);
+              if (entityKind != null) {
+                await context.read<FavoritesCubit>().remove(
+                  kind: entityKind,
+                  entityId: item.entityId,
+                );
+              }
+            },
+            child: Container(
+              width: 30.sW,
+              height: 30.sW,
+              decoration: BoxDecoration(
+                color: isRemoving ? AppColor.white.withOpacity(0.5) : AppColor.white,
+                shape: BoxShape.circle,
+                border:Border.all(color: Colors.black)
+              ),
+              child: isRemoving
+                  ? SizedBox(
+                width: 16.sSp,
+                height: 16.sSp,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColor.white),
+                ),
+              )
+                  : Icon(
+                Icons.favorite,
+                color: AppColor.red,
+                size: 25.sSp,
+              ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  EntityKind? _parseEntityKind(String entityKindString) {
+    switch (entityKindString.toLowerCase()) {
+      case 'artist':
+        return EntityKind.artist;
+      case 'artwork':
+        return EntityKind.artwork;
+      case 'speaker':
+        return EntityKind.speaker;
+      default:
+        return null;
+    }
   }
 }
