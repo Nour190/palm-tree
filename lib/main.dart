@@ -136,6 +136,7 @@ import 'package:baseqat/modules/tabs/presentation/view/tabs_view.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -166,6 +167,7 @@ void main() async {
 
     try {
       await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+      Gemini.init( apiKey: 'AIzaSyBibFQQgIWVf2rUBaQoZwP0064C5g_P4OY', enableDebugging: true,);
 
       await SupabaseConfig.initialize();
       debugPrint('Supabase initialized successfully');

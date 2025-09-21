@@ -10,6 +10,8 @@ import '../../view/speakers_info_view.dart';
 
 class SessionCard extends StatelessWidget {
   final Speaker speaker;
+  final String userId;
+
   final int index;
   final void Function(int index)? onTap;
   final bool isDesktop;
@@ -20,6 +22,7 @@ class SessionCard extends StatelessWidget {
     required this.index,
     this.onTap,
     this.isDesktop = false,
+    required this.userId,
   });
 
   String _formatTimeLocal(DateTime utc) =>
@@ -44,7 +47,8 @@ class SessionCard extends StatelessWidget {
       onTap: () {
         navigateTo(
           context,
-            SpeakersInfoScreen(speaker: speaker,));
+          SpeakersInfoScreen(speaker: speaker, userId: userId),
+        );
       },
       child: Container(
         decoration: BoxDecoration(
@@ -62,14 +66,32 @@ class SessionCard extends StatelessWidget {
         child: Padding(
           padding: EdgeInsets.all(isDesktop ? 20 : 16),
           child: isDesktop
-              ? _buildDesktopLayout(timeLabel, title, summary, fg, isHighlighted)
-              : _buildMobileLayout(timeLabel, title, summary, fg, isHighlighted),
+              ? _buildDesktopLayout(
+                  timeLabel,
+                  title,
+                  summary,
+                  fg,
+                  isHighlighted,
+                )
+              : _buildMobileLayout(
+                  timeLabel,
+                  title,
+                  summary,
+                  fg,
+                  isHighlighted,
+                ),
         ),
       ),
     );
   }
 
-  Widget _buildDesktopLayout(String timeLabel, String title, String summary, Color fg, bool isHighlighted) {
+  Widget _buildDesktopLayout(
+    String timeLabel,
+    String title,
+    String summary,
+    Color fg,
+    bool isHighlighted,
+  ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -110,7 +132,7 @@ class SessionCard extends StatelessWidget {
           ),
         ),
 
-         SizedBox(width: 1.sW),
+        SizedBox(width: 1.sW),
 
         // Content section
         Expanded(
@@ -124,13 +146,13 @@ class SessionCard extends StatelessWidget {
                   color: fg,
                 ),
               ),
-               SizedBox(height: 8.sH),
+              SizedBox(height: 8.sH),
               Text(
                 summary,
-                style: TextStyleHelper.instance.title14BlackRegularInter.copyWith(
-                  color: fg.withOpacity(0.85),
-                  height: 1.2,
-                ),maxLines: 6,overflow: TextOverflow.ellipsis,
+                style: TextStyleHelper.instance.title14BlackRegularInter
+                    .copyWith(color: fg.withOpacity(0.85), height: 1.2),
+                maxLines: 6,
+                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 12),
               if (speaker.city != null || speaker.country != null)
@@ -147,9 +169,8 @@ class SessionCard extends StatelessWidget {
                         speaker.city,
                         speaker.country,
                       ].where((e) => (e ?? '').isNotEmpty).join(', '),
-                      style: TextStyleHelper.instance.body14RegularInter.copyWith(
-                        color: fg.withOpacity(0.7),
-                      ),
+                      style: TextStyleHelper.instance.body14RegularInter
+                          .copyWith(color: fg.withOpacity(0.7)),
                     ),
                   ],
                 ),
@@ -176,7 +197,13 @@ class SessionCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMobileLayout(String timeLabel, String title, String summary, Color fg, bool isHighlighted) {
+  Widget _buildMobileLayout(
+    String timeLabel,
+    String title,
+    String summary,
+    Color fg,
+    bool isHighlighted,
+  ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -190,11 +217,9 @@ class SessionCard extends StatelessWidget {
         ),
         Text(
           timeLabel,
-          style: TextStyleHelper.instance.title16BoldInter.copyWith(
-            color: fg,
-          ),
+          style: TextStyleHelper.instance.title16BoldInter.copyWith(color: fg),
         ),
-         SizedBox(width: 16.sW),
+        SizedBox(width: 16.sW),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -205,13 +230,15 @@ class SessionCard extends StatelessWidget {
                   color: fg,
                 ),
               ),
-               SizedBox(height: 6.sH),
+              SizedBox(height: 6.sH),
               Text(
                 summary,
-                style: TextStyleHelper.instance.body12MediumInter
-                    .copyWith(color: fg.withOpacity(0.85)
+                style: TextStyleHelper.instance.body12MediumInter.copyWith(
+                  color: fg.withOpacity(0.85),
                 ),
-              maxLines: 4,overflow: TextOverflow.ellipsis,),
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+              ),
               const SizedBox(height: 8),
               if (speaker.city != null || speaker.country != null)
                 Text(
@@ -219,8 +246,7 @@ class SessionCard extends StatelessWidget {
                     speaker.city,
                     speaker.country,
                   ].where((e) => (e ?? '').isNotEmpty).join(', '),
-                  style: TextStyleHelper.instance.title16RegularInter
-                      .copyWith(
+                  style: TextStyleHelper.instance.title16RegularInter.copyWith(
                     fontSize: 12,
                     color: fg.withOpacity(0.7),
                   ),

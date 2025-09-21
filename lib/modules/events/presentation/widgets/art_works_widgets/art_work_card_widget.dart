@@ -1,8 +1,7 @@
-import 'package:baseqat/core/resourses/style_manager.dart';
+// ===================== ArtWorkCardWidget =====================
 import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/modules/home/data/models/artwork_model.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:baseqat/core/responsive/size_utils.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 
@@ -13,11 +12,17 @@ class ArtWorkCardWidget extends StatefulWidget {
   final VoidCallback? onTap;
   final ArtworkCardViewType viewType;
 
+  /// NEW: favorite state & handler
+  final bool isFavorite;
+  final VoidCallback? onFavoriteTap;
+
   const ArtWorkCardWidget({
     super.key,
     required this.artwork,
     this.onTap,
     this.viewType = ArtworkCardViewType.list,
+    this.isFavorite = false,
+    this.onFavoriteTap,
   });
 
   @override
@@ -84,34 +89,45 @@ class _ArtWorkCardWidgetState extends State<ArtWorkCardWidget>
   Widget _buildListCard(bool isDark, bool isMobile) {
     final art = widget.artwork;
     final cover = _pickCover(art);
-
     final isAlternate = art.id.hashCode % 2 == 0;
+
+    final heartIcon = widget.isFavorite
+        ? Icons.favorite
+        : Icons.favorite_border;
+    final heartColor = widget.isFavorite
+        ? AppColor.primaryColor
+        : (isAlternate
+              ? AppColor.white
+              : (isDark ? AppColor.white : AppColor.gray600));
 
     return Container(
       decoration: BoxDecoration(
         color: isAlternate
-            ? AppColor.backgroundBlack  // Always dark for alternate cards
-            : (isDark ? AppColor.gray700 : AppColor.white),  // Dark gray or white
+            ? AppColor.backgroundBlack
+            : (isDark ? AppColor.gray700 : AppColor.white),
         borderRadius: BorderRadius.circular(16.h),
         border: isAlternate
             ? null
             : Border.all(
-          color: isDark ? AppColor.gray600 : AppColor.gray200,
-          width: 1,
-        ),
-        boxShadow: isAlternate ? [
-          BoxShadow(
-            color: AppColor.black.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ] : null,
+                color: isDark ? AppColor.gray600 : AppColor.gray200,
+                width: 1,
+              ),
+        boxShadow: isAlternate
+            ? [
+                BoxShadow(
+                  color: AppColor.black.withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ]
+            : null,
       ),
       child: Padding(
         padding: EdgeInsets.all(16.h),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Cover
             ClipRRect(
               borderRadius: BorderRadius.circular(12.h),
               child: Container(
@@ -123,57 +139,51 @@ class _ArtWorkCardWidgetState extends State<ArtWorkCardWidget>
                 child: cover == null || cover.isEmpty
                     ? _buildImagePlaceholder(isDark)
                     : Image.network(
-                  cover,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => _buildImagePlaceholder(isDark),
-                ),
+                        cover,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            _buildImagePlaceholder(isDark),
+                      ),
               ),
             ),
 
             SizedBox(width: 16.h),
 
+            // Info
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title
                   Text(
                     art.name,
                     style: TextStyle(
                       fontSize: isMobile ? 18.fSize : 22.fSize,
                       fontWeight: FontWeight.w600,
                       color: isAlternate
-                          ? AppColor.white  // White text on dark background
-                          : (isDark ? AppColor.white : AppColor.gray900),  // White on dark theme, dark text on light theme
+                          ? AppColor.white
+                          : (isDark ? AppColor.white : AppColor.gray900),
                       height: 1.2,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-
                   SizedBox(height: 8.h),
-
-                  // Description
                   if (art.description != null && art.description!.isNotEmpty)
                     Text(
                       art.description!,
                       style: TextStyle(
                         fontSize: isMobile ? 14.fSize : 16.fSize,
                         color: isAlternate
-                            ? AppColor.gray400  // Light gray on dark background
-                            : (isDark ? AppColor.gray400 : AppColor.gray600),  // Light gray on dark, dark gray on light
+                            ? AppColor.gray400
+                            : (isDark ? AppColor.gray400 : AppColor.gray600),
                         height: 1.5,
                       ),
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
-
                   SizedBox(height: 16.h),
-
-                  // Artist info
                   Row(
                     children: [
-                      // Artist avatar
                       Container(
                         width: 32.h,
                         height: 32.h,
@@ -181,38 +191,48 @@ class _ArtWorkCardWidgetState extends State<ArtWorkCardWidget>
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: isAlternate
-                                ? AppColor.gray500  // Visible border on dark background
-                                : (isDark ? AppColor.gray600 : AppColor.gray400),
+                                ? AppColor.gray500
+                                : (isDark
+                                      ? AppColor.gray600
+                                      : AppColor.gray400),
                             width: 2,
                           ),
                         ),
                         child: ClipOval(
-                          child: art.artistProfileImage == null || art.artistProfileImage!.isEmpty
+                          child:
+                              art.artistProfileImage == null ||
+                                  art.artistProfileImage!.isEmpty
                               ? Container(
-                            color: isDark ? AppColor.gray700 : AppColor.gray100,
-                            child: Icon(
-                              Icons.person,
-                              size: 16.h,
-                              color: isDark ? AppColor.gray400 : AppColor.gray600,
-                            ),
-                          )
+                                  color: isDark
+                                      ? AppColor.gray700
+                                      : AppColor.gray100,
+                                  child: Icon(
+                                    Icons.person,
+                                    size: 16.h,
+                                    color: isDark
+                                        ? AppColor.gray400
+                                        : AppColor.gray600,
+                                  ),
+                                )
                               : Image.network(
-                            art.artistProfileImage!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              color: isDark ? AppColor.gray700 : AppColor.gray100,
-                              child: Icon(
-                                Icons.person,
-                                size: 16.h,
-                                color: isDark ? AppColor.gray400 : AppColor.gray600,
-                              ),
-                            ),
-                          ),
+                                  art.artistProfileImage!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Container(
+                                    color: isDark
+                                        ? AppColor.gray700
+                                        : AppColor.gray100,
+                                    child: Icon(
+                                      Icons.person,
+                                      size: 16.h,
+                                      color: isDark
+                                          ? AppColor.gray400
+                                          : AppColor.gray600,
+                                    ),
+                                  ),
+                                ),
                         ),
                       ),
-
                       SizedBox(width: 8.h),
-
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -223,8 +243,10 @@ class _ArtWorkCardWidgetState extends State<ArtWorkCardWidget>
                                 fontSize: 14.fSize,
                                 fontWeight: FontWeight.w500,
                                 color: isAlternate
-                                    ? AppColor.white  // White on dark background
-                                    : (isDark ? AppColor.white : AppColor.gray900),  // White on dark, dark on light
+                                    ? AppColor.white
+                                    : (isDark
+                                          ? AppColor.white
+                                          : AppColor.gray900),
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -234,8 +256,10 @@ class _ArtWorkCardWidgetState extends State<ArtWorkCardWidget>
                               style: TextStyle(
                                 fontSize: 12.fSize,
                                 color: isAlternate
-                                    ? AppColor.gray400  // Light gray on dark background
-                                    : (isDark ? AppColor.gray400 : AppColor.gray600),
+                                    ? AppColor.gray400
+                                    : (isDark
+                                          ? AppColor.gray400
+                                          : AppColor.gray600),
                               ),
                             ),
                           ],
@@ -249,20 +273,21 @@ class _ArtWorkCardWidgetState extends State<ArtWorkCardWidget>
 
             SizedBox(width: 16.h),
 
+            // Actions
             Column(
               children: [
-                // Heart/Like button
+                // Favorite
                 Container(
                   width: 44.h,
                   height: 44.h,
                   decoration: BoxDecoration(
                     color: isAlternate
-                        ? AppColor.gray700  // Dark gray on dark background
+                        ? AppColor.gray700
                         : (isDark ? AppColor.gray700 : AppColor.gray100),
                     borderRadius: BorderRadius.circular(22.h),
                     border: Border.all(
                       color: isAlternate
-                          ? AppColor.gray600  // Visible border
+                          ? AppColor.gray600
                           : (isDark ? AppColor.gray600 : AppColor.gray200),
                     ),
                   ),
@@ -270,34 +295,25 @@ class _ArtWorkCardWidgetState extends State<ArtWorkCardWidget>
                     color: AppColor.transparent,
                     child: InkWell(
                       borderRadius: BorderRadius.circular(22.h),
-                      onTap: () {
-                        // Handle like action
-                      },
-                      child: Icon(
-                        Icons.favorite_border,
-                        color: isAlternate
-                            ? AppColor.white  // White icon on dark background
-                            : (isDark ? AppColor.white : AppColor.gray600),
-                        size: 20.h,
-                      ),
+                      onTap: widget.onFavoriteTap,
+                      child: Icon(heartIcon, color: heartColor, size: 20.h),
                     ),
                   ),
                 ),
-
                 SizedBox(height: 12.h),
 
-                // Arrow/Navigate button
+                // Navigate
                 Container(
                   width: 44.h,
                   height: 44.h,
                   decoration: BoxDecoration(
                     color: isAlternate
-                        ? AppColor.gray700  // Dark gray on dark background
+                        ? AppColor.gray700
                         : (isDark ? AppColor.gray700 : AppColor.gray100),
                     borderRadius: BorderRadius.circular(22.h),
                     border: Border.all(
                       color: isAlternate
-                          ? AppColor.gray600  // Visible border
+                          ? AppColor.gray600
                           : (isDark ? AppColor.gray600 : AppColor.gray200),
                     ),
                   ),
@@ -309,7 +325,7 @@ class _ArtWorkCardWidgetState extends State<ArtWorkCardWidget>
                       child: Icon(
                         Icons.arrow_forward,
                         color: isAlternate
-                            ? AppColor.white  // White icon on dark background
+                            ? AppColor.white
                             : (isDark ? AppColor.white : AppColor.gray600),
                         size: 20.h,
                       ),
@@ -332,9 +348,7 @@ class _ArtWorkCardWidgetState extends State<ArtWorkCardWidget>
       decoration: BoxDecoration(
         color: isDark ? AppColor.gray700 : AppColor.white,
         borderRadius: BorderRadius.circular(16.h),
-        border: Border.all(
-          color: isDark ? AppColor.gray600 : AppColor.gray200,
-        ),
+        border: Border.all(color: isDark ? AppColor.gray600 : AppColor.gray200),
         boxShadow: [
           BoxShadow(
             color: AppColor.black.withOpacity(isDark ? 0.2 : 0.08),
@@ -346,13 +360,15 @@ class _ArtWorkCardWidgetState extends State<ArtWorkCardWidget>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image with favorite icon overlay
+          // Image + fav overlay
           Expanded(
             flex: 3,
             child: Stack(
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(16.h)),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(16.h),
+                  ),
                   child: Container(
                     width: double.infinity,
                     height: double.infinity,
@@ -362,10 +378,11 @@ class _ArtWorkCardWidgetState extends State<ArtWorkCardWidget>
                     child: cover == null || cover.isEmpty
                         ? _buildImagePlaceholder(isDark)
                         : Image.network(
-                      cover,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _buildImagePlaceholder(isDark),
-                    ),
+                            cover,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                                _buildImagePlaceholder(isDark),
+                          ),
                   ),
                 ),
                 Positioned(
@@ -389,12 +406,14 @@ class _ArtWorkCardWidgetState extends State<ArtWorkCardWidget>
                       color: AppColor.transparent,
                       child: InkWell(
                         borderRadius: BorderRadius.circular(18.h),
-                        onTap: () {
-                          // Handle favorite action
-                        },
+                        onTap: widget.onFavoriteTap,
                         child: Icon(
-                          Icons.favorite_border,
-                          color: AppColor.gray600,
+                          widget.isFavorite
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                          color: widget.isFavorite
+                              ? AppColor.primaryColor
+                              : AppColor.gray600,
                           size: 18.h,
                         ),
                       ),
@@ -413,7 +432,6 @@ class _ArtWorkCardWidgetState extends State<ArtWorkCardWidget>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title
                   Text(
                     art.name,
                     style: TextStyle(
@@ -425,10 +443,7 @@ class _ArtWorkCardWidgetState extends State<ArtWorkCardWidget>
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-
                   SizedBox(height: 6.h),
-
-                  // Small description under title
                   if (art.description != null && art.description!.isNotEmpty)
                     Text(
                       art.description!,
@@ -440,10 +455,7 @@ class _ArtWorkCardWidgetState extends State<ArtWorkCardWidget>
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-
                   SizedBox(height: 18.h),
-
-                  // Artist info
                   Row(
                     children: [
                       Container(
@@ -456,32 +468,40 @@ class _ArtWorkCardWidgetState extends State<ArtWorkCardWidget>
                           ),
                         ),
                         child: ClipOval(
-                          child: art.artistProfileImage == null || art.artistProfileImage!.isEmpty
+                          child:
+                              art.artistProfileImage == null ||
+                                  art.artistProfileImage!.isNotEmpty == false
                               ? Container(
-                            color: isDark ? AppColor.gray600 : AppColor.gray100,
-                            child: Icon(
-                              Icons.person,
-                              size: 12.h,
-                              color: isDark ? AppColor.gray400 : AppColor.gray600,
-                            ),
-                          )
+                                  color: isDark
+                                      ? AppColor.gray600
+                                      : AppColor.gray100,
+                                  child: Icon(
+                                    Icons.person,
+                                    size: 12.h,
+                                    color: isDark
+                                        ? AppColor.gray400
+                                        : AppColor.gray600,
+                                  ),
+                                )
                               : Image.network(
-                            art.artistProfileImage!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              color: isDark ? AppColor.gray600 : AppColor.gray100,
-                              child: Icon(
-                                Icons.person,
-                                size: 12.h,
-                                color: isDark ? AppColor.gray400 : AppColor.gray600,
-                              ),
-                            ),
-                          ),
+                                  art.artistProfileImage!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Container(
+                                    color: isDark
+                                        ? AppColor.gray600
+                                        : AppColor.gray100,
+                                    child: Icon(
+                                      Icons.person,
+                                      size: 12.h,
+                                      color: isDark
+                                          ? AppColor.gray400
+                                          : AppColor.gray600,
+                                    ),
+                                  ),
+                                ),
                         ),
                       ),
-
                       SizedBox(width: 6.h),
-
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -491,7 +511,9 @@ class _ArtWorkCardWidgetState extends State<ArtWorkCardWidget>
                               style: TextStyle(
                                 fontSize: 13.fSize,
                                 fontWeight: FontWeight.w500,
-                                color: isDark ? AppColor.white : AppColor.gray900,
+                                color: isDark
+                                    ? AppColor.white
+                                    : AppColor.gray900,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -500,7 +522,9 @@ class _ArtWorkCardWidgetState extends State<ArtWorkCardWidget>
                               'Artist',
                               style: TextStyle(
                                 fontSize: 11.fSize,
-                                color: isDark ? AppColor.gray400 : AppColor.gray600,
+                                color: isDark
+                                    ? AppColor.gray400
+                                    : AppColor.gray600,
                               ),
                             ),
                           ],

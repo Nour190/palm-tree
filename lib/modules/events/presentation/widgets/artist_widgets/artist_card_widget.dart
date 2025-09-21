@@ -13,11 +13,23 @@ class ArtistCardWidget extends StatelessWidget {
   final VoidCallback? onTap;
   final ArtistCardViewType viewType;
 
+  /// NEW: current user id (passed down, not used internally other than semantics)
+  final String userId;
+
+  /// NEW: whether this artist is currently favorited for the user
+  final bool isFavorite;
+
+  /// NEW: callback to toggle favorite
+  final VoidCallback? onFavoriteTap;
+
   const ArtistCardWidget({
     super.key,
     required this.artist,
+    required this.userId, // <-- NEW (required)
     this.onTap,
     this.viewType = ArtistCardViewType.list,
+    this.isFavorite = false, // <-- NEW
+    this.onFavoriteTap, // <-- NEW
   });
 
   @override
@@ -36,8 +48,8 @@ class ArtistCardWidget extends StatelessWidget {
             onTap: onTap,
             borderRadius: BorderRadius.circular(16.h),
             child: viewType == ArtistCardViewType.grid
-                ? _buildGridCard(isDesktop)
-                : _buildListCard(isDesktop),
+                ? _buildGridCard(context, isDesktop)
+                : _buildListCard(context, isDesktop),
           ),
         ),
       ),
@@ -48,10 +60,7 @@ class ArtistCardWidget extends StatelessWidget {
     return BoxDecoration(
       color: AppColor.white,
       borderRadius: BorderRadius.circular(16.h),
-      border: Border.all(
-        color: AppColor.gray200,
-        width: 1.h,
-      ),
+      border: Border.all(color: AppColor.gray200, width: 1.h),
       boxShadow: [
         BoxShadow(
           color: AppColor.black.withOpacity(0.08),
@@ -62,11 +71,19 @@ class ArtistCardWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildListCard(bool isDesktop) {
+  // ===================== LIST CARD =====================
+  Widget _buildListCard(BuildContext context, bool isDesktop) {
+    final favIcon = isFavorite
+        ? Icons.favorite_rounded
+        : Icons.favorite_border_rounded;
+    final favColor = isFavorite ? AppColor.primaryColor : AppColor.gray600;
+
     return Padding(
       padding: EdgeInsets.all(16.h),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Avatar
           ClipRRect(
             borderRadius: BorderRadius.circular(12.h),
             child: Container(
@@ -78,37 +95,42 @@ class ArtistCardWidget extends StatelessWidget {
               ),
               child: artist.profileImage?.isNotEmpty == true
                   ? Image.network(
-                artist.profileImage!,
-                fit: BoxFit.cover,
-                alignment: Alignment.topCenter,
-                errorBuilder: (_, __, ___) => _buildPlaceholderAvatar(),
-              )
+                      artist.profileImage!,
+                      fit: BoxFit.cover,
+                      alignment: Alignment.topCenter,
+                      errorBuilder: (_, __, ___) => _buildPlaceholderAvatar(),
+                    )
                   : _buildPlaceholderAvatar(),
             ),
           ),
+
           SizedBox(width: 16.h),
+
           // Content section
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Title row: Name + Country chip + Fav button
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(
                       child: Text(
                         artist.name,
-                        style: TextStyleHelper.instance.title16BoldInter.copyWith(
-                          color: AppColor.black,
-                        ),
+                        style: TextStyleHelper.instance.title16BoldInter
+                            .copyWith(color: AppColor.black),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    SizedBox(width: 12.h),
-                    // Country flag and location
+                    SizedBox(width: 8.h),
                     if (artist.country?.isNotEmpty == true)
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.h, vertical: 4.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.h,
+                          vertical: 4.h,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColor.primaryColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12.h),
@@ -124,16 +146,32 @@ class ArtistCardWidget extends StatelessWidget {
                             SizedBox(width: 4.h),
                             Text(
                               artist.country!,
-                              style: TextStyleHelper.instance.body12MediumInter.copyWith(
-                                color: AppColor.primaryColor,
-                              ),
+                              style: TextStyleHelper.instance.body12MediumInter
+                                  .copyWith(color: AppColor.primaryColor),
                             ),
                           ],
                         ),
                       ),
+                    SizedBox(width: 8.h),
+                    // NEW: Favorite button (list)
+                    Semantics(
+                      button: true,
+                      label: 'Favorite ${artist.name} (user $userId)',
+                      child: _CircleIconButton(
+                        icon: favIcon,
+                        size: 34.h,
+                        iconSize: 18.h,
+                        bgColor: AppColor.white,
+                        borderColor: AppColor.gray200,
+                        iconColor: favColor,
+                        onTap: onFavoriteTap,
+                      ),
+                    ),
                   ],
                 ),
+
                 SizedBox(height: 8.h),
+
                 if (artist.about?.isNotEmpty == true)
                   Text(
                     artist.about!,
@@ -152,11 +190,17 @@ class ArtistCardWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildGridCard(bool isDesktop) {
+  // ===================== GRID CARD =====================
+  Widget _buildGridCard(BuildContext context, bool isDesktop) {
+    final favIcon = isFavorite
+        ? Icons.favorite_rounded
+        : Icons.favorite_border_rounded;
+    final favColor = isFavorite ? AppColor.primaryColor : AppColor.gray600;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Profile image section
+        // Profile image section with fav overlay
         Expanded(
           flex: 3,
           child: Container(
@@ -177,34 +221,29 @@ class ArtistCardWidget extends StatelessWidget {
                 children: [
                   artist.profileImage?.isNotEmpty == true
                       ? Image.network(
-                    artist.profileImage!,
-                    fit: BoxFit.cover,
-                    alignment: Alignment.center,
-                    errorBuilder: (_, __, ___) => _buildPlaceholderImage(),
-                  )
+                          artist.profileImage!,
+                          fit: BoxFit.cover,
+                          alignment: Alignment.center,
+                          errorBuilder: (_, __, ___) =>
+                              _buildPlaceholderImage(),
+                        )
                       : _buildPlaceholderImage(),
-                  // Favorite icon overlay
+                  // NEW: Favorite icon overlay (clickable)
                   Positioned(
                     top: 12.h,
                     right: 12.h,
-                    child: Container(
-                      width: 32.h,
-                      height: 32.h,
-                      decoration: BoxDecoration(
-                        color: AppColor.white,
-                        borderRadius: BorderRadius.circular(16.h),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColor.black.withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.favorite_border_rounded,
-                        size: 18.h,
-                        color: AppColor.gray600,
+                    child: Semantics(
+                      button: true,
+                      label: 'Favorite ${artist.name} (user $userId)',
+                      child: _CircleIconButton(
+                        icon: favIcon,
+                        size: 32.h,
+                        iconSize: 18.h,
+                        bgColor: AppColor.white,
+                        borderColor: AppColor.gray200,
+                        iconColor: favColor,
+                        onTap: onFavoriteTap,
+                        elevation: 8,
                       ),
                     ),
                   ),
@@ -213,6 +252,7 @@ class ArtistCardWidget extends StatelessWidget {
             ),
           ),
         ),
+
         // Content section
         Expanded(
           flex: 2,
@@ -230,7 +270,7 @@ class ArtistCardWidget extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 SizedBox(height: 6.h),
-                // Small description
+
                 if (artist.about?.isNotEmpty == true)
                   Text(
                     artist.about!,
@@ -241,8 +281,9 @@ class ArtistCardWidget extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
+
                 const Spacer(),
-                // Country info
+
                 if (artist.country?.isNotEmpty == true)
                   Row(
                     children: [
@@ -253,13 +294,13 @@ class ArtistCardWidget extends StatelessWidget {
                       ),
                       SizedBox(width: 4.sH),
                       Expanded(
-                        child: // Using managed text style for country in grid
-                        Text(
+                        child: Text(
                           artist.country!,
-                          style: TextStyleHelper.instance.caption12RegularInter.copyWith(
-                            color: AppColor.gray500,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: TextStyleHelper.instance.caption12RegularInter
+                              .copyWith(
+                                color: AppColor.gray500,
+                                fontWeight: FontWeight.w500,
+                              ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -274,17 +315,14 @@ class ArtistCardWidget extends StatelessWidget {
     );
   }
 
+  // ===================== Placeholders =====================
   Widget _buildPlaceholderAvatar() {
     return Container(
       decoration: BoxDecoration(
         color: AppColor.gray100,
-        borderRadius: BorderRadius.circular(12.h), // Changed from circular to square corners
+        borderRadius: BorderRadius.circular(12.h),
       ),
-      child: Icon(
-        Icons.person_rounded,
-        size: 40.h, // Increased icon size for larger image
-        color: AppColor.gray400,
-      ),
+      child: Icon(Icons.person_rounded, size: 40.h, color: AppColor.gray400),
     );
   }
 
@@ -298,12 +336,65 @@ class ArtistCardWidget extends StatelessWidget {
         ),
       ),
       child: Center(
-        child: Icon(
-          Icons.person_rounded,
-          size: 48.h,
-          color: AppColor.gray400,
+        child: Icon(Icons.person_rounded, size: 48.h, color: AppColor.gray400),
+      ),
+    );
+  }
+}
+
+/// Small reusable circular icon button with ripple + optional elevation
+class _CircleIconButton extends StatelessWidget {
+  final IconData icon;
+  final double size;
+  final double iconSize;
+  final Color bgColor;
+  final Color borderColor;
+  final Color iconColor;
+  final VoidCallback? onTap;
+  final double elevation;
+
+  const _CircleIconButton({
+    required this.icon,
+    required this.size,
+    required this.iconSize,
+    required this.bgColor,
+    required this.borderColor,
+    required this.iconColor,
+    this.onTap,
+    this.elevation = 0,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final child = Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(size / 2),
+        border: Border.all(color: borderColor, width: 1),
+        boxShadow: elevation > 0
+            ? [
+                BoxShadow(
+                  color: AppColor.black.withOpacity(0.1),
+                  blurRadius: elevation,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(size / 2),
+          onTap: onTap ?? () {}, // default no-op
+          child: Center(
+            child: Icon(icon, size: iconSize, color: iconColor),
+          ),
         ),
       ),
     );
+
+    return child;
   }
 }

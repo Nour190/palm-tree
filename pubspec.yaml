@@ -46,7 +46,9 @@ dependencies:
   audioplayers: ^6.5.1
   translator: ^1.0.4+1
   pointer_interceptor: ^0.10.1+2
-  flutter_typeahead: ^5.2.0
+
+  flutter_map: ^8.2.2
+  font_awesome_flutter: ^10.10.0
 
 dev_dependencies:
   flutter_test:

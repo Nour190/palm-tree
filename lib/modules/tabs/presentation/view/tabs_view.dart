@@ -4,6 +4,7 @@ import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/core/responsive/size_utils.dart' hide DeviceType;
 import 'package:baseqat/modules/events/presentation/view/events_view.dart';
 import 'package:baseqat/modules/home/presentation/view/home_view.dart';
+import 'package:baseqat/modules/maps/presentation/view/map_view.dart';
 import 'package:baseqat/modules/tabs/presentation/manger/tabs_cubit.dart';
 import 'package:baseqat/modules/tabs/presentation/manger/tabs_states.dart';
 import 'package:flutter/material.dart';
@@ -121,7 +122,7 @@ Widget _bodyForSelectedIndex(int selectedIndex) {
     case 1: // Events
       return const EventsScreenResponsive();
     case 2: // Maps
-      return const SizedBox.shrink();
+      return const MapView();
     case 3: // Language
       return const SizedBox.shrink();
     case 4: // Profile (desktop-only item)

@@ -23,6 +23,8 @@ class SpeakersTabContent extends StatefulWidget {
   final IconData ctaIcon;
   final VoidCallback onPrevMonth;
   final VoidCallback onNextMonth;
+  final String userId;
+
   final Function(Speaker)? onSpeakerTap;
 
   const SpeakersTabContent({
@@ -38,6 +40,7 @@ class SpeakersTabContent extends StatefulWidget {
     required this.onPrevMonth,
     required this.onNextMonth,
     this.onSpeakerTap,
+    required this.userId,
   });
 
   @override
@@ -89,7 +92,7 @@ class _SpeakersTabContentState extends State<SpeakersTabContent> {
     );
     _days30 = List.generate(
       _windowDays,
-          (i) => _windowStartUtc.add(Duration(days: i)),
+      (i) => _windowStartUtc.add(Duration(days: i)),
     );
     _sliceStart = 0;
     _selectedIndexInSlice = 0;
@@ -163,7 +166,11 @@ class _SpeakersTabContentState extends State<SpeakersTabContent> {
     );
   }
 
-  Widget _buildDesktopLayout(List<DateTime> slice, WeekModel week, List<Speaker> daySpeakers) {
+  Widget _buildDesktopLayout(
+    List<DateTime> slice,
+    WeekModel week,
+    List<Speaker> daySpeakers,
+  ) {
     return Container(
       constraints: const BoxConstraints(maxWidth: 1200),
       margin: const EdgeInsets.symmetric(horizontal: 24),
@@ -194,14 +201,17 @@ class _SpeakersTabContentState extends State<SpeakersTabContent> {
                         start: slice.first,
                         end: slice.last,
                         onPrev7: (_sliceStart == 0) ? null : _prev7Days,
-                        onNext7: (_sliceStart >= _windowDays - _sliceLen) ? null : _next7Days,
+                        onNext7: (_sliceStart >= _windowDays - _sliceLen)
+                            ? null
+                            : _next7Days,
                         isDesktop: true,
                       ),
                       const SizedBox(height: 16),
                       WeekStrip(
                         week: week,
                         selectedIndex: _selectedIndexInSlice,
-                        onDaySelected: (i) => setState(() => _selectedIndexInSlice = i),
+                        onDaySelected: (i) =>
+                            setState(() => _selectedIndexInSlice = i),
                         isDesktop: true,
                       ),
                       const SizedBox(height: 24),
@@ -215,14 +225,16 @@ class _SpeakersTabContentState extends State<SpeakersTabContent> {
                   ),
                 ),
 
-                 SizedBox(width: 15.sW),
+                SizedBox(width: 15.sW),
 
                 // Right content area
                 Expanded(
                   child: ScheduleList(
                     speakers: daySpeakers,
+                    userId: widget.userId,
                     onTap: (index) {
-                      if (widget.onSpeakerTap != null && index < daySpeakers.length) {
+                      if (widget.onSpeakerTap != null &&
+                          index < daySpeakers.length) {
                         widget.onSpeakerTap!(daySpeakers[index]);
                       }
                     },
@@ -239,16 +251,20 @@ class _SpeakersTabContentState extends State<SpeakersTabContent> {
     );
   }
 
-  Widget _buildMobileTabletLayout(List<DateTime> slice, WeekModel week, List<Speaker> daySpeakers, bool isMobile) {
+  Widget _buildMobileTabletLayout(
+    List<DateTime> slice,
+    WeekModel week,
+    List<Speaker> daySpeakers,
+    bool isMobile,
+  ) {
     return SingleChildScrollView(
       padding: EdgeInsets.all(isMobile ? 16 : 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-       //   const SizedBox(height: 10),
-
+          //   const SizedBox(height: 10),
           SpeakersHeader(title: widget.headerTitle, isDesktop: false),
-           SizedBox(height: 20.sH),
+          SizedBox(height: 20.sH),
 
           // Month controls
           MonthSelector(
@@ -258,29 +274,33 @@ class _SpeakersTabContentState extends State<SpeakersTabContent> {
             isDesktop: false,
           ),
 
-           SizedBox(height: 16.sH),
+          SizedBox(height: 16.sH),
 
           // 7-day strip + slice navigation buttons
           _SliceHeader(
             start: slice.first,
             end: slice.last,
             onPrev7: (_sliceStart == 0) ? null : _prev7Days,
-            onNext7: (_sliceStart >= _windowDays - _sliceLen) ? null : _next7Days,
+            onNext7: (_sliceStart >= _windowDays - _sliceLen)
+                ? null
+                : _next7Days,
             isDesktop: false,
           ),
-           SizedBox(height: 10.sH),
-        WeekStrip(
-          week: week,
-          selectedIndex: _selectedIndexInSlice,
-          onDaySelected: (i) => setState(() => _selectedIndexInSlice = i),
-          isDesktop: false,
-        ),
-           SizedBox(height: 24.sH),
+          SizedBox(height: 10.sH),
+          WeekStrip(
+            week: week,
+            selectedIndex: _selectedIndexInSlice,
+            onDaySelected: (i) => setState(() => _selectedIndexInSlice = i),
+            isDesktop: false,
+          ),
+          SizedBox(height: 24.sH),
 
           // Schedule list for the selected day
           Center(
             child: ScheduleList(
               speakers: daySpeakers,
+              userId: widget.userId,
+
               onTap: (index) {
                 if (widget.onSpeakerTap != null && index < daySpeakers.length) {
                   widget.onSpeakerTap!(daySpeakers[index]);
@@ -344,7 +364,7 @@ class _SliceHeader extends StatelessWidget {
     final label = _rangeLabel(start, end);
 
     if (isDesktop) {
-      return  Row(
+      return Row(
         children: [
           Text(
             label,
@@ -359,10 +379,20 @@ class _SliceHeader extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: onPrev7,
-                    icon: const Icon(Icons.chevron_left, size: 16,color:AppColor.blueGray100),
-                    label:  Text('Prev 7',style: TextStyleHelper.instance.body14RegularInter,),
+                    icon: const Icon(
+                      Icons.chevron_left,
+                      size: 16,
+                      color: AppColor.blueGray100,
+                    ),
+                    label: Text(
+                      'Prev 7',
+                      style: TextStyleHelper.instance.body14RegularInter,
+                    ),
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       side: BorderSide(color: AppColor.blueGray100),
                     ),
                   ),
@@ -372,9 +402,15 @@ class _SliceHeader extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: onNext7,
                     icon: const Icon(Icons.chevron_right, size: 16),
-                    label:  Text('Next 7',style: TextStyleHelper.instance.body14RegularInter,),
+                    label: Text(
+                      'Next 7',
+                      style: TextStyleHelper.instance.body14RegularInter,
+                    ),
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       side: BorderSide(color: AppColor.blueGray100),
                     ),
                   ),
@@ -384,13 +420,12 @@ class _SliceHeader extends StatelessWidget {
           ),
         ],
       );
-
     }
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
- // space between label & buttons
+        // space between label & buttons
         Expanded(
           child: Row(
             children: [
@@ -398,9 +433,15 @@ class _SliceHeader extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: onPrev7,
                   icon: const Icon(Icons.chevron_left, size: 16),
-                  label:  Text('Prev 7',style: TextStyleHelper.instance.body14RegularInter,),
+                  label: Text(
+                    'Prev 7',
+                    style: TextStyleHelper.instance.body14RegularInter,
+                  ),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     side: BorderSide(color: AppColor.blueGray100),
                   ),
                 ),
@@ -410,9 +451,15 @@ class _SliceHeader extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: onNext7,
                   icon: const Icon(Icons.chevron_right, size: 16),
-                  label:  Text('Next 7',style: TextStyleHelper.instance.body14RegularInter,),
+                  label: Text(
+                    'Next 7',
+                    style: TextStyleHelper.instance.body14RegularInter,
+                  ),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     side: BorderSide(color: AppColor.blueGray100),
                   ),
                 ),
@@ -420,23 +467,31 @@ class _SliceHeader extends StatelessWidget {
             ],
           ),
         ),
-         SizedBox(width: 16.sH),
+        SizedBox(width: 16.sH),
         Text(
           label,
           style: TextStyleHelper.instance.title14BoldInter.copyWith(
             color: AppColor.gray900,
           ),
         ),
-
       ],
     );
-
   }
 
   String _rangeLabel(DateTime a, DateTime b) {
     String m(int x) => const [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ][x - 1];
     if (a.month == b.month && a.year == b.year) {
       return "${m(a.month)} ${a.day}–${b.day}, ${a.year}";

@@ -6,12 +6,14 @@ class ScheduleList extends StatelessWidget {
   final List<Speaker> speakers;
   final void Function(int index)? onTap;
   final bool isDesktop;
+  final String userId;
 
   const ScheduleList({
     super.key,
     required this.speakers,
     required this.onTap,
     this.isDesktop = false,
+    required this.userId,
   });
 
   @override
@@ -51,15 +53,16 @@ class ScheduleList extends StatelessWidget {
           .entries
           .map(
             (entry) => Padding(
-          padding: EdgeInsets.only(bottom: isDesktop ? 16 : 12),
-          child: SessionCard(
-            speaker: entry.value,
-            index: entry.key,
-            onTap: onTap,
-            isDesktop: isDesktop,
-          ),
-        ),
-      )
+              padding: EdgeInsets.only(bottom: isDesktop ? 16 : 12),
+              child: SessionCard(
+                speaker: entry.value,
+                index: entry.key,
+                onTap: onTap,
+                userId: userId,
+                isDesktop: isDesktop,
+              ),
+            ),
+          )
           .toList(),
     );
   }

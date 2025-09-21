@@ -1,17 +1,27 @@
 import 'package:baseqat/core/resourses/navigation_manger.dart';
 import 'package:baseqat/modules/artist_details/presentation/view/artist_details_page.dart';
+import 'package:baseqat/modules/events/data/models/fav_extension.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:baseqat/core/responsive/size_utils.dart' hide DeviceType;
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/modules/home/data/models/artist_model.dart';
 import 'package:baseqat/modules/events/presentation/widgets/artist_widgets/artist_card_widget.dart';
 import 'package:baseqat/core/responsive/responsive.dart';
 
+// Favorites wiring
+import 'package:baseqat/modules/events/presentation/manger/events/events_cubit.dart';
+
 enum ArtistViewType { list, grid }
 
 class ArtistTabContent extends StatefulWidget {
   final List<Artist> artists;
   final void Function(Artist artist)? onArtistTap;
+
+  /// NEW: provide the signed-in user id for favorites
+  final String userId;
+
+  final void Function(Artist artist)? onFavoriteTap;
 
   // Optional empty-state customization
   final String? emptyStateTitle;
@@ -24,7 +34,9 @@ class ArtistTabContent extends StatefulWidget {
   const ArtistTabContent({
     super.key,
     required this.artists,
+    required this.userId, // <-- NEW
     this.onArtistTap,
+    this.onFavoriteTap, // <-- NEW
     this.emptyStateTitle,
     this.emptyStateSubtitle,
     this.emptyStateIcon,
@@ -48,19 +60,19 @@ class _ArtistTabContentState extends State<ArtistTabContent> {
         Expanded(
           child: items.isEmpty
               ? _EmptyState(
-            title: widget.emptyStateTitle ?? 'No artists available',
-            subtitle:
-            widget.emptyStateSubtitle ??
-                'Check back later for new artists.',
-            icon: widget.emptyStateIcon,
-          )
+                  title: widget.emptyStateTitle ?? 'No artists available',
+                  subtitle:
+                      widget.emptyStateSubtitle ??
+                      'Check back later for new artists.',
+                  icon: widget.emptyStateIcon,
+                )
               : widget.onRefresh != null
               ? RefreshIndicator(
-            onRefresh: widget.onRefresh!,
-            color: AppColor.primaryColor,
-            backgroundColor: AppColor.white,
-            child: _buildContent(items),
-          )
+                  onRefresh: widget.onRefresh!,
+                  color: AppColor.primaryColor,
+                  backgroundColor: AppColor.white,
+                  child: _buildContent(items),
+                )
               : _buildContent(items),
         ),
       ],
@@ -70,6 +82,16 @@ class _ArtistTabContentState extends State<ArtistTabContent> {
   Widget _buildContent(List<Artist> items) {
     return _isDesktop ? _buildDesktopGrid(items) : _buildMobileList(items);
   }
+
+  // Default favorite toggle if parent didn't inject one
+  void _defaultToggleFav(Artist a) {
+    context.read<EventsCubit>().toggleFavorite(
+      userId: widget.userId,
+      kind: EntityKind.artist,
+      entityId: a.id,
+    );
+  }
+
   double _gridChildAspectRatio(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
 
@@ -93,6 +115,10 @@ class _ArtistTabContentState extends State<ArtistTabContent> {
 
   Widget _buildDesktopGrid(List<Artist> items) {
     final aspect = _gridChildAspectRatio(context);
+    final favIds = context.select<EventsCubit, Set<String>>(
+      (c) => c.state.favArtistIds,
+    );
+
     return GridView.builder(
       physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.symmetric(horizontal: 24.h, vertical: 16.h),
@@ -105,10 +131,19 @@ class _ArtistTabContentState extends State<ArtistTabContent> {
       itemCount: items.length,
       itemBuilder: (context, i) {
         final artist = items[i];
+        final isFav = favIds.contains(artist.id);
+
         return ArtistCardWidget(
           artist: artist,
+          userId: widget.userId,
+          isFavorite: isFav, // <-- NEW
+          onFavoriteTap: () =>
+              (widget.onFavoriteTap ?? _defaultToggleFav)(artist), // <-- NEW
           onTap: () {
-            navigateTo(context, ArtistDetailsPage(artistId: artist.id));
+            (widget.onArtistTap ??
+                    (a) =>
+                        navigateTo(context, ArtistDetailsPage(artistId: a.id)))
+                .call(artist);
           },
           viewType: ArtistCardViewType.grid,
         );
@@ -117,6 +152,10 @@ class _ArtistTabContentState extends State<ArtistTabContent> {
   }
 
   Widget _buildMobileList(List<Artist> items) {
+    final favIds = context.select<EventsCubit, Set<String>>(
+      (c) => c.state.favArtistIds,
+    );
+
     return ListView.separated(
       physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.symmetric(horizontal: 16.h, vertical: 12.h),
@@ -124,10 +163,19 @@ class _ArtistTabContentState extends State<ArtistTabContent> {
       separatorBuilder: (_, __) => SizedBox(height: 16.h),
       itemBuilder: (context, i) {
         final artist = items[i];
+        final isFav = favIds.contains(artist.id);
+
         return ArtistCardWidget(
           artist: artist,
+          userId: widget.userId,
+          isFavorite: isFav, // <-- NEW
+          onFavoriteTap: () =>
+              (widget.onFavoriteTap ?? _defaultToggleFav)(artist), // <-- NEW
           onTap: () {
-            navigateTo(context, ArtistDetailsPage(artistId: artist.id));
+            (widget.onArtistTap ??
+                    (a) =>
+                        navigateTo(context, ArtistDetailsPage(artistId: a.id)))
+                .call(artist);
           },
           viewType: ArtistCardViewType.list,
         );
@@ -141,11 +189,7 @@ class _EmptyState extends StatelessWidget {
   final String subtitle;
   final Widget? icon;
 
-  const _EmptyState({
-    required this.title,
-    required this.subtitle,
-    this.icon,
-  });
+  const _EmptyState({required this.title, required this.subtitle, this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -156,11 +200,7 @@ class _EmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             icon ??
-                Icon(
-                  Icons.people_rounded,
-                  size: 80.h,
-                  color: AppColor.gray400,
-                ),
+                Icon(Icons.people_rounded, size: 80.h, color: AppColor.gray400),
             SizedBox(height: 24.h),
             Text(
               title,

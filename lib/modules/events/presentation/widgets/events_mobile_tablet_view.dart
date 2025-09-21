@@ -1,27 +1,31 @@
 import 'package:baseqat/core/responsive/size_ext.dart';
+import 'package:baseqat/modules/events/data/models/fav_extension.dart';
+import 'package:baseqat/modules/events/data/models/gallery_item.dart';
+import 'package:baseqat/modules/home/data/models/artist_model.dart';
+import 'package:baseqat/modules/home/data/models/artwork_model.dart';
+import 'package:baseqat/modules/home/data/models/speaker_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../../core/components/custom_widgets/custom_search_view.dart';
 import '../../../../core/components/custom_widgets/events_search_field.dart';
 import '../../../../core/responsive/size_utils.dart';
 import '../../../../core/resourses/assets_manager.dart';
 import '../../../../core/resourses/color_manager.dart';
+
 import '../../data/datasources/events_remote_data_source.dart';
-import '../../data/repositories/events_repository_impl.dart';
+import '../../data/repositories/events/events_repository_impl.dart';
 import '../../data/models/category_model.dart' hide CategoryModel;
-import '../manger/events_cubit.dart';
-import '../manger/events_state.dart';
+
+import '../manger/events/events_cubit.dart';
+import '../manger/events/events_state.dart';
+
 import '../view/art_works_view.dart';
 import '../view/artist_tab.dart';
-import '../view/speakers_info_view.dart';
 import '../view/speakers_tab.dart';
 import '../view/gallery_tav_view.dart';
+
 import 'month_data.dart';
-import '../manger/search_cubit.dart';
-import '../manger/search_state.dart';
-import 'search_filter_panel.dart';
 
 class EventsMobileTabletView extends StatefulWidget {
   const EventsMobileTabletView({super.key});
@@ -34,6 +38,16 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
   int _selectedIndex = 0;
   final TextEditingController searchController = TextEditingController();
 
+  // Simple per-tab favorites-only flags (for the heart/tune icon color)
+  bool _favOnlyArtworks = false;
+  bool _favOnlyArtists = false;
+  bool _favOnlySpeakers = false;
+
+  // repo + user id (stable)
+  late final SupabaseClient _client;
+  late final EventsRepositoryImpl _repo;
+  final String _userId = "d0030cf6-3830-47e8-9ca4-a2d00d51427a";
+
   final List<CategoryModel> _categories = [
     CategoryModel(title: 'Art Works', isSelected: true),
     CategoryModel(title: 'Artist', isSelected: false),
@@ -42,7 +56,15 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
     CategoryModel(title: 'Virtual Tour', isSelected: false),
   ];
 
-  void _onCategoryTap(int index) {
+  @override
+  void initState() {
+    super.initState();
+    _client = Supabase.instance.client;
+    _repo = EventsRepositoryImpl(EventsRemoteDataSourceImpl(_client));
+  }
+
+  // IMPORTANT: use a ctx that lives UNDER the provider
+  void _onCategoryTap(BuildContext ctx, int index) {
     if (_selectedIndex == index) return;
     setState(() {
       _selectedIndex = index;
@@ -53,215 +75,317 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
         );
       }
     });
-    context.read<SearchCubit>().updateTabIndex(index);
+  }
+
+  void _toggleFavOnlyForCurrentTab(BuildContext ctx) {
+    final cubit = ctx.read<EventsCubit>();
+    switch (_selectedIndex) {
+      case 0:
+        setState(() => _favOnlyArtworks = !_favOnlyArtworks);
+        cubit.setFavoritesOnly(
+          kind: EntityKind.artwork,
+          value: _favOnlyArtworks,
+        );
+        break;
+      case 1:
+        setState(() => _favOnlyArtists = !_favOnlyArtists);
+        cubit.setFavoritesOnly(kind: EntityKind.artist, value: _favOnlyArtists);
+        break;
+      case 2:
+        setState(() => _favOnlySpeakers = !_favOnlySpeakers);
+        cubit.setFavoritesOnly(
+          kind: EntityKind.speaker,
+          value: _favOnlySpeakers,
+        );
+        break;
+      default:
+        break;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final client = Supabase.instance.client;
-    final repo = EventsRepositoryImpl(EventsRemoteDataSourceImpl(client));
+    return BlocProvider<EventsCubit>(
+      create: (_) {
+        final c = EventsCubit(_repo)
+          ..loadArtists(limit: 10)
+          ..loadArtworks(limit: 10)
+          ..loadSpeakers(limit: 10)
+          ..loadGallery(limitArtists: 10);
+        // initial favorites
+        c.loadFavorites(userId: _userId);
+        return c;
+      },
+      // Use a Builder to obtain a context under the provider
+      child: Builder(
+        builder: (ctx) => Container(
+          color: AppColor.white,
+          child: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 16.h),
 
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(create: (_) => EventsCubit(repo)..loadAll()),
-        BlocProvider(create: (_) => SearchCubit()),
-      ],
-      child: Container(
-        color: AppColor.white,
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 16.h),
-              BlocBuilder<SearchCubit, SearchState>(
-                builder: (context, searchState) {
-                  final isSearchVisible = searchState is SearchLoaded
-                      ? searchState.isSearchBarVisible
-                      : _selectedIndex != 2; // Hide for speakers tab
-
-                  return AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    height: isSearchVisible ? null : 0,
-                    child: isSearchVisible ? Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.h),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            height: 60.sH,
-                            decoration: BoxDecoration(
-                              color: AppColor.gray50,
-                              borderRadius: BorderRadius.circular(20.r),
-                              border: Border.all(
-                                color: AppColor.gray200,
-                                width: 1,
-                              ),
-                            ),
-                            child: TextField(
-                              controller: searchController,
-                              onChanged: (query) {
-                                context.read<SearchCubit>().updateSearchQuery(query);
-                              },
-                              decoration: InputDecoration(
-                                hintText: 'Search events, artists, artworks...',
-                                hintStyle: TextStyle(
-                                  color: AppColor.gray500,
-                                  fontSize: 14.sSp,
-                                ),
-                                prefixIcon: Padding(
-                                  padding: EdgeInsets.all(12.h),
-                                  child: Image.asset(
-                                    AppAssetsManager.imgSearch,
-                                    width: 15.sW,
-                                    height: 15.sH,
-                                    color: AppColor.gray500,
+                // ---------------- Search bar (hidden for Speakers tab) ----------------
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  height: _selectedIndex != 2 ? null : 0,
+                  child: _selectedIndex != 2
+                      ? Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16.h),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                height: 60.sH,
+                                decoration: BoxDecoration(
+                                  color: AppColor.gray50,
+                                  borderRadius: BorderRadius.circular(20.r),
+                                  border: Border.all(
+                                    color: AppColor.gray200,
+                                    width: 1,
                                   ),
                                 ),
-                                suffixIcon: IconButton(
-                                  onPressed: () {
-                                    SearchFilterPanel.showFilterBottomSheet(context);
-                                  },
-                                  icon: Icon(
-                                    Icons.tune,
-                                    color: searchState is SearchLoaded && searchState.isFilterVisible
-                                        ? AppColor.primaryColor
-                                        : AppColor.gray500,
-                                    size: 15.sSp,
+                                child: TextField(
+                                  controller: searchController,
+                                  onChanged: (query) => ctx
+                                      .read<EventsCubit>()
+                                      .setSearchQuery(query),
+                                  decoration: InputDecoration(
+                                    hintText:
+                                        'Search events, artists, artworks...',
+                                    hintStyle: TextStyle(
+                                      color: AppColor.gray500,
+                                      fontSize: 14.sSp,
+                                    ),
+                                    prefixIcon: Padding(
+                                      padding: EdgeInsets.all(12.h),
+                                      child: Image.asset(
+                                        AppAssetsManager.imgSearch,
+                                        width: 15.sW,
+                                        height: 15.sH,
+                                        color: AppColor.gray500,
+                                      ),
+                                    ),
+                                    // Favorites-only toggle (no filter bottom sheet)
+                                    suffixIcon: IconButton(
+                                      tooltip: 'Favorites only',
+                                      onPressed: () =>
+                                          _toggleFavOnlyForCurrentTab(ctx),
+                                      icon: Icon(
+                                        // using tune icon for parity; swap to heart if you prefer
+                                        Icons.tune,
+                                        size: 15.sSp,
+                                        color: switch (_selectedIndex) {
+                                          0 =>
+                                            _favOnlyArtworks
+                                                ? AppColor.primaryColor
+                                                : AppColor.gray500,
+                                          1 =>
+                                            _favOnlyArtists
+                                                ? AppColor.primaryColor
+                                                : AppColor.gray500,
+                                          2 =>
+                                            _favOnlySpeakers
+                                                ? AppColor.primaryColor
+                                                : AppColor.gray500,
+                                          _ => AppColor.gray500,
+                                        },
+                                      ),
+                                    ),
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 16.sW,
+                                      vertical: 28.sH,
+                                    ),
                                   ),
                                 ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16.sW,
-                                  vertical: 28.sH,
-                                ),
                               ),
-                            ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ) : const SizedBox.shrink(),
-                  );
-                },
-              ),
-              SizedBox(height: 15.sH),
-              EventsCategoryChips(
-                categories: _categories,
-                onTap: _onCategoryTap,
-                enableScrollIndicators: false,
-                animationDuration: const Duration(milliseconds: 250),
-                height: 60.sH,
-              ),
-              Expanded(
-                child: BlocConsumer<EventsCubit, EventsState>(
-                  listener: (context, state) {
-                    if (state is EventsError) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(state.message)),
-                      );
-                    }
-                    if (state is EventsLoaded) {
-                      context.read<SearchCubit>().initializeData(
-                        artists: state.artists,
-                        artworks: state.artworks,
-                        speakers: state.speakers,
-                        gallery: state.gallery,
-                      );
-                    }
-                  },
-                  builder: (context, state) {
-                    if (state is EventsInitial || state is EventsLoading) {
-                      return const _LoadingView();
-                    }
-                    if (state is EventsError) {
-                      return _ErrorView(
-                        message: state.message,
-                        onRetry: () => context.read<EventsCubit>().loadAll(),
-                      );
-                    }
-                    final s = state as EventsLoaded;
-                    return _buildTabBody(s);
-                  },
+                        )
+                      : const SizedBox.shrink(),
                 ),
-              ),
-            ],
+
+                SizedBox(height: 15.sH),
+
+                // ---------------- Category chips ----------------
+                EventsCategoryChips(
+                  categories: _categories,
+                  onTap: (i) => _onCategoryTap(ctx, i),
+                  enableScrollIndicators: false,
+                  animationDuration: const Duration(milliseconds: 250),
+                  height: 60.sH,
+                ),
+
+                // ---------------- Body ----------------
+                Expanded(
+                  child: Builder(builder: (innerCtx) => _buildBody(innerCtx)),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildTabBody(EventsLoaded s) {
-    return BlocBuilder<SearchCubit, SearchState>(
-      builder: (context, searchState) {
-        if (searchState is SearchLoaded && searchState.isSearching) {
-          switch (_selectedIndex) {
-            case 0:
-              return ArtWorksGalleryContent(
-                artworks: searchState.filteredArtworks,
-                onArtworkTap: (art) {},
-              );
-            case 1:
-              return ArtistTabContent(artists: searchState.filteredArtists);
-            case 2:
-              return MonthWidget(
-                builder: (context, monthData) {
-                  return SpeakersTabContent(
-                    headerTitle: "Festival Schedule",
-                    monthLabel: monthData.monthLabel,
-                    currentMonth: monthData.currentMonth,
-                    week: monthData.week,
-                    speakers: searchState.filteredSpeakers,
-                    ctaSubtitle: "Don't miss the exciting sessions on dates and palm cultivation.",
-                    ctaTitle: "We look forward to seeing you tomorrow",
-                    onNextMonth: monthData.nextMonth,
-                    onPrevMonth: monthData.prevMonth,
-                  );
-                },
-              );
-            case 3:
-              return GalleryGrid(items: searchState.filteredGallery, onTap: (item) {});
-            case 4:
-              return const ComingSoon('Virtual Tour');
-            default:
-              return const SizedBox.shrink();
-          }
-        }
+  // ============================ Body by Tab ============================
+  Widget _buildBody(BuildContext ctx) {
+    switch (_selectedIndex) {
+      case 0:
+        return _ArtworksSliceView(
+          userId: _userId,
+          onToggleFavorite: (id) => ctx.read<EventsCubit>().toggleFavorite(
+            userId: _userId,
+            kind: EntityKind.artwork,
+            entityId: id,
+          ),
+        );
+      case 1:
+        return _ArtistsSliceView(
+          userId: _userId,
+          onToggleFavorite: (id) => ctx.read<EventsCubit>().toggleFavorite(
+            userId: _userId,
+            kind: EntityKind.artist,
+            entityId: id,
+          ),
+        );
+      case 2:
+        return _SpeakersSliceView(
+          userId: _userId,
+          onToggleFavorite: (id) => ctx.read<EventsCubit>().toggleFavorite(
+            userId: _userId,
+            kind: EntityKind.speaker,
+            entityId: id,
+          ),
+        );
+      case 3:
+        return _GallerySliceView();
+      case 4:
+        return const ComingSoon('Virtual Tour');
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+}
 
-        switch (_selectedIndex) {
-          case 0:
-            return ArtWorksGalleryContent(
-              artworks: s.artworks,
-              onArtworkTap: (art) {},
-            );
-          case 1:
-            return ArtistTabContent(artists: s.artists);
-          case 2:
-            return MonthWidget(
-              builder: (context, monthData) {
-                return SpeakersTabContent(
-                  headerTitle: "Festival Schedule",
-                  monthLabel: monthData.monthLabel,
-                  currentMonth: monthData.currentMonth,
-                  week: monthData.week,
-                  speakers: s.speakers,
-                  ctaSubtitle: "Don't miss the exciting sessions on dates and palm cultivation.",
-                  ctaTitle: "We look forward to seeing you tomorrow",
-                  onNextMonth: monthData.nextMonth,
-                  onPrevMonth: monthData.prevMonth,
-                );
-              },
-            );
-          case 3:
-            return GalleryGrid(items: s.gallery, onTap: (item) {});
-          case 4:
-            return const ComingSoon('Virtual Tour');
-          default:
-            return const SizedBox.shrink();
-        }
+// ===================================================================
+// Slice Views — use EventsCubit.state.* lists (already filtered locally)
+// ===================================================================
+
+class _ArtworksSliceView extends StatelessWidget {
+  final String userId;
+  final void Function(String artworkId)? onToggleFavorite;
+  const _ArtworksSliceView({required this.userId, this.onToggleFavorite});
+
+  @override
+  Widget build(BuildContext context) {
+    final artworks = context.select<EventsCubit, List<Artwork>>(
+      (c) => c.state.artworks,
+    );
+    final status = context.select<EventsCubit, SliceStatus>(
+      (c) => c.state.artworksStatus,
+    );
+
+    if (status == SliceStatus.loading) {
+      return const _LoadingView();
+    }
+
+    return ArtWorksGalleryContent(
+      artworks: artworks,
+      userId: userId,
+      onArtworkTap: (art) {},
+      onFavoriteTap: (art) => onToggleFavorite?.call(art.id),
+    );
+  }
+}
+
+class _ArtistsSliceView extends StatelessWidget {
+  final String userId;
+  final void Function(String artistId)? onToggleFavorite;
+  const _ArtistsSliceView({required this.userId, this.onToggleFavorite});
+
+  @override
+  Widget build(BuildContext context) {
+    final artists = context.select<EventsCubit, List<Artist>>(
+      (c) => c.state.artists,
+    );
+    final status = context.select<EventsCubit, SliceStatus>(
+      (c) => c.state.artistsStatus,
+    );
+
+    if (status == SliceStatus.loading) {
+      return const _LoadingView();
+    }
+
+    return ArtistTabContent(
+      artists: artists,
+      userId: userId,
+      onFavoriteTap: (artist) => onToggleFavorite?.call(artist.id),
+    );
+  }
+}
+
+class _SpeakersSliceView extends StatelessWidget {
+  final void Function(String speakerId)? onToggleFavorite;
+  final String userId;
+
+  const _SpeakersSliceView({this.onToggleFavorite, required this.userId});
+
+  @override
+  Widget build(BuildContext context) {
+    final speakers = context.select<EventsCubit, List<Speaker>>(
+      (c) => c.state.speakers,
+    );
+    final status = context.select<EventsCubit, SliceStatus>(
+      (c) => c.state.speakersStatus,
+    );
+
+    if (status == SliceStatus.loading) {
+      return const _LoadingView();
+    }
+
+    return MonthWidget(
+      builder: (context, monthData) {
+        return SpeakersTabContent(
+          userId: userId,
+          headerTitle: "Festival Schedule",
+          monthLabel: monthData.monthLabel,
+          currentMonth: monthData.currentMonth,
+          week: monthData.week,
+          speakers: speakers,
+          ctaSubtitle:
+              "Don't miss the exciting sessions on dates and palm cultivation.",
+          ctaTitle: "We look forward to seeing you tomorrow",
+          onNextMonth: monthData.nextMonth,
+          onPrevMonth: monthData.prevMonth,
+          onSpeakerTap: (s) => onToggleFavorite?.call(s.id),
+        );
       },
     );
   }
 }
+
+class _GallerySliceView extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final gallery = context.select<EventsCubit, List<GalleryItem>>(
+      (c) => c.state.gallery,
+    );
+    final status = context.select<EventsCubit, SliceStatus>(
+      (c) => c.state.galleryStatus,
+    );
+
+    if (status == SliceStatus.loading) {
+      return const _LoadingView();
+    }
+
+    return GalleryGrid(items: gallery, onTap: (item) {});
+  }
+}
+
+// ------------------ Small loading & error widgets ------------------
 
 class _LoadingView extends StatelessWidget {
   const _LoadingView();
