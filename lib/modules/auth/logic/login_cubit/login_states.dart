@@ -7,8 +7,10 @@ class LoginWithGoogleLoadingState extends LoginStates {}
 
 class LoginRedirectingState extends LoginStates {}
 class LoginSuccessState extends LoginStates {
-  final String token;
-  LoginSuccessState(this.token);
+  // final String token;
+  LoginSuccessState(
+      //this.token
+      );
 }
 
 class LoginErrorState extends LoginStates {

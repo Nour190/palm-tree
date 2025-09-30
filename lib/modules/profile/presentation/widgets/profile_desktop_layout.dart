@@ -6,6 +6,9 @@ import 'package:baseqat/modules/profile/presentation/widgets/likes_tab_widget.da
 import 'package:baseqat/modules/profile/presentation/widgets/chat_tab_widget.dart';
 import 'package:baseqat/modules/profile/presentation/widgets/notification_tab_widget.dart';
 import 'package:baseqat/modules/profile/presentation/widgets/settings_tab_widget.dart';
+import 'package:baseqat/modules/profile/presentation/cubit/account_settings_cubit.dart';
+import 'package:baseqat/modules/profile/presentation/cubit/account_settings_state.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/components/custom_widgets/custom_top_bar.dart';
@@ -53,94 +56,111 @@ class ProfileDesktopLayout extends StatelessWidget {
               children: [
 
                 // Profile Header Section
-                // Profile Header Section
                 Container(
                   padding: EdgeInsets.all(32.sSp),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start, // <-- important: align children to start
-                    children: [
-                      // Profile Avatar centered
-                      Center(
-                        child: Container(
-                          width: 100.sW,
-                          height: 120.sH,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: AppColor.primaryColor.withOpacity(0.2),
-                              width: 3.sW,
+                  child: BlocBuilder<AccountSettingsCubit, AccountSettingsState>(
+                    builder: (context, state) {
+                      // Get profile data from cubit state
+                      final profile = context.read<AccountSettingsCubit>().currentProfile;
+                      final isLoading = state is AccountSettingsLoading;
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Profile Avatar centered
+                          Center(
+                            child: Container(
+                              width: 100.sW,
+                              height: 120.sH,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: AppColor.primaryColor.withOpacity(0.2),
+                                  width: 3.sW,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColor.primaryColor.withOpacity(0.1),
+                                    blurRadius: 20.sW,
+                                    spreadRadius: 2.sW,
+                                  ),
+                                ],
+                              ),
+                              child: ClipOval(
+                                child: isLoading
+                                    ? Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: AppColor.gray.withOpacity(0.3),
+                                  ),
+                                  child: const Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                )
+                                    : (profile?.avatarUrl != null && profile!.avatarUrl!.isNotEmpty)
+                                    ? Image.network(
+                                  profile.avatarUrl!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return _buildDefaultAvatar();
+                                  },
+                                )
+                                    : _buildDefaultAvatar(),
+                              ),
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColor.primaryColor.withOpacity(0.1),
-                                blurRadius: 20.sW,
-                                spreadRadius: 2.sW,
+                          ),
+
+                          SizedBox(height: 20.sH),
+
+                          // User Name centered
+                          Center(
+                            child: isLoading
+                                ? Container(
+                              width: 120.sW,
+                              height: 24.sH,
+                              decoration: BoxDecoration(
+                                color: AppColor.gray.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(4.sW),
+                              ),
+                            )
+                                : Text(
+                              profile?.name ?? 'User',
+                              style: TextStyleHelper.instance.headline32BoldInter.copyWith(
+                                color: AppColor.black,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+
+                          SizedBox(height: 8.sH),
+
+                          // "Profile" aligned to start (left in LTR, right in RTL)
+                          Row(
+                            children: [
+                              SizedBox(width: 12.sW),
+                              Text(
+                                'Profile',
+                                style: TextStyleHelper.instance.headline20BoldInter,
+                                textAlign: TextAlign.start,
                               ),
                             ],
                           ),
-                          child: ClipOval(
-                            child: Image.asset(
-                              AppAssetsManager.imgEllipse13,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: AppColor.primaryColor.withOpacity(0.1),
-                                  ),
-                                  child: Icon(
-                                    Icons.person,
-                                    size: 60.sW,
-                                    color: AppColor.primaryColor,
-                                  ),
-                                );
-                              },
+
+                          SizedBox(height: 15.sH),
+
+                          // "MANAGE" also aligned to start
+                          Text(
+                            'MANAGE',
+                            style: TextStyleHelper.instance.caption12RegularInter.copyWith(
+                              color: AppColor.gray500,
+                              letterSpacing: 1.2,
                             ),
                           ),
-                        ),
-                      ),
-
-                      SizedBox(height: 20.sH),
-
-                      // User Name centered
-                      Center(
-                        child: Text(
-                          'John Doe',
-                          style: TextStyleHelper.instance.headline32BoldInter.copyWith(
-                            color: AppColor.black,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-
-                      SizedBox(height: 8.sH),
-
-                      // "Profile" aligned to start (left in LTR, right in RTL)
-                      Row(
-                        children: [
-                          SizedBox(width: 12.sW),
-                          Text(
-                            'Profile',
-                            style: TextStyleHelper.instance.headline20BoldInter,
-                            textAlign: TextAlign.start,
-                          ),
                         ],
-                      ),
-
-                      SizedBox(height: 15.sH),
-
-                      // "MANAGE" also aligned to start
-                      Text(
-                        'MANAGE',
-                        style: TextStyleHelper.instance.caption12RegularInter.copyWith(
-                          color: AppColor.gray500,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                    ],
+                      );
+                    },
                   ),
                 ),
-
 
                 // Navigation Tabs
                 Expanded(
@@ -295,5 +315,20 @@ class ProfileDesktopLayout extends StatelessWidget {
       case 3: return const SettingsTabWidget();
       default: return const SizedBox.shrink();
     }
+  }
+
+  // Helper method for default avatar
+  Widget _buildDefaultAvatar() {
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppColor.primaryColor.withOpacity(0.1),
+      ),
+      child: Icon(
+        Icons.person,
+        size: 60.sW,
+        color: AppColor.primaryColor,
+      ),
+    );
   }
 }

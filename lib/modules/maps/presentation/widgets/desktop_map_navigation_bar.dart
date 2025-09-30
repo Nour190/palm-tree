@@ -117,16 +117,16 @@ class _ResponsiveMapNavBarState extends State<ResponsiveMapNavBar>
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(14.sW),
+        padding: EdgeInsets.all(12.sW),
         child: Row(
           children: [
             _logo(),
-            SizedBox(width: 16.sW),
+            SizedBox(width: 12.sW),
 
             // Layers
             _layerChips(),
 
-            const Spacer(),
+             Spacer(),
 
             // Search
             _searchButton(),
@@ -135,14 +135,14 @@ class _ResponsiveMapNavBarState extends State<ResponsiveMapNavBar>
             // Controls
             _controlsCluster(),
 
-            SizedBox(width: 10.sW),
-            _routeButton(),
+            //SizedBox(width: 10.sW),
+           // _routeButton(),
 
             SizedBox(width: 10.sW),
             _trackingButton(),
 
-            SizedBox(width: 8.sW),
-            _closeBtn(),
+          //  SizedBox(width: 8.sW),
+            //_closeBtn(),
           ],
         ),
       ),

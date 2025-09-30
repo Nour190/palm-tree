@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:baseqat/core/responsive/size_utils.dart';
-import '../../data/models/gallery_item.dart';
+import '../../../data/models/gallery_item.dart';
 
 class GalleryGrid extends StatelessWidget {
   final List<GalleryItem> items;

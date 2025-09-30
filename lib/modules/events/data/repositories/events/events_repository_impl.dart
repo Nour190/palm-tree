@@ -1,7 +1,9 @@
+// lib/modules/events/data/repositories/events_repository_impl.dart
 import 'package:baseqat/modules/events/data/models/fav_extension.dart';
 import 'package:baseqat/modules/home/data/models/artist_model.dart';
 import 'package:baseqat/modules/home/data/models/artwork_model.dart';
 import 'package:baseqat/modules/home/data/models/speaker_model.dart';
+import 'package:baseqat/modules/home/data/models/events_model.dart'; // <-- Event model
 import 'package:dartz/dartz.dart';
 
 import '../../datasources/events_remote_data_source.dart';
@@ -39,6 +41,17 @@ class EventsRepositoryImpl implements EventsRepository {
   Future<Either<Failure, List<Speaker>>> getSpeakers({int limit = 10}) async {
     try {
       final data = await remote.fetchSpeakers(limit: limit);
+      return Right(data);
+    } catch (e) {
+      return Left(_asFailure(e));
+    }
+  }
+
+  // NEW: Events
+  @override
+  Future<Either<Failure, List<Event>>> getEvents({int limit = 10}) async {
+    try {
+      final data = await remote.fetchEvents(limit: limit);
       return Right(data);
     } catch (e) {
       return Left(_asFailure(e));
@@ -194,10 +207,4 @@ class EventsRepositoryImpl implements EventsRepository {
       (e is Failure) ? e : UnknownFailure('Unexpected error', cause: e);
 
   String? _nz(String? s) => (s == null || s.trim().isEmpty) ? null : s.trim();
-
-  String _buildFavUid(String userId, EntityKind kind, String entityId) {
-    // If your IDs are UUIDs this remains a stable, unique key.
-    // You can swap this for a true UUID if you prefer randomness.
-    return 'fav_${userId}_${kind.db}_$entityId';
-  }
 }

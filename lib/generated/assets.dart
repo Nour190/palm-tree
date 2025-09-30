@@ -2,6 +2,10 @@
 class Assets {
   Assets._();
 
+  static const String animationsError = 'assets/animations/error.json';
+  static const String animationsLoading = 'assets/animations/loading.json';
+  static const String animationsSuccess = 'assets/animations/success.json';
+  static const String animationsWarning = 'assets/animations/warning.json';
   static const String assetsImagesImgSearch = 'assets/images/img_search.svg';
   static const String assetsImagesImgVectorWhiteA700 = 'assets/images/img_vector_white_a700.svg';
   static const String assetsImagesImgVectorWhiteA70050x66 = 'assets/images/img_vector_white_a700_50x66.svg';
@@ -11,9 +15,9 @@ class Assets {
   static const String fontsInterRegular = 'assets/fonts/InterRegular.ttf';
   static const String imagesAppLogo = 'assets/images/app_logo.png';
   static const String imagesAppleLogo = 'assets/images/apple_logo.png';
+  static const String imagesBackground = 'assets/images/background.png';
   static const String imagesGoogleLogo = 'assets/images/google_Logo.png';
   static const String imagesImageNotFound = 'assets/images/image_not_found.png';
-  static const String imagesImageWithWideWidth = 'assets/images/img_with_wide_width.png';
   static const String imagesImgArrowIcon = 'assets/images/img_arrow_icon.svg';
   static const String imagesImgArrowIconWhiteA700 = 'assets/images/img_arrow_icon_white_a700.svg';
   static const String imagesImgEllipse13 = 'assets/images/img_ellipse_13.png';
@@ -48,5 +52,9 @@ class Assets {
   static const String imagesImgVectorGray900 = 'assets/images/img_vector_gray_900.png';
   static const String imagesImgVectorWhiteA700 = 'assets/images/img_vector_white_a700.png';
   static const String imagesImgVectorWhiteA70050x66 = 'assets/images/img_vector_white_a700_50x66.png';
+  static const String imagesImgWithWideWidth = 'assets/images/img_with_wide_width.png';
+  static const String translationsAr = 'assets/translations/ar.json';
+  static const String translationsDe = 'assets/translations/de.json';
+  static const String translationsEn = 'assets/translations/en.json';
 
 }

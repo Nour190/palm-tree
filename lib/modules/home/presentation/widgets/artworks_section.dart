@@ -14,10 +14,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart' hide DeviceType;
 
 import 'package:baseqat/core/responsive/responsive.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
-import 'package:baseqat/core/components/custom_widgets/custom_image_view.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/modules/home/data/models/artwork_model.dart';
 import 'package:baseqat/modules/home/presentation/widgets/section_header_widget.dart';
+import 'package:baseqat/modules/home/presentation/widgets/common/home_image.dart';
 
 class ArtworksSection extends StatelessWidget {
   final List<Artwork> artworks;
@@ -233,7 +233,7 @@ class ArtworksSection extends StatelessWidget {
 // HORIZONTAL STRIP (shared by all devices)
 // ============================================================================
 class _HorizontalStrip extends StatelessWidget {
-   _HorizontalStrip({
+  _HorizontalStrip({
     required this.height,
     required this.itemWidth,
     required this.spacing,
@@ -246,7 +246,7 @@ class _HorizontalStrip extends StatelessWidget {
   final double spacing;
   final int itemCount;
   final Widget Function(BuildContext, int) itemBuilder;
-   final ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   Widget build(BuildContext context) {
@@ -256,7 +256,9 @@ class _HorizontalStrip extends StatelessWidget {
         controller: _scrollController,
         thumbVisibility: true,
         child: ListView.separated(
-          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
           controller: _scrollController,
           padding: EdgeInsets.zero,
           scrollDirection: Axis.horizontal,
@@ -264,17 +266,21 @@ class _HorizontalStrip extends StatelessWidget {
           separatorBuilder: (_, __) => SizedBox(width: spacing),
           itemBuilder: (context, index) => RepaintBoundary(
             key: ValueKey('artwork-horizontal-$index'),
-            child: SizedBox(width: itemWidth, child: itemBuilder(context, index)),
+            child: SizedBox(
+              width: itemWidth,
+              child: itemBuilder(context, index),
+            ),
           ),
         ),
       ),
     );
   }
+
+  // ============================================================================
+  // HORIZONTAL CARD (mobile/tablet/desktop) — 3-line title/desc
+  // ============================================================================
 }
 
-// ============================================================================
-// HORIZONTAL CARD (mobile/tablet/desktop) — 3-line title/desc
-// ============================================================================
 class _HorizontalArtworkCard extends StatelessWidget {
   final Artwork artwork;
   final int index;
@@ -333,9 +339,10 @@ class _HorizontalArtworkCard extends StatelessWidget {
                         final String cover = (artwork.gallery.isNotEmpty)
                             ? artwork.gallery.first
                             : (artwork.artistProfileImage ?? '');
-                        return CustomImageView(
-                          imagePath: cover,
+                        return HomeImage(
+                          path: cover,
                           fit: BoxFit.cover,
+                          errorChild: _coverFallback(),
                         );
                       },
                     ),
@@ -356,17 +363,17 @@ class _HorizontalArtworkCard extends StatelessWidget {
                     ),
                   ),
                   // favorite
-                  Positioned(
-                    right: 10.0.sW,
-                    top: 10.0.sH,
-                    child: _FavCircleButton(
-                      onPressed: onFavoriteTap != null
-                          ? () => onFavoriteTap!(index)
-                          : null,
-                      size: 36.0.sW,
-                      iconSize: 18.0.sW,
-                    ),
-                  ),
+                  // Positioned(
+                  //   right: 10.0.sW,
+                  //   top: 10.0.sH,
+                  //   child: _FavCircleButton(
+                  //     onPressed: onFavoriteTap != null
+                  //         ? () => onFavoriteTap!(index)
+                  //         : null,
+                  //     size: 36.0.sW,
+                  //     iconSize: 18.0.sW,
+                  //   ),
+                  // ),
                   // content (title + description up to 3 lines)
                   Positioned(
                     left: 12.0.sW,
@@ -408,11 +415,8 @@ class _HorizontalArtworkCard extends StatelessWidget {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8.0.r),
-                              child: CustomImageView(
-                                imagePath: artwork.artistProfileImage ?? '',
-                                height: 18.0.sW,
-                                width: 18.0.sW,
-                                fit: BoxFit.cover,
+                              child: _buildArtistAvatar(
+                                artwork.artistProfileImage,
                               ),
                             ),
                             SizedBox(width: 8.0.sW),
@@ -441,6 +445,70 @@ class _HorizontalArtworkCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _coverFallback() {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColor.gray100, AppColor.gray200],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.image_outlined,
+          color: AppColor.gray400.withOpacity(0.8),
+          size: 28.sSp,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildArtistAvatar(String? path) {
+    final trimmed = (path ?? '').trim();
+    final fallback = _artistAvatarFallback();
+    if (trimmed.isEmpty) return fallback;
+    return HomeImage(
+      path: trimmed,
+      fit: BoxFit.cover,
+      width: 18.0.sW,
+      height: 18.0.sW,
+      errorChild: fallback,
+    );
+  }
+
+  Widget _artistAvatarFallback() {
+    return Container(
+      width: 18.0.sW,
+      height: 18.0.sW,
+      alignment: Alignment.center,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColor.gray600, AppColor.gray700, AppColor.gray900],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Text(
+        _artistInitials(),
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+          fontSize: 10.0.sSp,
+          letterSpacing: -0.2,
+        ),
+      ),
+    );
+  }
+
+  String _artistInitials() {
+    final name = (artwork.artistName ?? '').trim();
+    if (name.isEmpty) return 'A';
+    final parts = name.split(RegExp(r'\s+'));
+    if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
+    return (parts.first[0] + parts.last[0]).toUpperCase();
   }
 }
 

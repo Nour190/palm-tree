@@ -1,7 +1,9 @@
+// lib/modules/events/presentation/manger/events/events_state.dart
 import 'package:equatable/equatable.dart';
 import 'package:baseqat/modules/home/data/models/artist_model.dart';
 import 'package:baseqat/modules/home/data/models/artwork_model.dart';
 import 'package:baseqat/modules/home/data/models/speaker_model.dart';
+import 'package:baseqat/modules/home/data/models/events_model.dart'; // <-- Event
 import '../../../data/models/gallery_item.dart';
 
 enum SliceStatus { idle, loading, success, error }
@@ -15,17 +17,20 @@ class EventsState extends Equatable {
   final List<Artist> artists;
   final List<Artwork> artworks;
   final List<Speaker> speakers;
+  final List<Event> events; // <-- NEW
   final List<GalleryItem> gallery;
 
   // ---------------- Per-slice loading/error ----------------
   final SliceStatus artistsStatus;
   final SliceStatus artworksStatus;
   final SliceStatus speakersStatus;
+  final SliceStatus eventsStatus; // <-- NEW
   final SliceStatus galleryStatus;
 
   final String? artistsError;
   final String? artworksError;
   final String? speakersError;
+  final String? eventsError; // <-- NEW
   final String? galleryError;
 
   // ---------------- Favorites (sets of IDs) ----------------
@@ -34,7 +39,7 @@ class EventsState extends Equatable {
   final Set<String> favSpeakerIds;
 
   // ---------------- Local search & simple filters ----------------
-  /// Current case-insensitive query applied to artists/artworks/speakers.
+  /// Current case-insensitive query applied to artists/artworks/speakers/events.
   final String searchQuery;
 
   /// When true, show only favorited entities for each kind.
@@ -47,16 +52,19 @@ class EventsState extends Equatable {
     this.artists = const [],
     this.artworks = const [],
     this.speakers = const [],
+    this.events = const [], // <-- NEW
     this.gallery = const [],
     // statuses
     this.artistsStatus = SliceStatus.idle,
     this.artworksStatus = SliceStatus.idle,
     this.speakersStatus = SliceStatus.idle,
+    this.eventsStatus = SliceStatus.idle, // <-- NEW
     this.galleryStatus = SliceStatus.idle,
     // errors
     this.artistsError,
     this.artworksError,
     this.speakersError,
+    this.eventsError, // <-- NEW
     this.galleryError,
     // favorites
     this.favArtistIds = const {},
@@ -79,16 +87,19 @@ class EventsState extends Equatable {
     List<Artist>? artists,
     List<Artwork>? artworks,
     List<Speaker>? speakers,
+    List<Event>? events, // <-- NEW
     List<GalleryItem>? gallery,
     // statuses
     SliceStatus? artistsStatus,
     SliceStatus? artworksStatus,
     SliceStatus? speakersStatus,
+    SliceStatus? eventsStatus, // <-- NEW
     SliceStatus? galleryStatus,
     // errors (pass null explicitly to clear)
     String? artistsError,
     String? artworksError,
     String? speakersError,
+    String? eventsError, // <-- NEW
     String? galleryError,
     // favorites
     Set<String>? favArtistIds,
@@ -105,16 +116,19 @@ class EventsState extends Equatable {
       artists: artists ?? this.artists,
       artworks: artworks ?? this.artworks,
       speakers: speakers ?? this.speakers,
+      events: events ?? this.events, // <-- NEW
       gallery: gallery ?? this.gallery,
       // statuses
       artistsStatus: artistsStatus ?? this.artistsStatus,
       artworksStatus: artworksStatus ?? this.artworksStatus,
       speakersStatus: speakersStatus ?? this.speakersStatus,
+      eventsStatus: eventsStatus ?? this.eventsStatus, // <-- NEW
       galleryStatus: galleryStatus ?? this.galleryStatus,
-      // errors
+      // errors (note: direct assign keeps your "explicit null clears" behavior)
       artistsError: artistsError,
       artworksError: artworksError,
       speakersError: speakersError,
+      eventsError: eventsError, // <-- NEW
       galleryError: galleryError,
       // favorites
       favArtistIds: favArtistIds ?? this.favArtistIds,
@@ -134,16 +148,19 @@ class EventsState extends Equatable {
     artists,
     artworks,
     speakers,
+    events, // <-- NEW
     gallery,
     // statuses
     artistsStatus,
     artworksStatus,
     speakersStatus,
+    eventsStatus, // <-- NEW
     galleryStatus,
     // errors
     artistsError,
     artworksError,
     speakersError,
+    eventsError, // <-- NEW
     galleryError,
     // favorites
     favArtistIds,

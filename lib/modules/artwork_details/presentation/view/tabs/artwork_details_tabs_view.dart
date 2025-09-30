@@ -1,5 +1,6 @@
 // lib/modules/artwork_details/presentation/view/artwork_details_screen.dart
 
+import 'package:baseqat/core/resourses/constants_manager.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/modules/artwork_details/presentation/view/tabs/chat_route.dart';
 import 'package:baseqat/modules/artwork_details/presentation/view/tabs/chat_tab_view.dart';
@@ -394,7 +395,7 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
 
       case 3: // Chat AI
         return ChatRoute(
-          userId: "031af91c-319d-4ef4-bec8-7d14a3d68dde",
+          userId: AppConstants.userIdValue??"",
           artworkId: artwork!.id.toString(),
           userName: 'AbdelRahman Karawia',
           artwork: artwork, // or null

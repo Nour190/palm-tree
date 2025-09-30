@@ -9,6 +9,7 @@ class CustomTextFormField extends StatelessWidget {
     this.controller,
     this.hintText,
     this.labelText,
+    this.initialValue,
     this.validator,
     this.onChanged,
     this.onTap,
@@ -42,7 +43,7 @@ class CustomTextFormField extends StatelessWidget {
   final TextInputType? keyboardType;
   final Widget? prefixIcon;
   final Widget? suffixIcon;
-
+  final String? initialValue;
   @override
   Widget build(BuildContext context) {
 
@@ -53,6 +54,7 @@ class CustomTextFormField extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 24.sH), // Added consistent spacing between fields
       child: TextFormField(
         controller: controller,
+        initialValue: controller == null ? initialValue : null,
         validator: validator,
         onChanged: onChanged,
         onTap: onTap,
@@ -65,7 +67,7 @@ class CustomTextFormField extends StatelessWidget {
           hintText: hintText,
           labelText: labelText,
           hintStyle: hintStyle ??
-              TextStyleHelper.instance.title16BoldInter,
+              TextStyleHelper.instance.title16RegularInter,
           prefixIcon: prefixIcon,
           suffixIcon: suffixIcon,
           filled: false,

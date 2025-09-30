@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../data/models/week_model.dart';
+import 'week_model.dart';
 
 class MonthData {
   DateTime currentMonth;

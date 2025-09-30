@@ -23,6 +23,9 @@ class ScaleConfig {
   /// Convert design fontSize -> clamped sp in runtime px
   static double ssp(double fontSize) => fontSize * textScale();
 
+  /// Convert design radius -> clamped radius in runtime px
+  static double sr(double radius) => radius * textScale();
+
   static void setClamp({double? min, double? max}) {
     if (min != null) minScale = min;
     if (max != null) maxScale = max;

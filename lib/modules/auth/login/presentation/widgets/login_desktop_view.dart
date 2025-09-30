@@ -357,7 +357,7 @@ class _loginDesktopState extends State<loginDesktop> {
     super.initState();
     final cubit = context.read<LoginCubit>();
     cubit.startAuthListener();
-    cubit.checkInitialAuthState();
+   // cubit.checkInitialAuthState();
   }
 
   @override

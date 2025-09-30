@@ -50,16 +50,16 @@ class _NotificationTabView extends StatelessWidget {
   Widget _buildNotificationsDisabledView(BuildContext context) {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(32.sW),
+        padding: EdgeInsets.all(15.sW),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.notifications_off,
-              size: 80.sSp,
+              size: 70.sSp,
               color: AppColor.gray400,
             ),
-            SizedBox(height: 24.sH),
+            SizedBox(height: 18.sH),
             Text(
               'Notifications are turned off',
               style: TextStyleHelper.instance.headline20BoldInter.copyWith(
@@ -67,9 +67,9 @@ class _NotificationTabView extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 12.sH),
+            SizedBox(height: 8.sH),
             Text(
-              'Enable notifications in your profile settings to receive updates about artworks, events, and more.',
+              'Enable notifications in your profile settings to receive \nupdates about artworks, events, and more.',
               style: TextStyleHelper.instance.title16RegularInter.copyWith(
                 color: AppColor.gray400,
               ),
@@ -118,28 +118,28 @@ class _NotificationTabView extends StatelessWidget {
   Widget _buildNoNotificationsView() {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(32.sW),
+        padding: EdgeInsets.all(15.sW),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.notifications_none,
-              size: 80.sSp,
+              size: 70.sSp,
               color: AppColor.gray400,
             ),
-            SizedBox(height: 24.sH),
+            SizedBox(height: 15.sH),
             Text(
               'No notifications yet',
-              style: TextStyleHelper.instance.headline20BoldInter.copyWith(
+              style: TextStyleHelper.instance.title18BoldInter.copyWith(
                 color: AppColor.black,
               ),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 12.sH),
+            SizedBox(height: 8.sH),
             Text(
-              'When you receive notifications about artworks, events, and updates, they\'ll appear here.',
-              style: TextStyleHelper.instance.title16RegularInter.copyWith(
-                color: AppColor.gray400,
+              'When you receive notifications about artworks, events, \nand updates, they\'ll appear here.',
+              style: TextStyleHelper.instance.title14MediumInter.copyWith(
+                color: AppColor.gray500,
               ),
               textAlign: TextAlign.center,
             ),

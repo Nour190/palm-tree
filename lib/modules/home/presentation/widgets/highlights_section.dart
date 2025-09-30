@@ -484,17 +484,14 @@ class _EnhancedHighlightsSectionState extends State<EnhancedHighlightsSection>
             controller: _mobilePageController,
             onPageChanged: (index) => setState(() => _currentIndex = index),
             itemCount: widget.images.length,
-            itemBuilder: (context, index) => Padding(
-              padding: EdgeInsets.symmetric(horizontal: _isMobile ? 4 : 6),
-              child: _MobileCard(
-                imagePath: widget.images[index],
-                title: widget.titles?[index] ?? 'Highlight ${index + 1}',
-                description: widget.descriptions?[index] ?? 'Tap to explore',
-                aspectRatio: _cardAspectRatio,
-                borderRadius: _borderRadius,
-                onTap: widget.onHighlightTap,
-                isMobile: _isMobile,
-              ),
+            itemBuilder: (context, index) => _MobileCard(
+              imagePath: widget.images[index],
+              title: widget.titles?[index] ?? 'Highlight ${index + 1}',
+              description: widget.descriptions?[index] ?? 'Tap to explore',
+              aspectRatio: _cardAspectRatio,
+              borderRadius: _borderRadius,
+              onTap: widget.onHighlightTap,
+              isMobile: _isMobile,
             ),
           ),
         ),
@@ -812,15 +809,10 @@ class _MobileCard extends StatelessWidget {
               ),
 
               // Content
-              Positioned(
-                left: isMobile ? 16 : 20,
-                right: isMobile ? 16 : 20,
-                bottom: isMobile ? 16 : 20,
-                child: _MobileCardContent(
-                  title: title,
-                  description: description,
-                  isMobile: isMobile,
-                ),
+              _MobileCardContent(
+                title: title,
+                description: description,
+                isMobile: isMobile,
               ),
             ],
           ),

@@ -9,4 +9,8 @@ class AppConstants {
   static const String fontFamily = "Montserrat";
   static const String imagePath = "assets/images/";
   static const String jsonPath = "assets/jsons";
+  static const String animationsPath = "assets/animations/";
+  static String? tokenValue;
+  static String? userIdValue;
+  static String? userNameValue;
 }

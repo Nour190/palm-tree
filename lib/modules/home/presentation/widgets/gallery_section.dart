@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:baseqat/core/responsive/responsive.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
+import 'package:baseqat/modules/home/presentation/widgets/common/home_image.dart';
 
 class ResponsiveGallery extends StatefulWidget {
   const ResponsiveGallery({
@@ -138,37 +139,37 @@ class _ResponsiveGalleryState extends State<ResponsiveGallery>
                       onTapUp: (_) => setState(() => _hoveredIndex = null),
                       onTap: () => _openViewer(context, index),
                       child: AnimatedScale(
-                      scale: isHovered ? 1.02 : 1.0,
-                      duration: const Duration(milliseconds: 160),
-                      curve: Curves.easeOut,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(18.sH),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(
-                                0.12 + (isHovered ? 0.12 : 0.0),
+                        scale: isHovered ? 1.02 : 1.0,
+                        duration: const Duration(milliseconds: 160),
+                        curve: Curves.easeOut,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(18.sH),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(
+                                  0.12 + (isHovered ? 0.12 : 0.0),
+                                ),
+                                blurRadius: 4 + (isHovered ? 6 : 0),
+                                offset: Offset(0, 4.sH),
                               ),
-                              blurRadius: 4 + (isHovered ? 6 : 0),
-                              offset: Offset(0, 4.sH),
-                            ),
-                          ],
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Hero(tag: heroTag, child: _buildImage(url)),
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 160),
-                              color: Colors.black.withOpacity(
-                                0.08 + (isHovered ? 0.12 : 0.0),
+                            ],
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Hero(tag: heroTag, child: _buildImage(url)),
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 160),
+                                color: Colors.black.withOpacity(
+                                  0.08 + (isHovered ? 0.12 : 0.0),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
                     ),
                   ),
                 );
@@ -184,11 +185,12 @@ class _ResponsiveGalleryState extends State<ResponsiveGallery>
 
   String _heroTag(String url, int index) => 'rg-hero-$index-$url';
 
-  Image _buildImage(String path) {
-    final isNetwork = path.startsWith('http://') || path.startsWith('https://');
-    return isNetwork
-        ? Image.network(path, fit: BoxFit.cover)
-        : Image.asset(path, fit: BoxFit.cover);
+  Widget _buildImage(String path) {
+    final trimmed = path.trim();
+    if (trimmed.isEmpty) {
+      return const HomeImage(path: '');
+    }
+    return HomeImage(path: trimmed, fit: BoxFit.cover);
   }
 
   void _openViewer(BuildContext context, int index) {

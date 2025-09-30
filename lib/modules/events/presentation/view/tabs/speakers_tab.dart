@@ -10,7 +10,7 @@ import 'package:baseqat/modules/home/data/models/speaker_model.dart';
 import 'package:flutter/material.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 
-import '../../../../core/resourses/style_manager.dart';
+import '../../../../../core/resourses/style_manager.dart';
 
 class SpeakersTabContent extends StatefulWidget {
   final String headerTitle;

@@ -1,8 +1,12 @@
 // lib/modules/home/presentation/views/home_view.dart
 import 'package:baseqat/core/resourses/assets_manager.dart';
+import 'package:baseqat/core/resourses/constants_manager.dart';
 import 'package:baseqat/core/responsive/responsive.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/core/resourses/navigation_manger.dart';
+import 'package:baseqat/core/components/alerts/custom_error_page.dart';
+import 'package:baseqat/core/components/alerts/custom_snackbar.dart';
+import 'package:baseqat/core/network/remote/supabase_failure.dart';
 import 'package:baseqat/modules/artist_details/presentation/view/artist_details_page.dart';
 import 'package:baseqat/modules/artwork_details/presentation/view/tabs/artwork_details_tabs_view.dart';
 import 'package:baseqat/modules/home/data/datasources/home_remote_data_source.dart';
@@ -10,46 +14,38 @@ import 'package:baseqat/modules/home/data/repositories/home_repository_impl.dart
 import 'package:baseqat/modules/home/presentation/manger/home_cubit.dart';
 import 'package:baseqat/modules/home/presentation/manger/home_state.dart';
 import 'package:baseqat/modules/home/presentation/widgets/about_info_section.dart';
-import 'package:baseqat/modules/home/presentation/widgets/artists_section.dart';
+import 'package:baseqat/modules/home/presentation/widgets/artists_section.dart' hide IthraArtistsSection;
 import 'package:baseqat/modules/home/presentation/widgets/artworks_section.dart';
 import 'package:baseqat/modules/home/presentation/widgets/common/app_section_header.dart';
+import 'package:baseqat/modules/home/presentation/widgets/common/section_error_banner.dart';
 import 'package:baseqat/modules/home/presentation/widgets/common/section_header_with_highlights.dart';
 import 'package:baseqat/modules/home/presentation/widgets/footer_section.dart';
 import 'package:baseqat/modules/home/presentation/widgets/gallery_section.dart';
 import 'package:baseqat/modules/home/presentation/widgets/reviews_section.dart';
 import 'package:baseqat/modules/home/presentation/widgets/speakers_section.dart';
 import 'package:baseqat/modules/home/presentation/widgets/textline_banner.dart';
-import 'package:baseqat/modules/home/presentation/widgets/home_skeleton.dart';
 import 'package:baseqat/modules/tabs/presentation/manger/tabs_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-// Optional small helper
-Widget _errorRow({required String message, required VoidCallback onRetry}) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 12.0),
-    child: Row(
-      children: [
-        const Icon(Icons.error_outline, color: Colors.redAccent),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            message,
-            style: const TextStyle(color: Colors.redAccent),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        const SizedBox(width: 8),
-        TextButton.icon(
-          onPressed: onRetry,
-          icon: const Icon(Icons.refresh),
-          label: const Text('Retry'),
-        ),
-      ],
-    ),
-  );
+import '../../../../core/components/alerts/custom_loading.dart';
+import '../widgets/common/ithra_app_header.dart';
+import '../widgets/common/ithra_welcome_section.dart';
+import '../widgets/ithra_artists_section.dart';
+import '../widgets/ithra_artworks_section.dart';
+import '../widgets/ithra_gallery_section.dart';
+import '../widgets/ithra_reviews_section.dart';
+import '../widgets/ithra_speakers_section.dart';
+import '../widgets/ithra_virtual_tour_section.dart';
+
+
+ErrorType _mapFailureToErrorType(Failure failure) {
+  if (failure is OfflineFailure) return ErrorType.noInternet;
+  if (failure is TimeoutFailure) return ErrorType.timeout;
+  if (failure is NotFoundFailure) return ErrorType.notFound;
+  if (failure is NetworkFailure) return ErrorType.network;
+  return ErrorType.generic;
 }
 
 class HomeView extends StatelessWidget {
@@ -65,22 +61,21 @@ class HomeView extends StatelessWidget {
       create: (_) => HomeCubit(repo)..loadAll(),
       child: BlocConsumer<HomeCubit, HomeState>(
         listenWhen: (prev, curr) =>
-            curr is HomeError ||
+        curr is HomeError ||
             (curr is HomeLoaded &&
                 (curr.artistsError != null ||
                     curr.artworksError != null ||
                     curr.reviewsError != null ||
                     curr.infoError != null)),
         listener: (context, state) {
-          // Show lightweight snackbars for section-level failures without killing the whole page
+          // Surface errors with the redesigned alert components
           if (state is HomeError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.failure.message),
-                backgroundColor: Colors.redAccent,
-              ),
+            context.showErrorSnackBar(
+              state.failure.message,
+              onRetry: () => context.read<HomeCubit>().loadAll(force: true),
             );
           }
+
           if (state is HomeLoaded) {
             final msgs = <String>[];
             if (state.artistsError != null) {
@@ -96,51 +91,33 @@ class HomeView extends StatelessWidget {
               msgs.add('Info: ${state.infoError!.message}');
             }
             if (msgs.isNotEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(msgs.join(' | ')),
-                  backgroundColor: Colors.orange.shade700,
-                ),
+              context.showWarningSnackBar(
+                msgs.map((msg) => '- ' + msg).join('\n'),
+                title: 'Partial content loaded',
               );
             }
           }
         },
         builder: (context, state) {
-          // Initial or first hard load → full screen spinner
-          if (state is HomeInitial ||
-              (state is HomeLoading &&
-                  !(state.message?.contains('Refreshing') ?? false))) {
-            return const HomeSkeleton();
+          // Initial or first hard load - show immersive loading page
+          if (state is HomeInitial || state is HomeLoading) {
+            final loadingMessage = state is HomeLoading ? state.message : null;
+            return LoadingPage(
+              message: loadingMessage ?? 'Curating your experience...',
+              subtitle: 'Please wait while we fetch the latest highlights.',
+            );
           }
 
           // Fatal top-level error with no data at all
           if (state is HomeError) {
-            return Scaffold(
-              body: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      color: Colors.red,
-                      size: 36,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      state.failure.message,
-                      style: const TextStyle(color: Colors.red),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton.icon(
-                      onPressed: () =>
-                          context.read<HomeCubit>().loadAll(force: true),
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              ),
+            final failure = state.failure;
+            return ErrorPage(
+              errorType: _mapFailureToErrorType(failure),
+              customMessage: failure.message,
+              details: failure.cause?.toString(),
+              showDetails: failure.cause != null,
+              onRetry: () => context.read<HomeCubit>().loadAll(force: true),
+              canContactSupport: false,
             );
           }
 
@@ -156,76 +133,50 @@ class HomeView extends StatelessWidget {
           final bool isTablet = deviceType == DeviceType.tablet;
           final bool isDesktop = deviceType == DeviceType.desktop;
 
-          final double horizontalPad = isDesktop
-              ? 48.sW
-              : isTablet
-              ? 32.sW
-              : 18.sW;
-          final double topPad = isDesktop
-              ? 40.sH
-              : isTablet
-              ? 32.sH
-              : 24.sH;
-          final double sectionGap = isDesktop
-              ? 40.sH
-              : isTablet
-              ? 32.sH
-              : 24.sH;
-          final double blockGap = isDesktop
-              ? 32.sH
-              : isTablet
-              ? 28.sH
-              : 24.sH;
-
           return Scaffold(
             backgroundColor: Colors.white,
-            // Small top bar to indicate background refresh in progress
-            appBar: loaded.isRefreshing
-                ? AppBar(
-                    backgroundColor: Colors.white,
-                    elevation: 0,
-                    toolbarHeight: 6,
-                    bottom: const PreferredSize(
-                      preferredSize: Size.fromHeight(2),
-                      child: LinearProgressIndicator(minHeight: 2),
-                    ),
-                  )
-                : null,
-            body: SafeArea(
+            body: LoadingOverlay(
+              isLoading: loaded.isRefreshing,
+              message: loaded.isRefreshing
+                  ? 'Refreshing the collection...'
+                  : null,
+              overlayColor: Colors.white.withOpacity(0.85),
               child: RefreshIndicator(
-                onRefresh: () => context.read<HomeCubit>().loadAll(force: true),
+                onRefresh: () =>
+                    context.read<HomeCubit>().loadAll(force: true),
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Header + Highlights
+                      // IthraAppHeader(
+                      //   onMenuTap: () {
+                      //     // Handle menu tap
+                      //   },
+                      //   onSearchTap: () {
+                      //     // Handle search tap
+                      //   },
+                      // ),
+
                       if (info != null) ...[
-                        Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            horizontalPad,
-                            topPad,
-                            horizontalPad,
-                            12,
-                          ),
-                          child: SectionHeaderWithHighlights(
-                            title: info.mainTitle,
-                            subtitle: info.subTitle,
-                            images: info.images,
-                            sectionGap: sectionGap,
-                            emphasize: true,
-                            webRowMinWidth: 900.0,
-                          ),
+                        IthraWelcomeSection(
+                          title: info.mainTitle,
+                          subtitle: info.subTitle,
+                          images: info.images,
                         ),
                         if (loaded.infoError != null)
-                          _errorRow(
+                          SectionErrorBanner(
                             message: loaded.infoError!.message,
-                            onRetry: () =>
-                                context.read<HomeCubit>().loadAll(force: true),
+                            onRetry: () => context.read<HomeCubit>().loadAll(
+                              force: true,
+                            ),
+                            margin: EdgeInsets.symmetric(
+                              horizontal: isDesktop ? 48.sW : isTablet ? 32.sW : 18.sW,
+                              vertical: 12.sH,
+                            ),
                           ),
-                        SizedBox(height: sectionGap),
                       ] else ...[
-                        // If no info yet but we’re refreshing, show lightweight placeholder
+                        // If no info yet but we're refreshing, show lightweight placeholder
                         if (loaded.isRefreshing)
                           const Padding(
                             padding: EdgeInsets.all(16),
@@ -233,24 +184,23 @@ class HomeView extends StatelessWidget {
                           ),
                       ],
 
-                      // Artists Section (selective rebuild)
                       BlocSelector<
-                        HomeCubit,
-                        HomeState,
-                        ({List artists, Object? error, bool refreshing})
+                          HomeCubit,
+                          HomeState,
+                          ({List artists, Object? error, bool refreshing})
                       >(
                         selector: (state) {
                           if (state is HomeLoaded) {
                             return (
-                              artists: state.artists,
-                              error: state.artistsError,
-                              refreshing: state.isRefreshingArtists,
+                            artists: state.artists,
+                            error: state.artistsError,
+                            refreshing: state.isRefreshingArtists,
                             );
                           }
                           return (
-                            artists: const <dynamic>[],
-                            error: null,
-                            refreshing: false,
+                          artists: const <dynamic>[],
+                          error: null,
+                          refreshing: false,
                           );
                         },
                         builder: (context, sel) {
@@ -264,59 +214,54 @@ class HomeView extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               if (errSel != null)
-                                _errorRow(
+                                SectionErrorBanner(
                                   message: (errSel as dynamic).message,
-                                  onRetry: () =>
-                                      context.read<HomeCubit>().reloadArtists(),
+                                  onRetry: () => context
+                                      .read<HomeCubit>()
+                                      .reloadArtists(),
+                                  margin: EdgeInsets.symmetric(
+                                    horizontal: isDesktop ? 48.sW : isTablet ? 32.sW : 18.sW,
+                                    vertical: 12.sH,
+                                  ),
                                 ),
-                              Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: horizontalPad,
-                                  vertical: 12,
-                                ),
-                                child: ArtistsSection(
-                                  artists: List.from(artistsSel),
-                                  isLoading: isRefreshingSel,
-                                  onSeeMore: () =>
-                                      context.read<TabsCubit>()
-                                          .changeSelectedIndex(1),
-                                  //.selectTop(1),
-                                  seeMoreButtonText: 'Explore More',
-                                  onArtistTap: (index) {
-                                    navigateTo(
-                                      context,
-                                      ArtistDetailsPage(
-                                        artistId:
-                                            (artistsSel[index] as dynamic).id,
-                                      ),
-                                    );
-                                  },
-                                ),
+                              IthraArtistsSection(
+                                artists: List.from(artistsSel),
+                                isLoading: isRefreshingSel,
+                                onSeeMore: () => context
+                                    .read<TabsCubit>()
+                                    .changeSelectedIndex(1),
+                                onArtistTap: (index) {
+                                  navigateTo(
+                                    context,
+                                    ArtistDetailsPage(
+                                      artistId:
+                                      (artistsSel[index] as dynamic).id,
+                                    ),
+                                  );
+                                },
                               ),
-                              SizedBox(height: sectionGap),
                             ],
                           );
                         },
                       ),
 
-                      // Artworks Section (selective rebuild)
                       BlocSelector<
-                        HomeCubit,
-                        HomeState,
-                        ({List artworks, Object? error, bool refreshing})
+                          HomeCubit,
+                          HomeState,
+                          ({List artworks, Object? error, bool refreshing})
                       >(
                         selector: (state) {
                           if (state is HomeLoaded) {
                             return (
-                              artworks: state.artworks,
-                              error: state.artworksError,
-                              refreshing: state.isRefreshingArtworks,
+                            artworks: state.artworks,
+                            error: state.artworksError,
+                            refreshing: state.isRefreshingArtworks,
                             );
                           }
                           return (
-                            artworks: const <dynamic>[],
-                            error: null,
-                            refreshing: false,
+                          artworks: const <dynamic>[],
+                          error: null,
+                          refreshing: false,
                           );
                         },
                         builder: (context, sel) {
@@ -330,84 +275,53 @@ class HomeView extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               if (errSel != null)
-                                _errorRow(
+                                SectionErrorBanner(
                                   message: (errSel as dynamic).message,
                                   onRetry: () => context
                                       .read<HomeCubit>()
                                       .reloadArtworks(),
+                                  margin: EdgeInsets.symmetric(
+                                    horizontal: isDesktop ? 48.sW : isTablet ? 32.sW : 18.sW,
+                                    vertical: 12.sH,
+                                  ),
                                 ),
-                              Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: horizontalPad,
-                                  vertical: 12,
-                                ),
-                                child: ArtworksSection(
-                                  artworks: List.from(artworksSel),
-                                  isLoading: isRefreshingSel,
-                                  showSeeMoreButton: true,
-                                  seeMoreButtonText: 'Explore More',
-                                  onSeeMore: () =>
-                                      context.read<TabsCubit>()
-                                      .changeSelectedIndex(1),
-                                          //.selectTop(1),
-                                  onCardTap: (index) {
-                                    navigateTo(
-                                      context,
-                                      ArtWorkDetailsScreen(
-                                        artworkId:
-                                            (artworksSel[index] as dynamic).id,
-                                        userId:
-                                            'd0030cf6-3830-47e8-9ca4-a2d00d51427a',
-                                        //onBack: () => Navigator.pop(context),
-                                      ),
-                                    );
-                                  },
-                                ),
+                              IthraArtworksSection(
+                                artworks: List.from(artworksSel),
+                                isLoading: isRefreshingSel,
+                                onSeeMore: () => context
+                                    .read<TabsCubit>()
+                                    .changeSelectedIndex(1),
+                                onArtworkTap: (index) {
+                                  navigateTo(
+                                    context,
+                                    ArtWorkDetailsScreen(
+                                      artworkId:
+                                      (artworksSel[index] as dynamic)
+                                          .id,
+                                      userId: AppConstants.userIdValue ?? "",
+                                    ),
+                                  );
+                                },
                               ),
-                              SizedBox(height: sectionGap),
                             ],
                           );
                         },
                       ),
 
-                      // Speakers
-                      Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: horizontalPad,
-                        ),
-                        child: const AppSectionHeader(title: 'Speakers'),
+                      IthraSpeakersSection(
+                        onSeeMore: () => context
+                            .read<TabsCubit>()
+                            .changeSelectedIndex(1),
+                        onJoinNow: () => context
+                            .read<TabsCubit>()
+                            .changeSelectedIndex(1),
+                        speakerImagePath: AppAssetsManager.imgInfo,
                       ),
-                      SizedBox(height: 16.sH),
-                      Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: horizontalPad,
-                        ),
-                        child: SpeakersSection(
-                          onSeeMore: () =>
-                              context.read<TabsCubit>()
-                                  .changeSelectedIndex(1),
-                                  //.selectTop(1),
-                          onJoinNow: () =>
-                              context.read<TabsCubit>()
-                                  .changeSelectedIndex(1),
-                                  //.selectTop(1),
-                          sideImagePath: AppAssetsManager.imgInfo,
-                          topEmblemPath: AppAssetsManager.imgVectorWhiteA700,
-                          leftEmblemPath: AppAssetsManager.imgGroup,
-                          badgeAssetPaths: [
-                            AppAssetsManager.imgVectorWhiteA70050x66,
-                            AppAssetsManager.imgVectorWhiteA70050x66,
-                            AppAssetsManager.imgVectorWhiteA70050x66,
-                            AppAssetsManager.imgVectorWhiteA70050x66,
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: blockGap),
-                      // Fancy banner
+
                       Padding(
                         padding: EdgeInsets.symmetric(vertical: 8.0),
                         child: TextLineBanner(
-                          text: 'FINEST DATES  *  YOUR DATE WITH THE  *',
+                          text: 'ATE WITH THE  *  YOUR DATE WITH THE  *',
                           enableMarquee: true,
                           speed: 50.0,
                           gap: 50.0,
@@ -418,9 +332,14 @@ class HomeView extends StatelessWidget {
                           showEntryAnimation: true,
                         ),
                       ),
-                      SizedBox(height: blockGap),
 
-                      // Gallery (selective rebuild)
+                      IthraVirtualTourSection(
+                        onTryNow: () => context
+                            .read<TabsCubit>()
+                            .changeSelectedIndex(1),
+                        previewImages: info?.images,
+                      ),
+
                       BlocSelector<HomeCubit, HomeState, List<String>>(
                         selector: (state) {
                           if (state is HomeLoaded && state.info != null) {
@@ -429,79 +348,69 @@ class HomeView extends StatelessWidget {
                           return const <String>[];
                         },
                         builder: (context, imagesSel) {
-                          if (imagesSel.isEmpty) return const SizedBox.shrink();
-                          return Column(
-                            children: [
-                              ResponsiveGallery(
-                                title: 'Gallery',
-                                onSeeMore: () =>
-                                    context.read<TabsCubit>()
-                                        .changeSelectedIndex(1),
-                                        //.selectTop(1),
-                                imageUrls: imagesSel,
-                              ),
-                              SizedBox(height: sectionGap),
-                            ],
+                          if (imagesSel.isEmpty)
+                            return const SizedBox.shrink();
+                          return IthraGallerySection(
+                            imageUrls: imagesSel,
+                            onSeeMore: () => context
+                                .read<TabsCubit>()
+                                .changeSelectedIndex(1),
+                            onImageTap: (index) {
+                              // Handle image tap - could open lightbox
+                            },
                           );
                         },
                       ),
 
-                      // Reviews (selective rebuild)
                       BlocSelector<
-                        HomeCubit,
-                        HomeState,
-                        ({List reviews, Object? error, bool refreshing})
+                          HomeCubit,
+                          HomeState,
+                          ({List reviews, Object? error, bool refreshing})
                       >(
                         selector: (state) {
                           if (state is HomeLoaded) {
                             return (
-                              reviews: state.reviews,
-                              error: state.reviewsError,
-                              refreshing: state.isRefreshingReviews,
+                            reviews: state.reviews,
+                            error: state.reviewsError,
+                            refreshing: state.isRefreshingReviews,
                             );
                           }
                           return (
-                            reviews: const <dynamic>[],
-                            error: null,
-                            refreshing: false,
+                          reviews: const <dynamic>[],
+                          error: null,
+                          refreshing: false,
                           );
                         },
                         builder: (context, sel) {
                           final reviewsSel = sel.reviews;
                           final errSel = sel.error;
                           final isRefreshingSel = sel.refreshing;
-                          if (reviewsSel.isEmpty && errSel == null) {
-                            return const SizedBox.shrink();
-                          }
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               if (errSel != null)
-                                Padding(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: horizontalPad,
-                                  ),
-                                  child: _errorRow(
-                                    message: (errSel as dynamic).message,
-                                    onRetry: () => context
-                                        .read<HomeCubit>()
-                                        .reloadReviews(),
+                                SectionErrorBanner(
+                                  message: (errSel as dynamic).message,
+                                  onRetry: () => context
+                                      .read<HomeCubit>()
+                                      .reloadReviews(),
+                                  margin: EdgeInsets.symmetric(
+                                    horizontal: isDesktop ? 48.sW : isTablet ? 32.sW : 18.sW,
+                                    vertical: 12.sH,
                                   ),
                                 ),
-                              Reviews(
-                                reviewsData: List.from(reviewsSel),
+                              IthraReviewsSection(
+                                reviews: List.from(reviewsSel),
                                 isLoading: isRefreshingSel,
                               ),
                             ],
                           );
                         },
                       ),
-                      SizedBox(height: sectionGap),
 
-                      // About (selective rebuild)
                       BlocSelector<HomeCubit, HomeState, dynamic>(
                         selector: (state) =>
-                            state is HomeLoaded ? state.info : null,
+                        state is HomeLoaded ? state.info : null,
                         builder: (context, infoSel) {
                           if (infoSel == null) return const SizedBox.shrink();
                           return AboutInfo(
@@ -511,7 +420,7 @@ class HomeView extends StatelessWidget {
                         },
                       ),
 
-                      // Footer
+                      // Footer (keeping existing)
                       const Footer(),
                     ],
                   ),

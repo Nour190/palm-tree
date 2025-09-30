@@ -219,10 +219,10 @@ class _AIChatViewState extends State<AIChatView> {
   // Persona Instruction
   // -----------------------------
   String _artworkPersonaInstruction(
-    Artwork a, {
-    String? userName,
-    Artist? artist,
-  }) {
+      Artwork a, {
+        String? userName,
+        Artist? artist,
+      }) {
     final facts = <String>[];
 
     // Artwork basics
@@ -334,11 +334,11 @@ ${facts.join('\n')}
       if (_ttsVoice != null) {
         await _tts.setVoice({
           'name':
-              (_ttsVoice!['name'] ??
-                      _ttsVoice!['voice'] ??
-                      _ttsVoice!['voiceId'] ??
-                      '')
-                  .toString(),
+          (_ttsVoice!['name'] ??
+              _ttsVoice!['voice'] ??
+              _ttsVoice!['voiceId'] ??
+              '')
+              .toString(),
           'locale': (_ttsVoice!['locale'] ?? localeCode).toString(),
         });
       } else {
@@ -372,7 +372,7 @@ ${facts.join('\n')}
 
   String _labelForLocale(String code) {
     final m = _ttsChoices.firstWhere(
-      (e) => e['code'] == code,
+          (e) => e['code'] == code,
       orElse: () => const {'code': 'en-US', 'label': 'EN'},
     );
     return m['label']!;
@@ -402,7 +402,7 @@ ${facts.join('\n')}
         parts: [
           Part.text(
             'Answer in the same language as this message. '
-            'If unclear, reply briefly in Arabic and English.',
+                'If unclear, reply briefly in Arabic and English.',
           ),
           Part.text(raw),
         ],
@@ -444,7 +444,7 @@ ${facts.join('\n')}
       );
 
       _recStreamSub = stream.listen(
-        (chunk) => _pcmBuilder.add(chunk),
+            (chunk) => _pcmBuilder.add(chunk),
         onError: (e) => _showSnack('Record error: $e'),
       );
 
@@ -509,8 +509,8 @@ ${facts.join('\n')}
           parts: [
             Part.text(
               'The visitor sent an audio question. Do NOT produce a transcript or translation. '
-              'Answer the content only in the detected language. '
-              'If language is uncertain or the visitor indicates confusion, respond briefly in Arabic and English.',
+                  'Answer the content only in the detected language. '
+                  'If language is uncertain or the visitor indicates confusion, respond briefly in Arabic and English.',
             ),
             Part.inline(inline),
           ],
@@ -534,10 +534,10 @@ ${facts.join('\n')}
   }
 
   Uint8List _pcm16ToWav(
-    Uint8List pcm, {
-    required int sampleRate,
-    required int channels,
-  }) {
+      Uint8List pcm, {
+        required int sampleRate,
+        required int channels,
+      }) {
     const bitsPerSample = 16;
     final totalAudioLen = pcm.length;
     final totalDataLen = totalAudioLen + 36;
@@ -590,43 +590,43 @@ ${facts.join('\n')}
     try {
       _streamSub = Gemini.instance
           .streamChat(
-            _history,
-            modelName: widget.modelName,
-            generationConfig: GenerationConfig(
-              maxOutputTokens: 2048,
-              temperature: 0.4,
-            ),
-          )
+        _history,
+        modelName: widget.modelName,
+        generationConfig: GenerationConfig(
+          maxOutputTokens: 2048,
+          temperature: 0.4,
+        ),
+      )
           .listen(
             (c) {
-              final chunk = c.output;
-              if (chunk == null) return;
-              cubit.appendModelChunk(chunk);
-              _scrollToEnd();
-            },
-            onError: (e) {
-              _showSnack('Gemini error: $e');
-              setState(() => _isSending = false);
-              // Clear streaming state
-              cubit.endModelStream(); // will save empty -> no-op
-            },
-            onDone: () async {
-              setState(() => _isSending = false);
+          final chunk = c.output;
+          if (chunk == null) return;
+          cubit.appendModelChunk(chunk);
+          _scrollToEnd();
+        },
+        onError: (e) {
+          _showSnack('Gemini error: $e');
+          setState(() => _isSending = false);
+          // Clear streaming state
+          cubit.endModelStream(); // will save empty -> no-op
+        },
+        onDone: () async {
+          setState(() => _isSending = false);
 
-              // Persist the final model message (with translation flag off by default)
-              await cubit.endModelStream();
+          // Persist the final model message (with translation flag off by default)
+          await cubit.endModelStream();
 
-              // Also keep Gemini conversation history for next turns
-              final finalText = cubit.state.messages.isNotEmpty
-                  ? cubit.state.messages.last.content
-                  : '';
-              if (finalText.trim().isNotEmpty) {
-                _history.add(
-                  Content(parts: [Part.text(finalText)], role: 'model'),
-                );
-              }
-            },
-          );
+          // Also keep Gemini conversation history for next turns
+          final finalText = cubit.state.messages.isNotEmpty
+              ? cubit.state.messages.last.content
+              : '';
+          if (finalText.trim().isNotEmpty) {
+            _history.add(
+              Content(parts: [Part.text(finalText)], role: 'model'),
+            );
+          }
+        },
+      );
     } catch (e) {
       _showSnack('Gemini stream error: $e');
       setState(() => _isSending = false);
@@ -763,66 +763,74 @@ ${facts.join('\n')}
             ),
             actions: [
               // TTS/Translation Language selector (five languages)
-              Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: PopupMenuButton<String>(
-                  tooltip: 'TTS/Translation language',
-                  onSelected: (code) async {
-                    // Update cubit (for speak + translation toggles)
-                    cubit.setTtsLocale(code);
-                    // Align TTS engine
-                    await _applyTtsLocale(code);
-                    if (mounted) setState(() {});
-                  },
-                  itemBuilder: (ctx) => _ttsChoices
-                      .map(
-                        (m) => PopupMenuItem<String>(
-                          value: m['code']!,
-                          child: Row(
-                            children: [
-                              const Icon(Icons.translate_rounded, size: 18),
-                              const SizedBox(width: 8),
-                              Text('${m['label']}  •  ${m['code']}'),
-                            ],
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 4),
+                  child: PopupMenuButton<String>(
+                    tooltip: 'TTS/Translation language',
+                    onSelected: (code) async {
+                      // Update cubit (for speak + translation toggles)
+                      cubit.setTtsLocale(code);
+                      // Align TTS engine
+                      await _applyTtsLocale(code);
+                      if (mounted) setState(() {});
+                    },
+                    itemBuilder: (ctx) => _ttsChoices
+                        .map(
+                          (m) => PopupMenuItem<String>(
+                        value: m['code']!,
+                        child: Row(
+                          children: [
+                            const Icon(Icons.translate_rounded, size: 18),
+                            const SizedBox(width: 8),
+                            Text('${m['label']}  •  ${m['code']}'),
+                          ],
+                        ),
+                      ),
+                    )
+                        .toList(),
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 4,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppColor.gray400, width: 1),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.translate_rounded, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            _labelForLocale(state.ttsLocale),
+                            style: t.body14MediumInter.copyWith(fontSize: 12),
                           ),
-                        ),
-                      )
-                      .toList(),
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(
-                      vertical: 8,
-                      horizontal: 6,
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppColor.gray400, width: 1),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.translate_rounded, size: 18),
-                        const SizedBox(width: 6),
-                        Text(
-                          _labelForLocale(state.ttsLocale),
-                          style: t.body14MediumInter,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
+              // Action buttons
               IconButton(
                 tooltip: 'Copy transcript',
-                icon: const Icon(Icons.content_copy_rounded),
+                icon: const Icon(Icons.content_copy_rounded, size: 20),
                 onPressed: () => _copyTranscript(state),
+                padding: const EdgeInsets.all(8),
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
               ),
               IconButton(
                 tooltip: 'Clear chat',
-                icon: const Icon(Icons.clear_all_rounded),
+                icon: const Icon(Icons.clear_all_rounded, size: 20),
                 onPressed: _confirmClear,
+                padding: const EdgeInsets.all(8),
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
               ),
               const SizedBox(width: 4),
             ],
@@ -985,12 +993,12 @@ ${facts.join('\n')}
                               ),
                               boxShadow: _isRecording
                                   ? [
-                                      BoxShadow(
-                                        color: Colors.red.withOpacity(.25),
-                                        blurRadius: 18,
-                                        spreadRadius: 1,
-                                      ),
-                                    ]
+                                BoxShadow(
+                                  color: Colors.red.withOpacity(.25),
+                                  blurRadius: 18,
+                                  spreadRadius: 1,
+                                ),
+                              ]
                                   : null,
                             ),
                             child: Icon(
@@ -1158,15 +1166,15 @@ class _Bubble extends StatelessWidget {
 
     final radius = fromUser
         ? const BorderRadius.only(
-            topLeft: Radius.circular(18),
-            topRight: Radius.circular(18),
-            bottomLeft: Radius.circular(18),
-          )
+      topLeft: Radius.circular(18),
+      topRight: Radius.circular(18),
+      bottomLeft: Radius.circular(18),
+    )
         : const BorderRadius.only(
-            topLeft: Radius.circular(18),
-            topRight: Radius.circular(18),
-            bottomRight: Radius.circular(18),
-          );
+      topLeft: Radius.circular(18),
+      topRight: Radius.circular(18),
+      bottomRight: Radius.circular(18),
+    );
 
     final timeStr = TimeOfDay.fromDateTime(time).format(context);
 
@@ -1307,20 +1315,20 @@ class _Bubble extends StatelessWidget {
                                   : onToggleTranslate,
                               icon: isTranslating
                                   ? SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(fg),
-                                      ),
-                                    )
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor:
+                                  AlwaysStoppedAnimation<Color>(fg),
+                                ),
+                              )
                                   : Icon(
-                                      translationOn
-                                          ? Icons.g_translate_rounded
-                                          : Icons.translate_rounded,
-                                      color: fg,
-                                    ),
+                                translationOn
+                                    ? Icons.g_translate_rounded
+                                    : Icons.translate_rounded,
+                                color: fg,
+                              ),
                               tooltip: translateLabel ?? 'Show translation',
                             ),
                           const SizedBox(width: 10),
@@ -1432,12 +1440,12 @@ class _VoicePlayerState extends State<_VoicePlayer> {
             onPressed: !_ready
                 ? null
                 : () async {
-                    if (isPlaying) {
-                      await _player.pause();
-                    } else {
-                      await _player.resume();
-                    }
-                  },
+              if (isPlaying) {
+                await _player.pause();
+              } else {
+                await _player.resume();
+              }
+            },
             icon: Icon(
               isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
               color: widget.tint,
@@ -1455,8 +1463,8 @@ class _VoicePlayerState extends State<_VoicePlayer> {
               child: Slider(
                 value: canSeek
                     ? _position.inMilliseconds
-                          .clamp(0, _duration.inMilliseconds)
-                          .toDouble()
+                    .clamp(0, _duration.inMilliseconds)
+                    .toDouble()
                     : 0,
                 min: 0,
                 max: canSeek ? _duration.inMilliseconds.toDouble() : 1,

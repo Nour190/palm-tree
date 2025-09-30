@@ -14,6 +14,9 @@ class AppSecureStorage {
   Future<String?> getData(String key) async {
     return await instance.read(key: key);
   }
+  Future<Map<String,String>> getAllData() async {
+    return await instance.readAll();
+  }
 
   Future setData({required String key, required String value}) async {
     await instance.write(key: key, value: value);

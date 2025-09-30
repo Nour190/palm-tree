@@ -103,13 +103,13 @@ class _SignUpMobileTabletState extends State<SignUpMobileTablet> {
     Future.microtask(() {
       final cubit = context.read<RegisterCubit>();
       cubit.startAuthListener();
-      cubit.checkInitialAuthState();
+      //cubit.checkInitialAuthState();
     });
   }
   @override
   Widget build(BuildContext context) {
     final isMobile = Responsive.isMobile(context);
-    final formWidth = isMobile ? 340.w : 480.w;
+    //final formWidth = isMobile ? 340.w : 480.w;
 
     return  BlocListener<RegisterCubit, RegisterStates>(
         listener: (context, state) {
@@ -144,32 +144,31 @@ class _SignUpMobileTabletState extends State<SignUpMobileTablet> {
             ),
             child: IntrinsicHeight(
               child: Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 24.w),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Spacer(flex: 1),
-                      Image.asset(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Spacer(flex: 1),
+                    Center(
+                      child: Image.asset(
                         AppAssetsManager.appLogo,
                         width: isMobile ? 80.w : 120.w,
                         height: isMobile ? 80.h : 120.h,
                       ),
-                      Text("ithra", style: TextStyleHelper.instance.display48BlackBoldInter),
-                      SizedBox(height: 15.h),
-                      SignUpForm(
-                        width: formWidth,
-                        onSubmit: (name, email, password) {
-                          final cubit = context.read<RegisterCubit>();
-                          cubit.nameController.text = name;
-                          cubit.emailController.text = email;
-                          cubit.passwordController.text = password;
-                          cubit.register();
-                        },
-                      ),
-                      const Spacer(flex: 2),
-                    ],
-                  ),
+                    ),
+                    Text("ithra", style: TextStyleHelper.instance.display48BlackBoldInter),
+                    SizedBox(height: 15.h),
+                    SignUpForm(
+                      width: double.infinity,
+                      // onSubmit: (name, email, password) {
+                      //   final cubit = context.read<RegisterCubit>();
+                      //   cubit.nameController.text = name;
+                      //   cubit.emailController.text = email;
+                      //   cubit.passwordController.text = password;
+                      //   cubit.register();
+                      // },
+                    ),
+                    const Spacer(flex: 2),
+                  ],
                 ),
               ),
             ),

@@ -11,9 +11,11 @@ class RegisterWithGoogleLoadingState extends RegisterStates {}
 class RegisterRedirectingState extends RegisterStates {}
 
 class RegisterSuccessState extends RegisterStates {
-  final UserModel userModel;
+  // final String token;
 
-  RegisterSuccessState(this.userModel);
+  RegisterSuccessState(
+      //this.token
+      );
 }
 
 class RegisterGoogleSuccessState extends RegisterStates {

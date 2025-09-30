@@ -16,7 +16,7 @@ class PrivacySettingsScreen extends StatelessWidget {
     return BlocProvider(
       create: (context) => PrivacySettingsCubit(PrivacySettingsService.instance)..loadSettings(),
       child: Scaffold(
-        backgroundColor: AppColor.gray50,
+        backgroundColor: AppColor.white,
         body: LayoutBuilder(
           builder: (context, constraints) {
             bool isDesktop = constraints.maxWidth > 768;

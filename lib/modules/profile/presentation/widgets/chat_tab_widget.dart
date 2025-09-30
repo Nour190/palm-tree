@@ -52,14 +52,7 @@ class ChatTabWidget extends StatelessWidget {
           }
 
           if (state.items.isEmpty) {
-            return Center(
-              child: Text(
-                'No conversations yet',
-                style: TextStyleHelper.instance.body14RegularInter.copyWith(
-                  color: AppColor.gray700,
-                ),
-              ),
-            );
+            return _buildNoConversationsView();
           }
 
           return RefreshIndicator(
@@ -87,7 +80,39 @@ class ChatTabWidget extends StatelessWidget {
       ),
     );
   }
-
+  Widget _buildNoConversationsView() {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(15.sW),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.chat_bubble_outline,
+              size: 70.sSp,
+              color: AppColor.gray400,
+            ),
+            SizedBox(height: 15.sH),
+            Text(
+              'No conversations yet',
+              style: TextStyleHelper.instance.title18BoldInter.copyWith(
+                color: AppColor.black,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 8.sH),
+            Text(
+              'Your conversations with the AI about selected artworks, \nalong with updates and events, will appear here.',
+              style: TextStyleHelper.instance.title14MediumInter.copyWith(
+                color: AppColor.gray500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
   Widget _buildChatItem(ConversationRecord conversation) {
     final lastMessageTime = conversation.lastMessageAt != null
         ? DateFormat('hh:mm a').format(conversation.lastMessageAt!)

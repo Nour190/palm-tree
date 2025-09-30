@@ -9,8 +9,13 @@ import 'package:baseqat/modules/profile/presentation/cubit/favorites_cubit.dart'
 import 'package:baseqat/modules/profile/data/repositories/conversations_repository.dart';
 import 'package:baseqat/modules/profile/data/datasources/conversations_remote_data_source.dart';
 import 'package:baseqat/modules/profile/presentation/cubit/conversations_cubit.dart';
+import 'package:baseqat/modules/profile/data/repositories/profile_repository.dart';
+import 'package:baseqat/modules/profile/data/repositories/profile_repository_impl.dart';
+import 'package:baseqat/modules/profile/presentation/cubit/account_settings_cubit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:get_it/get_it.dart';
+
+import '../../modules/auth/logic/auth_gate_cubit/auth_cubit.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -24,9 +29,22 @@ Future<void> diInit() async {
   sl.registerFactory<LoginCubit>(
         () => LoginCubit(sl<AuthRepo>()),
   );
+  sl.registerFactory<AuthCubit>(
+        () => AuthCubit(sl<AuthRepo>()),
+  );
 
   sl.registerFactory<RegisterCubit>(
         () => RegisterCubit(sl<AuthRepo>()),
+  );
+
+  // Profile Repository
+  sl.registerLazySingleton<ProfileRepository>(
+        () => ProfileRepositoryImpl(Supabase.instance.client),
+  );
+
+  // Profile Cubits
+  sl.registerFactory<AccountSettingsCubit>(
+        () => AccountSettingsCubit(sl<ProfileRepository>()),
   );
 
   // Favorites Data Source

@@ -4,6 +4,7 @@ import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/core/responsive/size_utils.dart';
 import 'package:baseqat/core/resourses/style_manager.dart';
 import 'package:baseqat/core/resourses/assets_manager.dart';
+import 'compact_locale_switcher.dart';
 
 class DesktopTopBar extends StatelessWidget {
   DesktopTopBar({
@@ -43,7 +44,7 @@ class DesktopTopBar extends StatelessWidget {
           // Logo and brand on the left
           _DesktopBrand(logoPath: logoPath, brand: brand),
           SizedBox(width: 48.sSp),
-          
+
           // Navigation tabs in the center
           Expanded(
             child: Row(
@@ -59,14 +60,17 @@ class DesktopTopBar extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // Actions on the right
           Row(
             children: [
-              if (showScanButton) ...[
-                _DesktopScanButton(onTap: onScanTap),
-                SizedBox(width: 16.sSp),
-              ],
+              // Language switcher with desktop-familiar dropdown design
+              const DesktopLanguageSwitcher(),
+              SizedBox(width: 16.sSp),
+              // if (showScanButton) ...[
+              //   //_DesktopScanButton(onTap: onScanTap),
+              //   SizedBox(width: 16.sSp),
+              // ],
               _DesktopLoginButton(onTap: onLoginTap),
             ],
           ),
@@ -90,7 +94,7 @@ class _DesktopBrand extends StatelessWidget {
           child: Container(
             width: 40.sW,
             height: 40.sH,
-            color: AppColor.grey200,
+            color: AppColor.white,
             child: Image.asset(logoPath, fit: BoxFit.cover),
           ),
         ),
@@ -118,19 +122,19 @@ class _DesktopNavTab extends StatelessWidget {
         decoration: BoxDecoration(
           border: selected
               ? Border(
-                  bottom: BorderSide(color: AppColor.gray900, width: 3.sW),
-                )
+            bottom: BorderSide(color: AppColor.gray900, width: 3.sW),
+          )
               : null,
         ),
         child: Text(
           label,
           style: selected
               ? TextStyleHelper.instance.title16BoldInter.copyWith(
-                  color: AppColor.gray900,
-                )
+            color: AppColor.gray900,
+          )
               : TextStyleHelper.instance.title16RegularInter.copyWith(
-                  color: AppColor.gray600,
-                ),
+            color: AppColor.gray600,
+          ),
         ),
       ),
     );

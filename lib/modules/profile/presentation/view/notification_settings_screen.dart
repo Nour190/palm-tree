@@ -27,7 +27,7 @@ class _NotificationSettingsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColor.gray50,
+      backgroundColor: AppColor.white,
       body: LayoutBuilder(
         builder: (context, constraints) {
           bool isDesktop = constraints.maxWidth > 768;
@@ -197,7 +197,9 @@ class _NotificationSettingsView extends StatelessWidget {
   }
 
   Widget _buildDesktopContent() {
-    return SingleChildScrollView(
+    return
+     // SingleChildScrollView
+      SingleChildScrollView(
       child: Column(
         children: [
           BlocBuilder<NotificationSettingsCubit, NotificationSettingsState>(
@@ -305,7 +307,7 @@ class _NotificationSettingsView extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColor.white,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppColor.grey200),
+        border: Border.all(color: AppColor.gray400),
         boxShadow: [
           BoxShadow(
             color: AppColor.black.withOpacity(0.04),

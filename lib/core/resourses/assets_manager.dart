@@ -3,7 +3,13 @@ import 'constants_manager.dart';
 class AppAssetsManager {
   // Base path for all assets
   static const String _basePath = AppConstants.imagePath;
+  static const String _basePathAnimationsPath = AppConstants.animationsPath;
 
+  static String error = '${_basePathAnimationsPath}error.json';
+  static String loading = '${_basePathAnimationsPath}loading.json';
+
+  static String success = '${_basePathAnimationsPath}success.json';
+  static String warning = '${_basePathAnimationsPath}warning.json';
   // Placeholder image for fallback
   static String imgPlaceholder = '${AppConstants.imagePath}placeholder.png';
 
@@ -61,4 +67,8 @@ class AppAssetsManager {
   static String googleLogo = '${_basePath}google_Logo.png';
   static String appleLogo = '${_basePath}apple_logo.png';
   static String appLogo = '${_basePath}app_logo.png';
+
+  //background
+  static String background = '${_basePath}background.png';
+
 }

@@ -1,8 +1,10 @@
+// lib/modules/events/presentation/manger/events/events_cubit.dart
 import 'dart:async';
 import 'package:baseqat/modules/events/data/models/fav_extension.dart';
 import 'package:baseqat/modules/home/data/models/artist_model.dart';
 import 'package:baseqat/modules/home/data/models/artwork_model.dart';
 import 'package:baseqat/modules/home/data/models/speaker_model.dart';
+import 'package:baseqat/modules/home/data/models/events_model.dart'; // <-- Event
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../data/repositories/events/events_repository.dart';
@@ -17,6 +19,7 @@ class EventsCubit extends Cubit<EventsState> {
   int _artworksReq = 0;
   int _speakersReq = 0;
   int _galleryReq = 0;
+  int _eventsReq = 0; // <-- NEW
   int _favReq = 0;
 
   // --- prevent double taps on the same toggle ---
@@ -31,11 +34,13 @@ class EventsCubit extends Cubit<EventsState> {
   bool _favOnlyArtists = false;
   bool _favOnlyArtworks = false;
   bool _favOnlySpeakers = false;
+  // NOTE: No favorites for events per your request.
 
   // Keep original (unfiltered) datasets so we can re-derive views locally
   List<Artist> _artistsAll = const [];
   List<Artwork> _artworksAll = const [];
   List<Speaker> _speakersAll = const [];
+  List<Event> _eventsAll = const []; // <-- NEW
 
   // ---------------------------------------------------------------------------
   // Public API — Search & favorites-only
@@ -62,6 +67,7 @@ class EventsCubit extends Cubit<EventsState> {
       case EntityKind.speaker:
         _favOnlySpeakers = value;
         break;
+      // No EntityKind.event branch on purpose.
     }
     _applyFilters();
   }
@@ -152,6 +158,32 @@ class EventsCubit extends Cubit<EventsState> {
       (data) {
         _speakersAll = List<Speaker>.unmodifiable(data);
         _applyFilters(emitSpeakersOnly: true);
+      },
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Events (NEW)
+  // ---------------------------------------------------------------------------
+  Future<void> loadEvents({int limit = 10, bool force = false}) async {
+    if (!force && state.eventsStatus == SliceStatus.loading) return;
+
+    final req = ++_eventsReq;
+    emit(state.copyWith(eventsStatus: SliceStatus.loading, eventsError: null));
+
+    final failureOrData = await repo.getEvents(limit: limit);
+    if (req != _eventsReq) return;
+
+    failureOrData.fold(
+      (failure) => emit(
+        state.copyWith(
+          eventsStatus: SliceStatus.error,
+          eventsError: failure.message,
+        ),
+      ),
+      (data) {
+        _eventsAll = List<Event>.unmodifiable(data);
+        _applyFilters(emitEventsOnly: true);
       },
     );
   }
@@ -335,6 +367,7 @@ class EventsCubit extends Cubit<EventsState> {
       loadArtists(limit: limit),
       loadArtworks(limit: limit),
       loadSpeakers(limit: limit),
+      loadEvents(limit: limit), // <-- NEW
       loadGallery(limitArtists: limit),
       loadFavorites(userId: userId),
     ]);
@@ -347,11 +380,12 @@ class EventsCubit extends Cubit<EventsState> {
     bool emitArtistsOnly = false,
     bool emitArtworksOnly = false,
     bool emitSpeakersOnly = false,
+    bool emitEventsOnly = false, // <-- NEW
   }) {
     final q = _searchQuery.toLowerCase();
 
     // ---------------- Artists ----------------
-    if (!emitArtworksOnly && !emitSpeakersOnly) {
+    if (!emitArtworksOnly && !emitSpeakersOnly && !emitEventsOnly) {
       var list = _artistsAll;
 
       if (_favOnlyArtists) {
@@ -375,7 +409,7 @@ class EventsCubit extends Cubit<EventsState> {
     }
 
     // ---------------- Artworks ----------------
-    if (!emitArtistsOnly && !emitSpeakersOnly) {
+    if (!emitArtistsOnly && !emitSpeakersOnly && !emitEventsOnly) {
       var list = _artworksAll;
 
       if (_favOnlyArtworks) {
@@ -399,7 +433,7 @@ class EventsCubit extends Cubit<EventsState> {
     }
 
     // ---------------- Speakers ----------------
-    if (!emitArtistsOnly && !emitArtworksOnly) {
+    if (!emitArtistsOnly && !emitArtworksOnly && !emitEventsOnly) {
       var list = _speakersAll;
 
       if (_favOnlySpeakers) {
@@ -418,6 +452,37 @@ class EventsCubit extends Cubit<EventsState> {
           speakers: List<Speaker>.unmodifiable(list),
           speakersStatus: SliceStatus.success,
           speakersError: null,
+        ),
+      );
+    }
+
+    // ---------------- Events (no favorites) ----------------
+    if (!emitArtistsOnly && !emitArtworksOnly && !emitSpeakersOnly) {
+      var list = _eventsAll;
+
+      if (q.isNotEmpty) {
+        list = list
+            .where(
+              (e) => _matchAny(q, [
+                e.title,
+                e.description,
+                e.venueName,
+                e.addressLine,
+                e.district,
+                e.city,
+                e.country,
+                e.category,
+                ...e.tags,
+              ]),
+            )
+            .toList(growable: false);
+      }
+
+      emit(
+        state.copyWith(
+          events: List<Event>.unmodifiable(list),
+          eventsStatus: SliceStatus.success,
+          eventsError: null,
         ),
       );
     }

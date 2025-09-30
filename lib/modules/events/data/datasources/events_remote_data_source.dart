@@ -6,14 +6,19 @@ import 'package:baseqat/modules/events/data/models/fav_extension.dart';
 import 'package:baseqat/modules/home/data/models/artist_model.dart';
 import 'package:baseqat/modules/home/data/models/artwork_model.dart';
 import 'package:baseqat/modules/home/data/models/speaker_model.dart';
+import 'package:baseqat/modules/home/data/models/events_model.dart'; // Event model
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 abstract class EventsRemoteDataSource {
+  // Core fetchers
   Future<List<Artist>> fetchArtists({int limit = 10});
   Future<List<Artwork>> fetchArtworks({int limit = 10});
   Future<List<Speaker>> fetchSpeakers({int limit = 10});
 
-  // Favorites
+  /// Fetch events ordered by start_at ASC (upcoming first).
+  Future<List<Event>> fetchEvents({int limit = 10});
+
+  // Favorites (generic ops)
   Future<void> setFavorite({
     required String userId,
     required EntityKind kind,
@@ -36,6 +41,7 @@ abstract class EventsRemoteDataSource {
     List<String>? inEntityIds,
   });
 
+  // Favorites (typed lists)
   Future<List<Artist>> fetchFavoriteArtists({
     required String userId,
     int limit = 10,
@@ -59,7 +65,8 @@ class EventsRemoteDataSourceImpl implements EventsRemoteDataSource {
   static const _timeout = Duration(seconds: 20);
   static const _favTable = 'favorites';
 
-  // ---------------- Existing fetchers ----------------
+  // ---------------- Fetchers ----------------
+
   @override
   Future<List<Artist>> fetchArtists({int limit = 10}) async {
     try {
@@ -114,7 +121,27 @@ class EventsRemoteDataSourceImpl implements EventsRemoteDataSource {
     }
   }
 
+  @override
+  Future<List<Event>> fetchEvents({int limit = 10}) async {
+    try {
+      await ensureOnline();
+
+      final res = await client
+          .from('events')
+          .select()
+          .order('start_at', ascending: true) // upcoming first
+          .limit(clampLimit(limit))
+          .timeout(_timeout);
+
+      final rows = (res as List).cast<Map<String, dynamic>>();
+      return rows.map(Event.fromMap).toList();
+    } catch (e, st) {
+      throw mapError(e, st);
+    }
+  }
+
   // ---------------- Favorites: core ops ----------------
+
   @override
   Future<void> setFavorite({
     required String userId,
@@ -129,24 +156,21 @@ class EventsRemoteDataSourceImpl implements EventsRemoteDataSource {
       await ensureOnline();
 
       if (value) {
-        // Idempotent add; include snapshot columns if provided.
         final payload = <String, dynamic>{
           'user_id': userId,
-          'entity_kind': kind.db, // MUST be 'artist' | 'artwork' | 'speaker'
+          'entity_kind':
+              kind.db, // e.g., 'artist' | 'artwork' | 'speaker' | 'event'
           'entity_id': entityId,
           if (title != null) 'title': title,
           if (description != null) 'description': description,
           if (imageUrl != null) 'image_url': imageUrl,
         };
 
-        // IMPORTANT: conflict target matches UNIQUE(user_id, entity_kind, entity_id)
         await client
             .from(_favTable)
             .upsert(payload, onConflict: 'user_id,entity_kind,entity_id')
-            // .select('fav_uid') // optional if you want the UUID back
             .timeout(_timeout);
       } else {
-        // Remove
         await client
             .from(_favTable)
             .delete()
@@ -171,10 +195,9 @@ class EventsRemoteDataSourceImpl implements EventsRemoteDataSource {
     try {
       await ensureOnline();
 
-      // ❗️Do NOT select('id') anymore — the table uses fav_uid now.
       final res = await client
           .from(_favTable)
-          .select('fav_uid') // existence is enough
+          .select('fav_uid') // existence check
           .eq('user_id', userId)
           .eq('entity_kind', kind.db)
           .eq('entity_id', entityId)
@@ -214,6 +237,8 @@ class EventsRemoteDataSourceImpl implements EventsRemoteDataSource {
       throw mapError(e, st);
     }
   }
+
+  // ---------------- Favorites: typed lists ----------------
 
   @override
   Future<List<Artist>> fetchFavoriteArtists({

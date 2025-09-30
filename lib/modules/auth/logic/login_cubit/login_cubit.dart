@@ -133,6 +133,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/resourses/app_secure_storage.dart';
 import '../../../../core/resourses/constants_manager.dart';
 import '../../data/models/auth_request_model.dart';
+import '../../data/models/user_model.dart';
 import '../../data/repos/auth_repo.dart';
 import 'login_states.dart';
 
@@ -158,9 +159,10 @@ class LoginCubit extends Cubit<LoginStates> {
         await _saveTokensIfAvailable(accessToken: session.accessToken,
             refreshToken: session.refreshToken,
           userId: session.user.id,
-          name: session.user.userMetadata?['full_name'] ?? session.user.userMetadata?['name'] ?? '',
         );
-        emit(LoginSuccessState(session.refreshToken!));
+        emit(LoginSuccessState(
+        //    session.refreshToken!
+        ));
       },
     );
   }
@@ -186,9 +188,10 @@ class LoginCubit extends Cubit<LoginStates> {
               accessToken: session.accessToken,
               refreshToken: session.refreshToken,
               userId: session.user.id,
-              name:  session.user.userMetadata?['full_name'] ?? session.user.userMetadata?['name'] ?? '',
             );
-            emit(LoginSuccessState(session.refreshToken ?? ''));
+            emit(LoginSuccessState(
+            //    session.refreshToken ?? ''
+            ));
           },
         );
       }
@@ -198,14 +201,14 @@ class LoginCubit extends Cubit<LoginStates> {
   }
 
   // ------------ Auth state listener (Supabase) ------------
-  /// Start listening to Supabase auth state changes (idempotent)
   void startAuthListener() {
     if (_authStateSubscription != null) return;
     _authStateSubscription = authRepo.onAuthStateChange().listen((data) async {
       final event = data.event;
       final session = data.session;
+       print("*********************login start ${session??"false"}");
 
-      if (event == AuthChangeEvent.signedIn && session != null) {
+      if (session != null) {
         await _handleOAuthSuccess(session);
       } else if (event == AuthChangeEvent.signedOut) {
         await _clearTokens();
@@ -215,38 +218,55 @@ class LoginCubit extends Cubit<LoginStates> {
   }
 
   Future<void> _handleOAuthSuccess(Session session) async {
+    // print(" Start save data in profiles");
+    final user = session.user;
+    final userModel = UserModel(
+      id: user.id,
+      name: user.userMetadata?['full_name'] ?? user.userMetadata?['name'] ?? '',
+      email: user.email ?? '',
+      avatarUrl: user.userMetadata?['avatar_url'] ?? user.userMetadata?['picture'] ?? '',
+    );
+    // print("save data in profiles");
+    final res = await authRepo.createUser(userModel);
+    res.fold(
+          (failure) => emit(LoginErrorState('Profile setup failed: ${failure.errorMessage}')),
+          (_) async {
+        // print("save data in profiles true");
+      },
+    );
     await _saveTokensIfAvailable(
       accessToken: session.accessToken,
       refreshToken: session.refreshToken,
       userId: session.user.id,
-      name: session.user.userMetadata?['full_name'] ?? session.user.userMetadata?['name'] ?? '',
     );
-    emit(LoginSuccessState(session.refreshToken ?? ''));
+    emit(LoginSuccessState(
+    //    session.refreshToken ?? ''
+    ));
   }
 
   /// On web, check the URL fragment/query after a redirect callback
-  Future<void> checkInitialAuthState() async {
-    if (!kIsWeb) return;
-    try {
-      final uri = Uri.base;
-      final hasTokenFragment = uri.fragment.contains('access_token') || uri.fragment.contains('refresh_token');
-      final hasCode = uri.queryParameters.containsKey('code');
-      if (hasTokenFragment || hasCode) {
-        await Future.delayed(const Duration(milliseconds: 400));
-        final session = authRepo.currentSession();
-        if (session != null) {
-          await _handleOAuthSuccess(session);
-        } else {
-          emit(LoginErrorState('OAuth callback received but no session found'));
-        }
-      }
-    } catch (e) {
-      emit(LoginErrorState('Error processing OAuth callback: ${e.toString()}'));
-    }
-  }
+  // Future<void> checkInitialAuthState() async {
+  //   if (!kIsWeb) return;
+  //   try {
+  //     final uri = Uri.base;
+  //     final hasTokenFragment = uri.fragment.contains('access_token') || uri.fragment.contains('refresh_token');
+  //     final hasCode = uri.queryParameters.containsKey('code');
+  //     if (hasTokenFragment || hasCode) {
+  //       await Future.delayed(const Duration(milliseconds: 400));
+  //       final session = authRepo.currentSession();
+  //       if (session != null) {
+  //         await _handleOAuthSuccess(session);
+  //       } else {
+  //         emit(LoginErrorState('OAuth callback received but no session found'));
+  //       }
+  //     }
+  //   } catch (e) {
+  //     emit(LoginErrorState('Error processing OAuth callback: ${e.toString()}'));
+  //   }
+  // }
 
   // ------------ Token storage helpers ------------
-  Future<void> _saveTokensIfAvailable({String? accessToken,String? refreshToken, String? userId, String? name}) async {
+  Future<void> _saveTokensIfAvailable({String? accessToken,String? refreshToken, String? userId}) async {
     if (accessToken != null && accessToken.isNotEmpty) {
       await _storage.setData(key: AppConstants.accessTokenKey, value: accessToken);
     }
@@ -254,11 +274,8 @@ class LoginCubit extends Cubit<LoginStates> {
       await _storage.setData(key: AppConstants.tokenKey, value: refreshToken);
     }
 
-if (refreshToken != null && refreshToken.isNotEmpty) {
-await _storage.setData(key: AppConstants.userName, value: refreshToken);
-}
-if (refreshToken != null && refreshToken.isNotEmpty) {
-await _storage.setData(key: AppConstants.userId, value: refreshToken);
+if (userId != null && userId.isNotEmpty) {
+await _storage.setData(key: AppConstants.userId, value: userId);
 }
 
 

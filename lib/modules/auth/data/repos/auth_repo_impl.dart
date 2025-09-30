@@ -547,11 +547,55 @@ class AuthRepoImpl extends AuthRepo {
     );
   }
 
+  // @override
+  // Future<Either<Failure, UserModel>> register(
+  //     AuthRequestModel authRequestModel,
+  //     ) async {
+  //   try {
+  //     final response =
+  //     await client.auth.signUp(
+  //       password: authRequestModel.password,
+  //       email: authRequestModel.email,
+  //     );
+  //
+  //     if (response.user == null) {
+  //       return Left(SupabaseAuthFailure('Registration failed: No user returned'));
+  //     }
+  //     // print('*********id********${response.user!.id}');
+  //     // print('**********name*********${authRequestModel.name}');
+  //
+  //     final userModel = UserModel(
+  //       id: response.user!.id,
+  //       name: authRequestModel.name ?? 'Unknown',
+  //       email: authRequestModel.email,
+  //
+  //     );
+  //     // Save token
+  //     //await _saveUserData(userModel);
+  //     return Right(userModel);
+  //   } catch (error) {
+  //     if (error is AuthApiException) {
+  //       return Left(SupabaseAuthFailure.fromAuthException(error));
+  //     }
+  //     return Left(SupabaseAuthFailure('Registration failed: ${error.toString()}'));
+  //   }
+  // }
+
   @override
   Future<Either<Failure, UserModel>> register(
       AuthRequestModel authRequestModel,
       ) async {
     try {
+      final existingProfile = await client
+          .from('profiles')
+          .select()
+          .eq('email', authRequestModel.email)
+          .maybeSingle();
+
+      if (existingProfile != null) {
+        return Left(SupabaseAuthFailure('User already registered with this email'));
+      }
+
       final response = await client.auth.signUp(
         password: authRequestModel.password,
         email: authRequestModel.email,
@@ -560,15 +604,19 @@ class AuthRepoImpl extends AuthRepo {
       if (response.user == null) {
         return Left(SupabaseAuthFailure('Registration failed: No user returned'));
       }
+
       final userModel = UserModel(
         id: response.user!.id,
         name: authRequestModel.name ?? 'Unknown',
         email: authRequestModel.email,
-        accessToken: response.session!.refreshToken,
-        refreshToken: response.session!.refreshToken
       );
-      // Save token
-      //await _saveUserData(userModel);
+
+      await client.from('profiles').insert({
+        'id': userModel.id,
+        'name': userModel.name,
+        'email': userModel.email,
+      });
+
       return Right(userModel);
     } catch (error) {
       if (error is AuthApiException) {
@@ -577,6 +625,7 @@ class AuthRepoImpl extends AuthRepo {
       return Left(SupabaseAuthFailure('Registration failed: ${error.toString()}'));
     }
   }
+
 
   @override
   Future<Either<Failure, Unit>> createUser(UserModel userModel) async {
@@ -587,7 +636,6 @@ class AuthRepoImpl extends AuthRepo {
           .select()
           .eq('id', userModel.id)
           .maybeSingle();
-
       if (existingProfile != null) {
         // Update existing profile
         await client
@@ -596,9 +644,10 @@ class AuthRepoImpl extends AuthRepo {
             .eq('id', userModel.id);
       } else {
         // Create new profile
+        print("save data in profiles start");
+
         await client.from('profiles').insert(userModel.toJson());
       }
-
       return const Right(unit);
     } catch (error) {
       return Left(SupabaseDatabaseFailure('Failed to create/update user profile: ${error.toString()}'));
@@ -875,7 +924,6 @@ class AuthRepoImpl extends AuthRepo {
           print('Google sign-out failed: $e');
         }
       }
-
       // Sign out from Supabase
       await client.auth.signOut();
 

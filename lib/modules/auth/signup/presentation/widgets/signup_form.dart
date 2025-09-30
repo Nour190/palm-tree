@@ -1,6 +1,7 @@
 import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../../core/components/custom_widgets/custom_text_field.dart';
 import '../../../../../core/components/custom_widgets/auth_button.dart';
 import '../../../../../core/components/custom_widgets/social_button.dart';
@@ -14,10 +15,9 @@ import '../../../logic/register_cubit/register_states.dart';
 import '../../../../../../modules/auth/login/presentation/view/login_screen.dart';
 
 class SignUpForm extends StatefulWidget {
-  const SignUpForm({super.key, this.width, this.onSubmit});
+  const SignUpForm({super.key, this.width});
 
   final double? width;
-  final void Function(String name, String email, String password)? onSubmit;
 
   @override
   State<SignUpForm> createState() => _SignUpFormState();
@@ -48,18 +48,16 @@ class _SignUpFormState extends State<SignUpForm> {
     }
   }
 
-
   void _signUpWithGoogle() {
     final cubit = context.read<RegisterCubit>();
     cubit.signUpWithGoogle();
   }
 
-
   void _signUpWithApple() {
     // TODO: Implement Apple Sign-Up
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Apple Sign-Up not implemented yet'),
+      SnackBar(
+        content: Text('auth.apple_signin_not_implemented'.tr()),
         backgroundColor: Colors.orange,
       ),
     );
@@ -79,13 +77,13 @@ class _SignUpFormState extends State<SignUpForm> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8.r),
         color: AppColor.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        // boxShadow: [
+        //   BoxShadow(
+        //     color: Colors.black.withOpacity(0.05),
+        //     blurRadius: 10,
+        //     offset: const Offset(0, 4),
+        //   ),
+        // ],
       ),
       child: Form(
         key: _formKey,
@@ -93,10 +91,10 @@ class _SignUpFormState extends State<SignUpForm> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Create an account', style: TextStyleHelper.instance.headline32BoldInter),
+            Text('auth.sign_up'.tr(), style: TextStyleHelper.instance.headline32BoldInter),
             SizedBox(height: 10.sH),
             Text(
-              "Let's get started with your free version",
+              'auth.email_prompt'.tr(),
               style: TextStyleHelper.instance.title16BlackRegularInter,
             ),
             SizedBox(height: 30.sH),
@@ -104,19 +102,19 @@ class _SignUpFormState extends State<SignUpForm> {
             /// Name
             CustomTextFormField(
               controller: _nameController,
-              hintText: 'Name',
-              validator: (value) => value == null || value.isEmpty ? 'Please enter your name' : null,
+              hintText: 'auth.first_name'.tr(),
+              validator: (value) => value == null || value.isEmpty ? 'validation.first_name_required'.tr() : null,
             ),
             SizedBox(height: 16.sH),
 
             /// Email
             CustomTextFormField(
               controller: _emailController,
-              hintText: 'Email',
+              hintText: 'auth.email'.tr(),
               keyboardType: TextInputType.emailAddress,
               validator: (value) {
-                if (value == null || value.isEmpty) return 'Please enter your email';
-                if (!value.contains('@')) return 'Enter a valid email';
+                if (value == null || value.isEmpty) return 'validation.email_required'.tr();
+                if (!value.contains('@')) return 'validation.email_invalid'.tr();
                 return null;
               },
             ),
@@ -125,10 +123,10 @@ class _SignUpFormState extends State<SignUpForm> {
             /// Password
             CustomTextFormField(
               controller: _passwordController,
-              hintText: 'Password',
+              hintText: 'auth.password'.tr(),
               obscureText: true,
               validator: (value) => value != null && value.length < 6
-                  ? 'Password must be at least 6 characters'
+                  ? 'validation.password_required'.tr()
                   : null,
             ),
             SizedBox(height: 20.sH),
@@ -138,7 +136,7 @@ class _SignUpFormState extends State<SignUpForm> {
               builder: (context, state) {
                 final isLoading = state is RegisterLoadingState;
                 return AuthButton(
-                  text: isLoading ? 'Creating account...' : 'Create account',
+                  text: isLoading ? 'auth.signing_up'.tr() : 'auth.sign_up'.tr(),
                   onPressed: isLoading ? null : () => _submitForm(),
                 );
               },
@@ -147,12 +145,11 @@ class _SignUpFormState extends State<SignUpForm> {
             SizedBox(height: 16.sH),
 
             /// Social Logins
-            /// Social Logins
             BlocBuilder<RegisterCubit, RegisterStates>(
               builder: (context, state) {
                 final isGoogleLoading = state is RegisterWithGoogleLoadingState;
                 return SocialButton(
-                  text: isGoogleLoading ? 'Signing up with Google...' : 'Sign up with Google',
+                  text: isGoogleLoading ? 'auth.signing_in_with_google'.tr() : 'auth.login_with_google'.tr(),
                   imageAsset: AppAssetsManager.googleLogo,
                   onPressed: isGoogleLoading ? (){} : _signUpWithGoogle,
                 );
@@ -160,7 +157,7 @@ class _SignUpFormState extends State<SignUpForm> {
             ),
             SizedBox(height: 14.sH),
             SocialButton(
-              text: 'Sign up with Apple',
+              text: 'auth.login_with_apple'.tr(),
               imageAsset: AppAssetsManager.appleLogo,
               onPressed: _signUpWithApple,
             ),
@@ -170,12 +167,12 @@ class _SignUpFormState extends State<SignUpForm> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('Already have account ?', style: TextStyleHelper.instance.title16BlackRegularInter),
+                Text('auth.already_have_account'.tr(), style: TextStyleHelper.instance.title16BlackRegularInter),
                 SizedBox(width: 6.sW),
                 GestureDetector(
                   onTap: _navigateToLogin,
                   child: Text(
-                    'Login',
+                    'auth.sign_in'.tr(),
                     style: TextStyleHelper.instance.title16BoldInter,
                   ),
                 ),

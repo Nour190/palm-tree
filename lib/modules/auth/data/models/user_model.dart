@@ -4,8 +4,7 @@ class UserModel {
   final String email;
   final String? avatarUrl;
   final DateTime? createdAt;
-  final String? refreshToken;
-  final String? accessToken;
+
 
 
   UserModel({
@@ -14,8 +13,7 @@ class UserModel {
     required this.email,
     this.avatarUrl,
     this.createdAt,
-    this.refreshToken,
-    this.accessToken,
+
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {

@@ -10,4 +10,7 @@ extension SizeExt on num {
 
   /// Safe sp (clamped)
   double get sSp => ScaleConfig.ssp(toDouble());
+
+  /// Safe radius (clamped)
+  double get sR => ScaleConfig.sr(toDouble());
 }

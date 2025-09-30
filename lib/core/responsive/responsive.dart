@@ -8,7 +8,7 @@ class Responsive {
   Responsive._();
 
   static double mobileMaxWidth = 400;
-  static double tabletMaxWidth = 800;
+  static double tabletMaxWidth = 850;
 
   // last known values from init
   static late MediaQueryData _mediaQueryData;
@@ -22,7 +22,7 @@ class Responsive {
     if (w <= 400) {
       // mobile: use base
       return baseSize;
-    } else if (w <= 800) {
+    } else if (w <= 850) {
       // tablet: small increase
       return (baseSize * 1.05).roundToDouble();
     } else {

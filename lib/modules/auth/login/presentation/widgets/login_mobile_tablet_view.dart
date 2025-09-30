@@ -27,7 +27,7 @@ class _loginMobileTabletState extends State<loginMobileTablet> {
     super.initState();
     final cubit = context.read<LoginCubit>();
     cubit.startAuthListener();
-    cubit.checkInitialAuthState();
+    //cubit.checkInitialAuthState();
   }
 
   @override
@@ -38,7 +38,7 @@ class _loginMobileTabletState extends State<loginMobileTablet> {
   @override
   Widget build(BuildContext context) {
     final isMobile = Responsive.isMobile(context);
-    final formWidth = isMobile ? 340.w : 480.w;
+ //   final formWidth = isMobile ? 340.w : 480.w;
     return BlocListener<LoginCubit, LoginStates>(
 
     listener: (context, state) {
@@ -69,31 +69,30 @@ class _loginMobileTabletState extends State<loginMobileTablet> {
             ),
             child: IntrinsicHeight(
               child: Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 24.w),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Spacer(flex: 1),
-                      Image.asset(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Spacer(flex: 1),
+                    Center(
+                      child: Image.asset(
                         AppAssetsManager.appLogo,
                         width: isMobile ? 80.w : 120.w,
                         height: isMobile ? 80.h : 120.h,
                       ),
-                      Text("ithra", style: TextStyleHelper.instance.display48BlackBoldInter),
-                      SizedBox(height: 15.h),
-                      loginForm(
-                        width: formWidth,
-                        onSubmit: (email, password) {
-                          final cubit = context.read<LoginCubit>();
-                          cubit.emailController.text = email;
-                          cubit.passwordController.text = password;
-                          cubit.login();
-                        },
-                      ),
-                      const Spacer(flex: 2),
-                    ],
-                  ),
+                    ),
+                    Text("ithra", style: TextStyleHelper.instance.display48BlackBoldInter),
+                    SizedBox(height: 15.h),
+                    loginForm(
+                      width: double.infinity,
+                      onSubmit: (email, password) {
+                        final cubit = context.read<LoginCubit>();
+                        cubit.emailController.text = email;
+                        cubit.passwordController.text = password;
+                        cubit.login();
+                      },
+                    ),
+                    const Spacer(flex: 2),
+                  ],
                 ),
               ),
             ),

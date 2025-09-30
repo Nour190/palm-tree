@@ -144,7 +144,10 @@ class _ReviewsState extends State<Reviews> {
             if (widget.isLoading)
               Padding(
                 padding: EdgeInsets.only(bottom: 8.sH),
-                child:  LinearProgressIndicator(minHeight: 2,color: AppColor.primaryColor,),
+                child: LinearProgressIndicator(
+                  minHeight: 2,
+                  color: AppColor.primaryColor,
+                ),
               ),
             SizedBox(
               height: _getContentHeight(context),
@@ -253,9 +256,10 @@ class _HeaderRow extends StatelessWidget {
             // Consider localizing this
             'What people are saying',
             textAlign: TextAlign.left,
-            style:
-                (styles.headline20BoldInter)
-                    .copyWith(color: AppColor.whiteCustom, height: 1.15),
+            style: (styles.headline20BoldInter).copyWith(
+              color: AppColor.whiteCustom,
+              height: 1.15,
+            ),
           ),
         ),
         if (!isDesktop)
@@ -585,36 +589,40 @@ class _ReviewAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-   final size =
+    final size =
         overrideSize ?? (Responsive.isDesktop(context) ? 100.sH : 80.sH);
 
     return Container(
-   width: 65.sW,
-   height: 90.sH,
-   decoration: BoxDecoration(
-     shape: BoxShape.circle,
-     // border: Border.all(
-     //   color: Colors.white,
-     //   //width: Responsive.isDesktop(context) ? 1.sW : 1.sW,
-     // ),
-     boxShadow: [
-       BoxShadow(
-         color: Colors.black.withOpacity(0.3),
-         blurRadius: 20.sH,
-         offset: Offset(0, 10.sH),
-       ),
-     ],
-   ),
-   child: ClipOval(
-     child: Image.network(
-       avatarUrl,
-       fit: BoxFit.cover,
-       errorBuilder: (context, error, stackTrace) =>
-           _fallback(size, context),
-     ),
-   ),
-   );
-
+      width: 65.sW,
+      height: 90.sH,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 20.sH,
+            offset: Offset(0, 10.sH),
+          ),
+        ],
+      ),
+      child: ClipOval(
+        child: Image.network(
+          avatarUrl,
+          fit: BoxFit.cover,
+          filterQuality: FilterQuality.high,
+          loadingBuilder: (context, child, progress) {
+            if (progress == null) return child;
+            final total = progress.expectedTotalBytes;
+            final value = total != null && total != 0
+                ? progress.cumulativeBytesLoaded / total
+                : null;
+            return _loading(size, value);
+          },
+          errorBuilder: (context, error, stackTrace) =>
+              _fallback(size, context),
+        ),
+      ),
+    );
   }
 
   Widget _fallback(double size, BuildContext context) {
@@ -633,6 +641,23 @@ class _ReviewAvatar extends StatelessWidget {
             color: Colors.white,
             fontWeight: FontWeight.w700,
             fontSize: Responsive.isDesktop(context) ? 36.sSp : 28.sSp,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _loading(double size, double? progress) {
+    return Container(
+      decoration: const BoxDecoration(color: AppColor.gray100),
+      child: Center(
+        child: SizedBox(
+          width: size * 0.32,
+          height: size * 0.32,
+          child: CircularProgressIndicator(
+            strokeWidth: 2.4,
+            value: progress,
+            valueColor: AlwaysStoppedAnimation<Color>(AppColor.primaryColor),
           ),
         ),
       ),
@@ -659,8 +684,7 @@ class _ReviewerName extends StatelessWidget {
     final styles = TextStyleHelper.instance;
     final desktop = Responsive.isDesktop(context);
 
-    final style =
-      styles.title18BoldInter;
+    final style = styles.title18BoldInter;
 
     return Text(
       name,

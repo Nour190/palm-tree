@@ -1,8 +1,10 @@
+// lib/modules/events/data/repositories/events_repository.dart
 import 'package:baseqat/core/network/remote/supabase_failure.dart';
 import 'package:baseqat/modules/events/data/models/fav_extension.dart';
 import 'package:baseqat/modules/home/data/models/artist_model.dart';
 import 'package:baseqat/modules/home/data/models/artwork_model.dart';
 import 'package:baseqat/modules/home/data/models/speaker_model.dart';
+import 'package:baseqat/modules/home/data/models/events_model.dart'; // <-- Event model
 import 'package:dartz/dartz.dart';
 
 import '../../models/gallery_item.dart';
@@ -15,6 +17,9 @@ abstract class EventsRepository {
   Future<Either<Failure, List<GalleryItem>>> getGalleryFromArtists({
     int limitArtists = 10,
   });
+
+  // NEW: Events (simple list, ordered by start_at ASC at the datasource)
+  Future<Either<Failure, List<Event>>> getEvents({int limit = 10});
 
   /// Mark/unmark an entity as favorite for a given user.
   ///

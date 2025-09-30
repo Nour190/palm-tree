@@ -7,6 +7,8 @@ import 'package:baseqat/modules/auth/logic/auth_gate_cubit/auth_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
 
+import '../view/account_settings_screen.dart';
+
 class SettingsTabWidget extends StatelessWidget {
   const SettingsTabWidget({super.key});
 
@@ -17,6 +19,13 @@ class SettingsTabWidget extends StatelessWidget {
         'title': 'Account',
         'icon': Icons.person,
         'onTap': () {
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AccountSettingsScreen(),
+            ),
+          );
           // Handle account settings
         },
       },

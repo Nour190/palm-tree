@@ -33,65 +33,95 @@ class RegisterCubit extends Cubit<RegisterStates> {
     result.fold(
           (failure) => emit(RegisterErrorState(failure.errorMessage)),
           (userModel) async {
+            print("************* Start create account model ${userModel.name} ");
         final createUserResult = await authRepo.createUser(userModel);
         createUserResult.fold(
               (failure) => emit(RegisterErrorState('Account created but profile setup failed: ${failure.errorMessage}')),
               (_) {
-                _saveTokensIfAvailable(accessToken:userModel.accessToken,
-                    refreshToken: userModel.refreshToken,
-                  userId: userModel.id,
-                  name: userModel.name,
-                );
-                emit(RegisterSuccessState(userModel));
+                emit(RegisterSuccessState(
+                //    userModel
+                ));
               }
         );
       },
     );
   }
-  Future<void> _saveTokensIfAvailable({String? accessToken, String? refreshToken, String? name,String? userId}) async {
+  Future<void> _saveTokensIfAvailable({String? accessToken, String? refreshToken,  String? userId}) async {
     if (accessToken != null && accessToken.isNotEmpty) {
       await _storage.setData(key: AppConstants.accessTokenKey, value: accessToken);
     }
     if (refreshToken != null && refreshToken.isNotEmpty) {
       await _storage.setData(key: AppConstants.tokenKey, value: refreshToken);
     }
-    if (refreshToken != null && refreshToken.isNotEmpty) {
-      await _storage.setData(key: AppConstants.userName, value: refreshToken);
-    }
-    if (refreshToken != null && refreshToken.isNotEmpty) {
-      await _storage.setData(key: AppConstants.userId, value: refreshToken);
-    }
-  }
-  Future<void> signUpWithGoogle() async {
-    emit(RegisterWithGoogleLoadingState());
 
-    if (kIsWeb) {
-      // For web, initiate OAuth flow
-      emit(RegisterRedirectingState());
-      final res = await authRepo.startWebGoogleSignIn();
-      res.fold((failure) {
-        emit(RegisterErrorState(failure.errorMessage));
-      }, (_) {
-        // Keep the redirecting state active
-        // The OAuth callback will be handled by the auth state listener in the view
-        emit(RegisterRedirectingState());
-      });
-    } else {
-      // For mobile, use Google Sign-In package
-      final res = await authRepo.mobileGoogleSignIn();
-      res.fold(
-            (failure) => emit(RegisterErrorState(failure.errorMessage)),
-            (session) => emit(RegisterGoogleSuccessState(session)),
-      );
+    if (userId != null && userId.isNotEmpty) {
+      await _storage.setData(key: AppConstants.userId, value: userId);
     }
   }
+  // Future<void> signUpWithGoogle() async {
+  //  // emit(RegisterWithGoogleLoadingState());
+  //
+  //   if (kIsWeb) {
+  //     // For web, initiate OAuth flow
+  //     emit(RegisterRedirectingState());
+  //     final res = await authRepo.startWebGoogleSignIn();
+  //     res.fold((failure) {
+  //       emit(RegisterErrorState(failure.errorMessage));
+  //     }, (_) {
+  //       // Keep the redirecting state active
+  //       // The OAuth callback will be handled by the auth state listener in the view
+  //    //   emit(RegisterRedirectingState());
+  //     });
+  //   } else {
+  //     // For mobile, use Google Sign-In package
+  //     final res = await authRepo.mobileGoogleSignIn();
+  //     res.fold(
+  //           (failure) => emit(RegisterErrorState(failure.errorMessage)),
+  //           (session) => emit(RegisterGoogleSuccessState(session)),
+  //     );
+  //   }
+  // }
   // start listening to auth changes via repo
+  Future<void> signUpWithGoogle() async {
+    try {
+      if (kIsWeb) {
+        emit(RegisterRedirectingState());
+        final res = await authRepo.startWebGoogleSignIn();
+        res.fold(
+              (failure) => emit(RegisterErrorState(failure.errorMessage)),
+              (_) {
+          },
+        );
+      } else {
+        emit(RegisterWithGoogleLoadingState());
+        final res = await authRepo.mobileGoogleSignIn();
+        res.fold(
+              (failure) => emit(RegisterErrorState(failure.errorMessage)),
+              (session) async {
+            await _saveTokensIfAvailable(
+              accessToken: session.accessToken,
+              refreshToken: session.refreshToken,
+              userId: session.user.id,
+            );
+            emit(RegisterSuccessState(
+            //    session.refreshToken ?? ''
+            ));
+          },
+        );
+      }
+    } catch (e) {
+      emit(RegisterErrorState(e.toString()));
+    }
+  }
   void startAuthListener() {
+    // print("************* Start startAuthListener ");
     if (_authStateSubscription != null) return;
     _authStateSubscription = authRepo.onAuthStateChange().listen((data) async {
       final event = data.event;
       final session = data.session;
-      if (event == AuthChangeEvent.signedIn && session != null) {
+      // print("************* session model ${session??"null"} ");
+      if (session != null) {
+        // debugPrint("handleOAuthSuccess");
         await _handleOAuthSuccess(session);
       } else if (event == AuthChangeEvent.signedOut) {
         await _clearTokens();
@@ -106,25 +136,25 @@ class RegisterCubit extends Cubit<RegisterStates> {
     await _storage.removeData(AppConstants.userName);
 
   }
-  Future<void> checkInitialAuthState() async {
-    if (!kIsWeb) return;
-    try {
-      final uri = Uri.base;
-      final hasTokenFragment = uri.fragment.contains('access_token') || uri.fragment.contains('refresh_token');
-      final hasCode = uri.queryParameters.containsKey('code');
-      if (hasTokenFragment || hasCode) {
-        await Future.delayed(const Duration(milliseconds: 400));
-        final session = authRepo.currentSession();
-        if (session != null) {
-          await _handleOAuthSuccess(session);
-        } else {
-          emit(RegisterErrorState('OAuth callback received but no session found'));
-        }
-      }
-    } catch (e) {
-      emit(RegisterErrorState('Error processing OAuth callback: ${e.toString()}'));
-    }
-  }
+  // Future<void> checkInitialAuthState() async {
+  //   if (!kIsWeb) return;
+  //   try {
+  //     final uri = Uri.base;
+  //     final hasTokenFragment = uri.fragment.contains('access_token') || uri.fragment.contains('refresh_token');
+  //     final hasCode = uri.queryParameters.containsKey('code');
+  //     if (hasTokenFragment || hasCode) {
+  //       await Future.delayed(const Duration(milliseconds: 400));
+  //       final session = authRepo.currentSession();
+  //       if (session != null) {
+  //         await _handleOAuthSuccess(session);
+  //       } else {
+  //         emit(RegisterErrorState('OAuth callback received but no session found'));
+  //       }
+  //     }
+  //   } catch (e) {
+  //     emit(RegisterErrorState('Error processing OAuth callback: ${e.toString()}'));
+  //   }
+  // }
 
   Future<void> _handleOAuthSuccess(Session session) async {
     emit(RegisterWithGoogleLoadingState());
@@ -135,20 +165,22 @@ class RegisterCubit extends Cubit<RegisterStates> {
       email: user.email ?? '',
       avatarUrl: user.userMetadata?['avatar_url'] ?? user.userMetadata?['picture'] ?? '',
     );
-
+// print("save data in profiles");
     final res = await authRepo.createUser(userModel);
     res.fold(
           (failure) => emit(RegisterErrorState('Profile setup failed: ${failure.errorMessage}')),
           (_) async {
-        final refresh = session.refreshToken ?? '';
+            // print("save data in profiles true");
+            final refresh = session.refreshToken ?? '';
         if (refresh.isNotEmpty) {
           _saveTokensIfAvailable(accessToken:session.accessToken,
               refreshToken: session.refreshToken,
             userId: session.user.id,
-            name: session.user.userMetadata?['full_name'] ?? session.user.userMetadata?['name'] ?? '',
           );
         }
-        emit(RegisterSuccessState(userModel));
+        emit(RegisterSuccessState(
+        //    userModel
+        ));
       },
     );
   }

@@ -108,7 +108,7 @@ class _SignUpDesktopState extends State<SignUpDesktop> {
     Future.microtask(() {
       final cubit = context.read<RegisterCubit>();
       cubit.startAuthListener();
-      cubit.checkInitialAuthState();
+     // cubit.checkInitialAuthState();
     });
   }
 

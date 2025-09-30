@@ -70,7 +70,7 @@ class SizeUtils {
     }
     if (width < 400) {
       deviceType = DeviceType.mobile;
-    } else if (width < 800) {
+    } else if (width < 850) {
       deviceType = DeviceType.tablet;
     } else {
       deviceType = DeviceType.desktop;

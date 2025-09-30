@@ -61,33 +61,7 @@ class LikesTabWidget extends StatelessWidget {
 
           case FavoritesStatus.success:
             if (state.items.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.favorite_border,
-                      size: 48.sSp,
-                      color: AppColor.gray400,
-                    ),
-                    SizedBox(height: 16.sH),
-                    Text(
-                      'No favorites yet',
-                      style: TextStyleHelper.instance.title16BoldInter.copyWith(
-                        color: AppColor.gray700,
-                      ),
-                    ),
-                    SizedBox(height: 8.sH),
-                    Text(
-                      'Start exploring and add items to your favorites',
-                      style: TextStyleHelper.instance.body12LightInter.copyWith(
-                        color: AppColor.gray400,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              );
+              return _buildNoFavoritesView();
             }
 
             return SingleChildScrollView(
@@ -212,9 +186,9 @@ class LikesTabWidget extends StatelessWidget {
               width: 30.sW,
               height: 30.sW,
               decoration: BoxDecoration(
-                color: isRemoving ? AppColor.white.withOpacity(0.5) : AppColor.white,
-                shape: BoxShape.circle,
-                border:Border.all(color: Colors.black)
+                  color: isRemoving ? AppColor.white.withOpacity(0.5) : AppColor.white,
+                  shape: BoxShape.circle,
+                  border:Border.all(color: Colors.black)
               ),
               child: isRemoving
                   ? SizedBox(
@@ -236,7 +210,39 @@ class LikesTabWidget extends StatelessWidget {
       ),
     );
   }
-
+  Widget _buildNoFavoritesView() {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(32.sW),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.favorite_border_outlined,
+              size: 70.sSp,
+              color: AppColor.gray400,
+            ),
+            SizedBox(height: 15.sH),
+            Text(
+              'No favorites yet',
+              style: TextStyleHelper.instance.title18BoldInter.copyWith(
+                color: AppColor.black,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 8.sH),
+            Text(
+              'Start exploring and add items to your favorites',
+              style: TextStyleHelper.instance.title14MediumInter.copyWith(
+                color: AppColor.gray500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
   EntityKind? _parseEntityKind(String entityKindString) {
     switch (entityKindString.toLowerCase()) {
       case 'artist':

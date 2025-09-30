@@ -8,8 +8,8 @@ class AuthLoading extends AuthState {
 }
 
 class AuthAuthenticated extends AuthState {
-  final String token;
-  const AuthAuthenticated(this.token);
+  final Map<String,String> userData;
+  const AuthAuthenticated(this.userData);
 }
 
 class AuthUnauthenticated extends AuthState {
