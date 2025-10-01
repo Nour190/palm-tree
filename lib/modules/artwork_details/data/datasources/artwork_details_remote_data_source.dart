@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data'; // for Uint8List
 import 'package:baseqat/core/network/remote/error_mapper.dart';
 import 'package:baseqat/core/network/remote/net_guard.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

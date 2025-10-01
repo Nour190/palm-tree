@@ -4,11 +4,12 @@ import 'package:baseqat/core/responsive/responsive.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/modules/home/presentation/widgets/common/home_image.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class IthraVirtualTourSection extends StatelessWidget {
   final VoidCallback? onTryNow;
   final String? virtualTourImage;
-  final  String peopleImage;
+  final String peopleImage;
 
   const IthraVirtualTourSection({
     super.key,
@@ -39,7 +40,7 @@ class IthraVirtualTourSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Virtual Tour',
+            'home.virtual_tour'.tr(),
             style: TextStyle(
               fontFamily: 'Inter',
               fontSize: isDesktop
@@ -63,12 +64,11 @@ class IthraVirtualTourSection extends StatelessWidget {
   }
 
   Widget _buildMobileLayout(BuildContext context, DeviceType deviceType) {
-      final bool isMobile = deviceType == DeviceType.mobile;
-      final bool isTablet = deviceType == DeviceType.tablet;
+    final bool isMobile = deviceType == DeviceType.mobile;
+    final bool isTablet = deviceType == DeviceType.tablet;
 
-      final avatarSize = isMobile ? 36.sW : isTablet ? 40.sW : 44.sW;
+    final avatarSize = isMobile ? 36.sW : isTablet ? 40.sW : 44.sW;
     return Container(
-
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -86,93 +86,89 @@ class IthraVirtualTourSection extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: EdgeInsets.all(10.sW),
-            child:Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-              Text(
-                      'Step Inside the Exhibition',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 20.sSp,
-                        fontWeight: FontWeight.w700,
-                        color: AppColor.black,
-                        height: 1.3,
-                      ),
+              padding: EdgeInsets.all(10.sW),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'home.virtual_tour_title'.tr(),
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 20.sSp,
+                      fontWeight: FontWeight.w700,
+                      color: AppColor.black,
+                      height: 1.3,
                     ),
-                      SizedBox(height: 12.sH),
-
-                      Text(
-                        'A 3D tour that lets you explore the exhibition as if you were inside walking through the sections and viewing products from every angle before your actual visit',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 14.sSp,
-                          fontWeight: FontWeight.w400,
-                          color: AppColor.gray600,
-                          height: 1.5,
-                        ),
-                      ),
-                      SizedBox(height: 20.sH),
-                      Text(
-                        'Discover an exceptional journey\nalongside over 20+ people',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 13.sSp,
-                          fontWeight: FontWeight.w400,
-                          color: AppColor.gray700,
-                          height: 1.4,
-                        ),
-                      ),
-
-                      SizedBox(height: 12.sH),
-                Row(
-                  children: [
-                    HomeImage(
-                      path:peopleImage,
-                      fit: BoxFit.contain,
-                      height: 40.sH,
-                      errorChild: Container(
-                        color: AppColor.gray200,
-                        child: Icon(
-                          Icons.person,
-                          size: avatarSize * 0.5,
-                          color: AppColor.gray600,
-                        ),
-                      ),
+                  ),
+                  SizedBox(height: 12.sH),
+                  Text(
+                    'home.virtual_tour_description'.tr(),
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14.sSp,
+                      fontWeight: FontWeight.w400,
+                      color: AppColor.gray600,
+                      height: 1.5,
                     ),
-                    Spacer(),
-                    if (onTryNow != null)
-                      SizedBox(
-                                  width: 80.sW,
-                                  child: GestureDetector(
-                                    onTap: onTryNow,
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(vertical: 14.sH),
-                                      decoration: BoxDecoration(
-                                        color: AppColor.black,
-                                        borderRadius: BorderRadius.circular(15.sR),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          'Try Now',
-                                          style: TextStyle(
-                                            fontFamily: 'Inter',
-                                            fontSize: 16.sSp,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
+                  ),
+                  SizedBox(height: 20.sH),
+                  Text(
+                    'home.virtual_tour_journey'.tr(),
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 13.sSp,
+                      fontWeight: FontWeight.w400,
+                      color: AppColor.gray700,
+                      height: 1.4,
+                    ),
+                  ),
+                  SizedBox(height: 12.sH),
+                  Row(
+                    children: [
+                      HomeImage(
+                        path: peopleImage,
+                        fit: BoxFit.contain,
+                        height: 40.sH,
+                        errorChild: Container(
+                          color: AppColor.gray200,
+                          child: Icon(
+                            Icons.person,
+                            size: avatarSize * 0.5,
+                            color: AppColor.gray600,
+                          ),
+                        ),
+                      ),
+                      Spacer(),
+                      if (onTryNow != null)
+                        SizedBox(
+                          width: 80.sW,
+                          child: GestureDetector(
+                            onTap: onTryNow,
+                            child: Container(
+                              padding: EdgeInsets.symmetric(vertical: 14.sH),
+                              decoration: BoxDecoration(
+                                color: AppColor.black,
+                                borderRadius: BorderRadius.circular(15.sR),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'home.try_now'.tr(),
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 16.sSp,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
                                   ),
                                 ),
-                  ],
-                )
-              ],
-            )
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  )
+                ],
+              )
           ),
-
-
         ],
       ),
     );
@@ -214,7 +210,6 @@ class IthraVirtualTourSection extends StatelessWidget {
               ),
             ),
           ),
-
           Expanded(
             flex: isTablet ? 5 : 6,
             child: Padding(
@@ -224,7 +219,7 @@ class IthraVirtualTourSection extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Step Inside the Exhibition',
+                    'home.virtual_tour_title'.tr(),
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: isTablet ? 24.sSp : 28.sSp,
@@ -233,11 +228,9 @@ class IthraVirtualTourSection extends StatelessWidget {
                       height: 1.2,
                     ),
                   ),
-
                   SizedBox(height: 16.sH),
-
                   Text(
-                    'A 3D tour that lets you explore the exhibition as if you were inside walking through the sections and viewing products from every angle before your actual visit',
+                    'home.virtual_tour_description'.tr(),
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: isTablet ? 14.sSp : 16.sSp,
@@ -246,29 +239,22 @@ class IthraVirtualTourSection extends StatelessWidget {
                       height: 1.6,
                     ),
                   ),
-
                   SizedBox(height: 24.sH),
-
-                    Text(
-                      'Discover an exceptional journey\nalongside over 20+ people',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: isTablet ? 13.sSp : 14.sSp,
-                        fontWeight: FontWeight.w400,
-                        color: AppColor.gray700,
-                        height: 1.5,
-                      ),
+                  Text(
+                    'home.virtual_tour_journey'.tr(),
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: isTablet ? 13.sSp : 14.sSp,
+                      fontWeight: FontWeight.w400,
+                      color: AppColor.gray700,
+                      height: 1.5,
                     ),
-
-                    SizedBox(height: 16.sH),
-
-                    //_buildPeopleAvatars(deviceType),
-
-                   // SizedBox(height: 28.sH),
+                  ),
+                  SizedBox(height: 16.sH),
                   Row(
                     children: [
                       HomeImage(
-                        path:peopleImage!,
+                        path: peopleImage,
                         fit: BoxFit.cover,
                         errorChild: Container(
                           color: AppColor.gray200,
@@ -291,10 +277,9 @@ class IthraVirtualTourSection extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: AppColor.black,
                               borderRadius: BorderRadius.circular(15.sR),
-
                             ),
                             child: Text(
-                              'Try Now',
+                              'home.try_now'.tr(),
                               style: TextStyle(
                                 fontFamily: 'Inter',
                                 fontSize: isTablet ? 15.sSp : 16.sSp,
@@ -314,79 +299,6 @@ class IthraVirtualTourSection extends StatelessWidget {
       ),
     );
   }
-
-  // Widget _buildPeopleAvatars(DeviceType deviceType) {
-  //   final bool isMobile = deviceType == DeviceType.mobile;
-  //   final bool isTablet = deviceType == DeviceType.tablet;
-  //
-  //   final avatarSize = isMobile ? 36.sW : isTablet ? 40.sW : 44.sW;
-  //   final displayCount = isMobile ? 5 : 6;
-  //
-  //   return Row(
-  //     children: [
-  //       ...peopleImages!
-  //           .take(displayCount)
-  //           .map((imagePath) => Container(
-  //         margin: EdgeInsets.only(right: isMobile ? 6.sW : 8.sW),
-  //         width: avatarSize,
-  //         height: avatarSize,
-  //         decoration: BoxDecoration(
-  //           shape: BoxShape.circle,
-  //           border: Border.all(
-  //             color: Colors.white,
-  //             width: 2.5,
-  //           ),
-  //           boxShadow: [
-  //             BoxShadow(
-  //               color: AppColor.black.withOpacity(0.12),
-  //               blurRadius: 6,
-  //               offset: const Offset(0, 2),
-  //             ),
-  //           ],
-  //         ),
-  //         child: ClipOval(
-  //           child: HomeImage(
-  //             path: imagePath,
-  //             fit: BoxFit.cover,
-  //             errorChild: Container(
-  //               color: AppColor.gray200,
-  //               child: Icon(
-  //                 Icons.person,
-  //                 size: avatarSize * 0.5,
-  //                 color: AppColor.gray600,
-  //               ),
-  //             ),
-  //           ),
-  //         ),
-  //       ))
-  //           .toList(),
-  //       if (peopleImages!.length > displayCount)
-  //         Container(
-  //           width: avatarSize,
-  //           height: avatarSize,
-  //           decoration: BoxDecoration(
-  //             color: AppColor.gray200,
-  //             shape: BoxShape.circle,
-  //             border: Border.all(
-  //               color: Colors.white,
-  //               width: 2.5,
-  //             ),
-  //           ),
-  //           child: Center(
-  //             child: Text(
-  //               '+${peopleImages!.length - displayCount}',
-  //               style: TextStyle(
-  //                 fontFamily: 'Inter',
-  //                 fontSize: isMobile ? 11.sSp : 12.sSp,
-  //                 fontWeight: FontWeight.w600,
-  //                 color: AppColor.gray700,
-  //               ),
-  //             ),
-  //           ),
-  //         ),
-  //     ],
-  //   );
-  // }
 
   Widget _buildDefaultVirtualTourImage(DeviceType deviceType) {
     final bool isMobile = deviceType == DeviceType.mobile;
@@ -413,7 +325,7 @@ class IthraVirtualTourSection extends StatelessWidget {
             ),
             SizedBox(height: 8.sH),
             Text(
-              'Virtual Gallery',
+              'home.virtual_gallery'.tr(),
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: isMobile ? 14.sSp : 16.sSp,

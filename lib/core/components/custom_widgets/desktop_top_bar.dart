@@ -1,7 +1,7 @@
 import 'package:baseqat/core/responsive/size_ext.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
-import 'package:baseqat/core/responsive/size_utils.dart';
 import 'package:baseqat/core/resourses/style_manager.dart';
 import 'package:baseqat/core/resourses/assets_manager.dart';
 import 'compact_locale_switcher.dart';
@@ -10,7 +10,7 @@ class DesktopTopBar extends StatelessWidget {
   DesktopTopBar({
     super.key,
     String? logoPath,
-    this.brand = 'ithra',
+    this.brand ,
     required this.items,
     this.selectedIndex = 0,
     this.onItemTap,
@@ -20,7 +20,7 @@ class DesktopTopBar extends StatelessWidget {
   }) : logoPath = logoPath ?? AppAssetsManager.imgLogo;
 
   final String logoPath;
-  final String brand;
+  final String ?brand;
   final List<String> items;
   final int selectedIndex;
   final ValueChanged<int>? onItemTap;
@@ -42,7 +42,7 @@ class DesktopTopBar extends StatelessWidget {
       child: Row(
         children: [
           // Logo and brand on the left
-          _DesktopBrand(logoPath: logoPath, brand: brand),
+          _DesktopBrand(logoPath: logoPath, brand: brand?? "navigation.home".tr(),),
           SizedBox(width: 48.sSp),
 
           // Navigation tabs in the center

@@ -1,11 +1,10 @@
 import 'package:baseqat/core/components/custom_widgets/custom_top_bar.dart';
 import 'package:baseqat/core/components/custom_widgets/desktop_top_bar.dart';
-import 'package:baseqat/core/responsive/size_ext.dart';
-import 'package:baseqat/core/responsive/size_utils.dart' hide DeviceType;
 import 'package:baseqat/modules/home/presentation/view/home_view.dart';
 import 'package:baseqat/modules/maps/presentation/view/map_view.dart';
 import 'package:baseqat/modules/tabs/presentation/manger/tabs_cubit.dart';
 import 'package:baseqat/modules/tabs/presentation/manger/tabs_states.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/responsive/responsive.dart';
@@ -46,10 +45,10 @@ class _TabsViewBody extends StatelessWidget {
                   children: [
                     devType == DeviceType.desktop
                         ? DesktopTopBar(
-                      items: const [
-                        'Home',
-                        'Events',
-                        'Maps',
+                      items: [
+                        "navigation.home".tr(),
+                        "navigation.events".tr(),
+                        "navigation.maps".tr(),
                         //'Profile',
                       ],
                       selectedIndex: selectedIndex,
@@ -61,10 +60,10 @@ class _TabsViewBody extends StatelessWidget {
                       onScanTap: () {},
                     )
                         : TopBar(
-                          items: const [
-                            'Home',
-                            'Events',
-                            'Maps',
+                          items:  [
+                            "navigation.home".tr(),
+                            "navigation.events".tr(),
+                            "navigation.maps".tr(),
                            // 'Profile',
                           ],
                           selectedIndex: selectedIndex,

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:baseqat/core/responsive/responsive.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
@@ -6,6 +5,7 @@ import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/modules/home/data/models/artwork_model.dart';
 import 'package:baseqat/modules/home/presentation/widgets/common/home_image.dart';
 import 'package:baseqat/core/components/custom_widgets/custom_image_view.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class IthraArtworksSection extends StatelessWidget {
   final List<Artwork> artworks;
@@ -49,7 +49,7 @@ class IthraArtworksSection extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Art Works',
+                'home.art_works'.tr(),
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: isDesktop
@@ -65,7 +65,7 @@ class IthraArtworksSection extends StatelessWidget {
                 GestureDetector(
                   onTap: onSeeMore,
                   child: Text(
-                    'See More',
+                    'home.see_more'.tr(),
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: isDesktop ? 14.sSp : 13.sSp,
@@ -85,47 +85,12 @@ class IthraArtworksSection extends StatelessWidget {
           else if (artworks.isEmpty)
             _buildEmptyState(context, deviceType)
           else
-
             _buildArtworksHorizontalList(context, deviceType),
-
         ],
       ),
     );
   }
 
-  // Widget _buildArtworksHorizontalList(
-  //     BuildContext context, DeviceType deviceType) {
-  //   final bool isMobile = deviceType == DeviceType.mobile;
-  //   final bool isTablet = deviceType == DeviceType.tablet;
-  //
-  //   final double cardHeight = isMobile ? 420.sH : isTablet ? 480.sH : 520.sH;
-  //
-  //   return SizedBox(
-  //     height: cardHeight,
-  //     child: ListView.separated(
-  //       scrollDirection: Axis.horizontal,
-  //       itemCount: artworks.length,
-  //       separatorBuilder: (context, index) => SizedBox(width: 16.sW,
-  //       child:VerticalDivider(
-  //           width: 28.sW,
-  //         thickness: 2,
-  //         color: AppColor.gray400,
-  //       )
-  //       ),
-  //       itemBuilder: (context, index) {
-  //
-  //
-  //         return _IthraArtworkCard(
-  //           artwork: artworks[index],
-  //           index: index,
-  //           onTap: onArtworkTap,
-  //           onFavoriteTap: onFavoriteTap,
-  //           deviceType: deviceType,
-  //         );
-  //       },
-  //     ),
-  //   );
-  // }
   Widget _buildArtworksHorizontalList(
       BuildContext context, DeviceType deviceType) {
     final bool isMobile = deviceType == DeviceType.mobile;
@@ -208,7 +173,7 @@ class IthraArtworksSection extends StatelessWidget {
             ),
             SizedBox(height: 8.sH),
             Text(
-              'No artworks available',
+              'home.no_artworks_available'.tr(),
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: isMobile ? 14.sSp : 16.sSp,
@@ -295,17 +260,6 @@ class _IthraArtworkCardState extends State<_IthraArtworkCard>
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16.sR),
-                // border: Border.all(
-                //   color: AppColor.gray200,
-                //   width: 1,
-                // ),
-                // boxShadow: [
-                //   BoxShadow(
-                //     color: AppColor.black.withOpacity(0.08),
-                //     blurRadius: 12,
-                //     offset: const Offset(0, 4),
-                //   ),
-                // ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -314,7 +268,7 @@ class _IthraArtworkCardState extends State<_IthraArtworkCard>
                   Stack(
                     children: [
                       Padding(
-                        padding:  EdgeInsets.symmetric(horizontal: 20.sW,vertical: 12.sH),
+                        padding: EdgeInsets.symmetric(horizontal: 20.sW, vertical: 12.sH),
                         child: ClipRRect(
                           borderRadius: BorderRadius.all(
                             Radius.circular(25.sR),
@@ -339,7 +293,7 @@ class _IthraArtworkCardState extends State<_IthraArtworkCard>
 
                   // Content section
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal:16.sW,vertical: 4.sSp),
+                    padding: EdgeInsets.symmetric(horizontal: 16.sW, vertical: 4.sSp),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -381,7 +335,7 @@ class _IthraArtworkCardState extends State<_IthraArtworkCard>
                           children: [
                             Expanded(
                               child: Text(
-                                widget.artwork.artistName ?? 'Unknown Artist',
+                                widget.artwork.artistName ?? 'home.unknown_artist'.tr(),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(

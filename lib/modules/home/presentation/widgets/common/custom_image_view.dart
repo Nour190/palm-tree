@@ -1,4 +1,3 @@
-// lib/modules/home/presentation/widgets/common/custom_image_view.dart
 import 'package:flutter/material.dart';
 import 'package:baseqat/core/resourses/assets_manager.dart';
 

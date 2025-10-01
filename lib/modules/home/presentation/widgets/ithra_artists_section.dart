@@ -5,6 +5,7 @@ import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/modules/home/data/models/artist_model.dart';
 import 'package:baseqat/modules/home/presentation/widgets/common/home_image.dart';
 import 'package:baseqat/core/components/custom_widgets/custom_image_view.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class IthraArtistsSection extends StatelessWidget {
   final List<Artist> artists;
@@ -46,13 +47,13 @@ class IthraArtistsSection extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Artists',
+                'home.artists'.tr(),
                 style: TextStyle(
                   fontFamily: 'Inter',
-                  fontSize: isDesktop 
-                      ? 24.sSp 
-                      : isTablet 
-                      ? 22.sSp 
+                  fontSize: isDesktop
+                      ? 24.sSp
+                      : isTablet
+                      ? 22.sSp
                       : 20.sSp,
                   fontWeight: FontWeight.w700,
                   color: AppColor.black,
@@ -62,7 +63,7 @@ class IthraArtistsSection extends StatelessWidget {
                 GestureDetector(
                   onTap: onSeeMore,
                   child: Text(
-                    'See More',
+                    'home.see_more'.tr(),
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: isDesktop ? 14.sSp : 13.sSp,
@@ -73,9 +74,9 @@ class IthraArtistsSection extends StatelessWidget {
                 ),
             ],
           ),
-          
+
           SizedBox(height: 24.sH),
-          
+
           // Artists grid
           if (isLoading)
             _buildLoadingState(context, deviceType)
@@ -91,10 +92,10 @@ class IthraArtistsSection extends StatelessWidget {
   Widget _buildArtistsGrid(BuildContext context, DeviceType deviceType) {
     final bool isMobile = deviceType == DeviceType.mobile;
     final bool isTablet = deviceType == DeviceType.tablet;
-    
+
     // Show max 5 artists in a horizontal row
     final displayArtists = artists.take(5).toList();
-    
+
     return SizedBox(
       height: isMobile ? 120.sH : isTablet ? 140.sH : 160.sH,
       child: ListView.separated(
@@ -116,7 +117,7 @@ class IthraArtistsSection extends StatelessWidget {
   Widget _buildLoadingState(BuildContext context, DeviceType deviceType) {
     final bool isMobile = deviceType == DeviceType.mobile;
     final bool isTablet = deviceType == DeviceType.tablet;
-    
+
     return SizedBox(
       height: isMobile ? 120.sH : isTablet ? 140.sH : 160.sH,
       child: ListView.separated(
@@ -132,7 +133,7 @@ class IthraArtistsSection extends StatelessWidget {
 
   Widget _buildEmptyState(BuildContext context, DeviceType deviceType) {
     final bool isMobile = deviceType == DeviceType.mobile;
-    
+
     return Container(
       height: isMobile ? 120.sH : 160.sH,
       decoration: BoxDecoration(
@@ -151,7 +152,7 @@ class IthraArtistsSection extends StatelessWidget {
             ),
             SizedBox(height: 8.sH),
             Text(
-              'No artists available',
+              'home.no_artists_available'.tr(),
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: isMobile ? 14.sSp : 16.sSp,
@@ -214,8 +215,7 @@ class _IthraArtistCardState extends State<_IthraArtistCard>
   Widget build(BuildContext context) {
     final bool isMobile = widget.deviceType == DeviceType.mobile;
     final bool isTablet = widget.deviceType == DeviceType.tablet;
-    
-   // final double avatarSize = isMobile ? 80.sW : isTablet ? 100.sW : 120.sW;
+
     final double cardWidth = isMobile ? 70.sW : isTablet ? 90.sW : 110.sW;
 
     return GestureDetector(
@@ -234,11 +234,9 @@ class _IthraArtistCardState extends State<_IthraArtistCard>
                 children: [
                   // Circular avatar
                   Container(
-
                     width: 80.sH,
                     height: 80.sH,
                     decoration: BoxDecoration(
-
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: AppColor.gray200,
@@ -300,7 +298,7 @@ class _IthraArtistCardState extends State<_IthraArtistCard>
 
   Widget _buildAvatarImage() {
     final String? imagePath = widget.artist.profileImage;
-    
+
     if (imagePath != null && imagePath.isNotEmpty) {
       if (imagePath.toLowerCase().startsWith('http')) {
         return HomeImage(
@@ -315,7 +313,7 @@ class _IthraArtistCardState extends State<_IthraArtistCard>
         );
       }
     }
-    
+
     return _buildFallbackAvatar();
   }
 
@@ -360,11 +358,11 @@ class _IthraArtistCardState extends State<_IthraArtistCard>
     if (widget.artist.city?.isNotEmpty == true) {
       parts.add(widget.artist.city!);
     }
-    
+
     if (parts.isNotEmpty) {
       return parts.join(', ');
     }
-    
+
     return 'Artist';
   }
 }
@@ -410,7 +408,7 @@ class _LoadingArtistCardState extends State<_LoadingArtistCard>
   Widget build(BuildContext context) {
     final bool isMobile = widget.deviceType == DeviceType.mobile;
     final bool isTablet = widget.deviceType == DeviceType.tablet;
-    
+
     final double avatarSize = isMobile ? 80.sW : isTablet ? 100.sW : 120.sW;
     final double cardWidth = isMobile ? 90.sW : isTablet ? 110.sW : 130.sW;
 
@@ -445,9 +443,9 @@ class _LoadingArtistCardState extends State<_LoadingArtistCard>
               );
             },
           ),
-          
+
           SizedBox(height: 12.sH),
-          
+
           // Shimmer name
           AnimatedBuilder(
             animation: _shimmerAnimation,
@@ -475,9 +473,9 @@ class _LoadingArtistCardState extends State<_LoadingArtistCard>
               );
             },
           ),
-          
+
           SizedBox(height: 8.sH),
-          
+
           // Shimmer subtitle
           AnimatedBuilder(
             animation: _shimmerAnimation,

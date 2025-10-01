@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../resourses/color_manager.dart';
-import '../../responsive/responsive.dart';
 
 class CustomImageView extends StatelessWidget {
   final String imagePath;

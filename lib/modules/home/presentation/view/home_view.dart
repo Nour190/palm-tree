@@ -1,4 +1,3 @@
-// lib/modules/home/presentation/views/home_view.dart
 import 'package:baseqat/core/resourses/assets_manager.dart';
 import 'package:baseqat/core/resourses/constants_manager.dart';
 import 'package:baseqat/core/responsive/responsive.dart';
@@ -14,29 +13,20 @@ import 'package:baseqat/modules/home/data/repositories/home_repository_impl.dart
 import 'package:baseqat/modules/home/presentation/manger/home_cubit.dart';
 import 'package:baseqat/modules/home/presentation/manger/home_state.dart';
 import 'package:baseqat/modules/home/presentation/widgets/about_info_section.dart';
-import 'package:baseqat/modules/home/presentation/widgets/artists_section.dart' hide IthraArtistsSection;
-import 'package:baseqat/modules/home/presentation/widgets/artworks_section.dart';
-import 'package:baseqat/modules/home/presentation/widgets/common/app_section_header.dart';
 import 'package:baseqat/modules/home/presentation/widgets/common/section_error_banner.dart';
-import 'package:baseqat/modules/home/presentation/widgets/common/section_header_with_highlights.dart';
 import 'package:baseqat/modules/home/presentation/widgets/footer_section.dart';
-import 'package:baseqat/modules/home/presentation/widgets/gallery_section.dart';
-import 'package:baseqat/modules/home/presentation/widgets/reviews_section.dart';
 import 'package:baseqat/modules/home/presentation/widgets/speakers_section.dart';
 import 'package:baseqat/modules/home/presentation/widgets/textline_banner.dart';
 import 'package:baseqat/modules/tabs/presentation/manger/tabs_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import '../../../../core/components/alerts/custom_loading.dart';
-import '../widgets/common/ithra_app_header.dart';
 import '../widgets/common/ithra_welcome_section.dart';
 import '../widgets/ithra_artists_section.dart';
 import '../widgets/ithra_artworks_section.dart';
 import '../widgets/ithra_gallery_section.dart';
 import '../widgets/ithra_reviews_section.dart';
-import '../widgets/ithra_speakers_section.dart';
 import '../widgets/ithra_virtual_tour_section.dart';
 
 

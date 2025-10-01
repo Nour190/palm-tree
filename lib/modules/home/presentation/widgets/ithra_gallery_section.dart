@@ -5,6 +5,7 @@ import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/modules/home/presentation/widgets/common/home_image.dart';
 import 'package:baseqat/core/components/custom_widgets/custom_image_view.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class IthraGallerySection extends StatelessWidget {
   final List<String> imageUrls;
@@ -43,7 +44,7 @@ class IthraGallerySection extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Gallery',
+                'home.gallery'.tr(),
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: isDesktop
@@ -59,7 +60,7 @@ class IthraGallerySection extends StatelessWidget {
                 GestureDetector(
                   onTap: onSeeMore,
                   child: Text(
-                    'See More',
+                    'home.see_more'.tr(),
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: isDesktop ? 16.sSp : 14.sSp,
@@ -193,7 +194,7 @@ class IthraGallerySection extends StatelessWidget {
             ),
             SizedBox(height: 12.sH),
             Text(
-              'No gallery images available',
+              'home.no_gallery_images'.tr(),
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: isMobile ? 14.sSp : 16.sSp,

@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
 
-/// Shared image widget for the Home feature that provides
-/// a consistent loading placeholder and graceful error fallback
-/// when displaying network assets. Local assets still work seamlessly.
+
 class HomeImage extends StatelessWidget {
   const HomeImage({
     super.key,

@@ -698,7 +698,7 @@ class _MobileTabBar extends StatelessWidget {
                       : [],
                 ),
                 child: Text(
-                  category.title!.tr() ?? "",
+                  category.title!.tr() ,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight:

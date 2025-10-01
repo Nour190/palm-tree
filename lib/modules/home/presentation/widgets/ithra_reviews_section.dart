@@ -4,6 +4,7 @@ import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/modules/home/presentation/widgets/common/home_image.dart';
 import 'package:baseqat/core/components/custom_widgets/custom_image_view.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class IthraReviewsSection extends StatelessWidget {
   final List<dynamic> reviews;
@@ -37,21 +38,21 @@ class IthraReviewsSection extends StatelessWidget {
         children: [
           // Section title
           Text(
-            'Reviews',
+            'home.reviews'.tr(),
             style: TextStyle(
               fontFamily: 'Inter',
-              fontSize: isDesktop 
-                  ? 32.sSp 
-                  : isTablet 
-                  ? 28.sSp 
+              fontSize: isDesktop
+                  ? 32.sSp
+                  : isTablet
+                  ? 28.sSp
                   : 24.sSp,
               fontWeight: FontWeight.w700,
               color: Colors.white,
             ),
           ),
-          
+
           SizedBox(height: isMobile ? 24.sH : 32.sH),
-          
+
           // Review content
           if (isLoading)
             _buildLoadingState(context, deviceType)
@@ -70,7 +71,7 @@ class IthraReviewsSection extends StatelessWidget {
     final bool isDesktop = deviceType == DeviceType.desktop;
     // Use the first review for display
     final review = reviews.first;
-    
+
     return Container(
       constraints: BoxConstraints(
         maxWidth: isDesktop ? 600.sW : double.infinity,
@@ -92,9 +93,9 @@ class IthraReviewsSection extends StatelessWidget {
               child: _buildReviewerImage(review),
             ),
           ),
-          
+
           SizedBox(height: 20.sH),
-          
+
           // Reviewer name
           Text(
             _getReviewerName(review),
@@ -105,9 +106,9 @@ class IthraReviewsSection extends StatelessWidget {
               color: Colors.white,
             ),
           ),
-          
+
           SizedBox(height: 16.sH),
-          
+
           // Review text
           Text(
             _getReviewText(review),
@@ -120,9 +121,9 @@ class IthraReviewsSection extends StatelessWidget {
               height: 1.6,
             ),
           ),
-          
+
           SizedBox(height: 20.sH),
-          
+
           // Star rating
           _buildStarRating(context, _getReviewRating(review), deviceType),
         ],
@@ -132,7 +133,7 @@ class IthraReviewsSection extends StatelessWidget {
 
   Widget _buildReviewerImage(dynamic review) {
     final String? imagePath = _getReviewerImagePath(review);
-    
+
     if (imagePath != null && imagePath.isNotEmpty) {
       if (imagePath.toLowerCase().startsWith('http')) {
         return HomeImage(
@@ -147,7 +148,7 @@ class IthraReviewsSection extends StatelessWidget {
         );
       }
     }
-    
+
     return _buildFallbackReviewerImage(review);
   }
 
@@ -181,7 +182,7 @@ class IthraReviewsSection extends StatelessWidget {
     final bool isMobile = deviceType == DeviceType.mobile;
     final int fullStars = rating.floor();
     final bool hasHalfStar = (rating - fullStars) >= 0.5;
-    
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(5, (index) {
@@ -211,7 +212,7 @@ class IthraReviewsSection extends StatelessWidget {
   Widget _buildLoadingState(BuildContext context, DeviceType deviceType) {
     final bool isMobile = deviceType == DeviceType.mobile;
     final bool isTablet = deviceType == DeviceType.tablet;
-    
+
     return Column(
       children: [
         // Loading avatar
@@ -223,9 +224,9 @@ class IthraReviewsSection extends StatelessWidget {
             shape: BoxShape.circle,
           ),
         ),
-        
+
         SizedBox(height: 20.sH),
-        
+
         // Loading name
         Container(
           width: 150.sW,
@@ -235,20 +236,20 @@ class IthraReviewsSection extends StatelessWidget {
             borderRadius: BorderRadius.circular(4.sR),
           ),
         ),
-        
+
         SizedBox(height: 16.sH),
-        
+
         // Loading text
         Column(
           children: List.generate(3, (index) => Container(
-                margin: EdgeInsets.only(bottom: 8.sH),
-                width: double.infinity,
-                height: 16.sH,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(4.sR),
-                ),
-              )),
+            margin: EdgeInsets.only(bottom: 8.sH),
+            width: double.infinity,
+            height: 16.sH,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(4.sR),
+            ),
+          )),
         ),
       ],
     );
@@ -256,7 +257,7 @@ class IthraReviewsSection extends StatelessWidget {
 
   Widget _buildEmptyState(BuildContext context, DeviceType deviceType) {
     final bool isMobile = deviceType == DeviceType.mobile;
-    
+
     return Column(
       children: [
         Icon(
@@ -266,7 +267,7 @@ class IthraReviewsSection extends StatelessWidget {
         ),
         SizedBox(height: 16.sH),
         Text(
-          'No reviews available',
+          'home.no_reviews_available'.tr(),
           style: TextStyle(
             fontFamily: 'Inter',
             fontSize: isMobile ? 16.sSp : 18.sSp,
@@ -281,19 +282,19 @@ class IthraReviewsSection extends StatelessWidget {
   // Helper methods to extract data from review object
   String? _getReviewerImagePath(dynamic review) {
     if (review == null) return null;
-    
+
     if (review is Map) {
-      return review['userImage'] ?? 
-             review['avatar'] ?? 
-             review['profileImage'] ??
-             review['image'];
+      return review['userImage'] ??
+          review['avatar'] ??
+          review['profileImage'] ??
+          review['image'];
     }
-    
+
     try {
-      return review.userImage ?? 
-             review.avatar ?? 
-             review.profileImage ??
-             review.image;
+      return review.userImage ??
+          review.avatar ??
+          review.profileImage ??
+          review.image;
     } catch (e) {
       return null;
     }
@@ -301,19 +302,19 @@ class IthraReviewsSection extends StatelessWidget {
 
   String _getReviewerName(dynamic review) {
     if (review == null) return 'Anonymous';
-    
+
     if (review is Map) {
-      return review['userName'] ?? 
-             review['name'] ?? 
-             review['reviewerName'] ??
-             'Anonymous';
+      return review['userName'] ??
+          review['name'] ??
+          review['reviewerName'] ??
+          'Anonymous';
     }
-    
+
     try {
-      return review.userName ?? 
-             review.name ?? 
-             review.reviewerName ??
-             'Anonymous';
+      return review.userName ??
+          review.name ??
+          review.reviewerName ??
+          'Anonymous';
     } catch (e) {
       return 'Anonymous';
     }
@@ -321,21 +322,21 @@ class IthraReviewsSection extends StatelessWidget {
 
   String _getReviewText(dynamic review) {
     if (review == null) return 'Great experience with the cultural center!';
-    
+
     if (review is Map) {
-      return review['review'] ?? 
-             review['comment'] ?? 
-             review['text'] ??
-             review['content'] ??
-             'Great experience with the cultural center!';
+      return review['review'] ??
+          review['comment'] ??
+          review['text'] ??
+          review['content'] ??
+          'Great experience with the cultural center!';
     }
-    
+
     try {
-      return review.review ?? 
-             review.comment ?? 
-             review.text ??
-             review.content ??
-             'Great experience with the cultural center!';
+      return review.review ??
+          review.comment ??
+          review.text ??
+          review.content ??
+          'Great experience with the cultural center!';
     } catch (e) {
       return 'Great experience with the cultural center!';
     }
@@ -343,12 +344,12 @@ class IthraReviewsSection extends StatelessWidget {
 
   double _getReviewRating(dynamic review) {
     if (review == null) return 5.0;
-    
+
     if (review is Map) {
       final rating = review['rating'] ?? review['stars'] ?? 5.0;
       return (rating is num) ? rating.toDouble() : 5.0;
     }
-    
+
     try {
       final rating = review.rating ?? review.stars ?? 5.0;
       return (rating is num) ? rating.toDouble() : 5.0;

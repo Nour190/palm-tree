@@ -1,4 +1,3 @@
-import 'package:baseqat/core/resourses/assets_manager.dart';
 import 'package:baseqat/core/resourses/style_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';

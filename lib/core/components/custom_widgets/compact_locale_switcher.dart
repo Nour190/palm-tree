@@ -3,7 +3,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
 import '../../resourses/color_manager.dart';
 import '../../resourses/style_manager.dart';
-import '../../utils/rtl_helper.dart';
 
 /// Compact language switcher for desktop top bars
 /// Follows familiar web design patterns with dropdown menu

@@ -983,7 +983,7 @@ class _PinSheetState extends State<_PinSheet> {
           '${_fmt(s.startAt)} - ${_fmt(s.endAt)}',
         ),
         if ((s.timezone ?? '').isNotEmpty)
-          _row(Icons.public, 'Timezone', s.timezone!),
+          _row(Icons.public, 'Timezone', s.timezone),
         if ((s.city ?? '').isNotEmpty || (s.country ?? '').isNotEmpty)
           _row(
             Icons.place,
