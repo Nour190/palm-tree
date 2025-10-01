@@ -68,7 +68,7 @@ class SizeUtils {
       );
       height = boxConstraints.maxWidth.isNonZero();
     }
-    if (width < 400) {
+    if (width < 450) {
       deviceType = DeviceType.mobile;
     } else if (width < 850) {
       deviceType = DeviceType.tablet;

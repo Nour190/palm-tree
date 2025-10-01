@@ -307,19 +307,8 @@ class HomeView extends StatelessWidget {
                           );
                         },
                       ),
-
-                      IthraSpeakersSection(
-                        onSeeMore: () => context
-                            .read<TabsCubit>()
-                            .changeSelectedIndex(1),
-                        onJoinNow: () => context
-                            .read<TabsCubit>()
-                            .changeSelectedIndex(1),
-                        speakerImagePath: AppAssetsManager.imgInfo,
-                      ),
-
                       Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8.0),
+                        padding: EdgeInsets.symmetric(vertical: 8.0.sH,horizontal: 8.sW),
                         child: TextLineBanner(
                           text: 'ATE WITH THE  *  YOUR DATE WITH THE  *',
                           enableMarquee: true,
@@ -332,12 +321,27 @@ class HomeView extends StatelessWidget {
                           showEntryAnimation: true,
                         ),
                       ),
+                      Padding(
+                        padding:  EdgeInsets.symmetric(horizontal: isDesktop?12.sW:8.0.sW),
+                        child: SpeakersSection(
+                          onSeeMore: () => context
+                              .read<TabsCubit>()
+                              .changeSelectedIndex(1),
+                          onJoinNow: () => context
+                              .read<TabsCubit>()
+                              .changeSelectedIndex(1),
+                          //speakerImagePath: AppAssetsManager.imgInfo,
+                        ),
+                      ),
+
+
 
                       IthraVirtualTourSection(
                         onTryNow: () => context
                             .read<TabsCubit>()
-                            .changeSelectedIndex(1),
-                        previewImages: info?.images,
+                            .changeSelectedIndex(1),virtualTourImage: AppAssetsManager.imgImage,
+                        peopleImage :AppAssetsManager.imgUsers
+                        //previewImages: info?.images,
                       ),
 
                       BlocSelector<HomeCubit, HomeState, List<String>>(
@@ -421,7 +425,7 @@ class HomeView extends StatelessWidget {
                       ),
 
                       // Footer (keeping existing)
-                      const Footer(),
+                       Footer(),
                     ],
                   ),
                 ),

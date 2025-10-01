@@ -7,7 +7,7 @@ enum DeviceType { mobile, tablet, desktop }
 class Responsive {
   Responsive._();
 
-  static double mobileMaxWidth = 400;
+  static double mobileMaxWidth = 450;
   static double tabletMaxWidth = 850;
 
   // last known values from init
@@ -19,7 +19,7 @@ class Responsive {
   static double responsiveFontSize(BuildContext context, double baseSize) {
     final w = MediaQuery.of(context).size.width;
 
-    if (w <= 400) {
+    if (w <= 450) {
       // mobile: use base
       return baseSize;
     } else if (w <= 850) {

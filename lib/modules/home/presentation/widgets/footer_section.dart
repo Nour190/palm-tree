@@ -5,6 +5,8 @@ import 'package:baseqat/core/resourses/style_manager.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/resourses/assets_manager.dart';
+
 class Footer extends StatefulWidget {
   final String email;
   final String phone;
@@ -49,22 +51,20 @@ class _FooterState extends State<Footer> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(context, isMobile),
           SizedBox(height: isMobile ? 16.sH : 24.sH),
           _buildContent(context, deviceType),
-          SizedBox(height: isMobile ? 24.sH : 32.sH),
-          _buildBrandName(context, isMobile),
         ],
       ),
     );
   }
+
 
   double _getHorizontalPadding(DeviceType deviceType) {
     switch (deviceType) {
       case DeviceType.mobile:
         return 20.sW;
       case DeviceType.tablet:
-        return 32.sW;
+        return 48.sW;
       case DeviceType.desktop:
         return 48.sW;
     }
@@ -75,7 +75,7 @@ class _FooterState extends State<Footer> {
       case DeviceType.mobile:
         return 28.sH;
       case DeviceType.tablet:
-        return 36.sH;
+        return 44.sH;
       case DeviceType.desktop:
         return 44.sH;
     }
@@ -86,51 +86,36 @@ class _FooterState extends State<Footer> {
       case DeviceType.mobile:
         return 64.sH;
       case DeviceType.tablet:
-        return 80.sH;
+        return 96.sH;
       case DeviceType.desktop:
         return 96.sH;
     }
   }
 
-  Widget _buildHeader(BuildContext context, bool isMobile) {
-    final styles = TextStyleHelper.instance;
-    return Text(
-      'Contact & Updates',
-      style: isMobile
-          ? styles.headline24BoldInter.copyWith(
-              color: AppColor.whiteCustom,
-              fontSize: Responsive.responsiveFontSize(context, 24),
-            )
-          : styles.headline32BoldInter.copyWith(
-              color: AppColor.whiteCustom,
-              fontSize: Responsive.responsiveFontSize(context, 32),
-            ),
-    );
-  }
 
   Widget _buildContent(BuildContext context, DeviceType deviceType) {
     final isDesktop = deviceType == DeviceType.desktop;
-
-    return isDesktop
-        ? Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _ContactSection(
-                  email: widget.email,
-                  phone: widget.phone,
-                  address: widget.address,
-                ),
-              ),
-              SizedBox(width: 32.sW),
-              Expanded(
-                child: _FollowSection(
-                  controller: _subscribeController,
-                  onSubscribe: _handleSubscribe,
-                ),
-              ),
-            ],
-          )
+    final isTablet = deviceType == DeviceType.tablet;
+    return isDesktop || isTablet
+        ?  Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: _ContactSection(
+            email: widget.email,
+            phone: widget.phone,
+            address: widget.address,
+          ),
+        ),
+        SizedBox(width: 32.sW),
+        Expanded(
+          child: _FollowSection(
+            controller: _subscribeController,
+            onSubscribe: _handleSubscribe,
+          ),
+        ),
+      ],
+    )
         : Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -144,27 +129,11 @@ class _FooterState extends State<Footer> {
                 controller: _subscribeController,
                 onSubscribe: _handleSubscribe,
               ),
+
             ],
           );
   }
 
-  Widget _buildBrandName(BuildContext context, bool isMobile) {
-    final styles = TextStyleHelper.instance;
-
-    final baseStyle = isMobile
-        ? styles.display40BoldInter.copyWith(
-            color: AppColor.whiteCustom,
-            letterSpacing: -0.5,
-            fontSize: Responsive.responsiveFontSize(context, 28), // reduced
-          )
-        : styles.display56BoldInter.copyWith(
-            color: AppColor.whiteCustom,
-            letterSpacing: 1.5,
-            fontSize: Responsive.responsiveFontSize(context, 44), // reduced
-          );
-
-    return Text(widget.brandName, style: baseStyle);
-  }
 
   void _handleSubscribe() {
     final email = _subscribeController.text.trim();
@@ -181,11 +150,7 @@ class _FooterState extends State<Footer> {
       ),
     );
 
-    // If you want to deep-link to mail or a web form, do it here.
-    // Example (commented): mailto:
-    // if (isValid) {
-    //   launchUrl(Uri.parse('mailto:$email?subject=Subscribe%20me'));
-    // }
+
   }
 
   bool _isValidEmail(String input) {
@@ -334,50 +299,51 @@ class _FollowSection extends StatelessWidget {
     final textFieldHeight = isMobile ? 44.sH : 52.sH;
     final borderRadius = isMobile ? 8.sH : 12.sH;
 
-    return Row(
+    return Column(
+     crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Expanded(
-          child: SizedBox(
-            height: textFieldHeight,
-            child: TextField(
-              controller: controller,
-              keyboardType: TextInputType.emailAddress,
-              textInputAction: TextInputAction.done,
-              style: isMobile
+        SizedBox(
+          height: textFieldHeight,
+          child: TextField(
+            controller: controller,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.done,
+            style: isMobile
+                ? styles.body14RegularInter.copyWith(
+                    color: AppColor.gray900,
+                    fontSize: Responsive.responsiveFontSize(context, 12),
+                  )
+                : styles.title16RegularInter.copyWith(
+                    color: AppColor.gray900,
+                    fontSize: Responsive.responsiveFontSize(context, 14),
+                  ),
+
+            decoration: InputDecoration(
+              hintText: 'Enter your email',
+              filled: true,
+              fillColor: AppColor.whiteCustom,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 12.sW : 16.sW,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(borderRadius),
+                borderSide: BorderSide.none,
+              ),
+              hintStyle: isMobile
                   ? styles.body14RegularInter.copyWith(
-                      color: AppColor.gray900,
+                      color: AppColor.gray400,
                       fontSize: Responsive.responsiveFontSize(context, 12),
                     )
                   : styles.title16RegularInter.copyWith(
-                      color: AppColor.gray900,
+                      color: AppColor.gray400,
                       fontSize: Responsive.responsiveFontSize(context, 14),
                     ),
-              decoration: InputDecoration(
-                hintText: 'Enter your email',
-                filled: true,
-                fillColor: AppColor.whiteCustom,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: isMobile ? 12.sW : 16.sW,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(borderRadius),
-                  borderSide: BorderSide.none,
-                ),
-                hintStyle: isMobile
-                    ? styles.body14RegularInter.copyWith(
-                        color: AppColor.gray400,
-                        fontSize: Responsive.responsiveFontSize(context, 12),
-                      )
-                    : styles.title16RegularInter.copyWith(
-                        color: AppColor.gray400,
-                        fontSize: Responsive.responsiveFontSize(context, 14),
-                      ),
-              ),
-              onSubmitted: (_) => onSubscribe(),
             ),
+            onSubmitted: (_) => onSubscribe(),
+
           ),
         ),
-        SizedBox(width: 8.sW),
+        SizedBox(height: 12.sH),
         _buildSubscribeButton(context),
       ],
     );

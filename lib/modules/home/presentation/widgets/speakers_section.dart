@@ -2,8 +2,6 @@ import 'package:baseqat/core/components/custom_widgets/custom_button.dart';
 import 'package:baseqat/core/components/custom_widgets/custom_image_view.dart';
 import 'package:baseqat/core/resourses/assets_manager.dart';
 import 'package:flutter/material.dart';
-
-// Your helpers/utilities
 import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/core/responsive/responsive.dart';
 import 'package:baseqat/core/resourses/style_manager.dart';
@@ -17,50 +15,45 @@ class SpeakersSection extends StatelessWidget {
     this.heroHeadline = 'A lineup of 300+ voices from industry leaders',
     this.heroBody =
         'Meet a selection of experts and professionals sharing their knowledge and success stories in the world of dates and palm cultivation during the exhibition',
-    // Make assets nullable; resolve defaults at runtime to avoid non-const default errors
     this.avatarImagePath,
     this.sideImagePath,
     this.topEmblemPath,
     this.leftEmblemPath,
-    this.badgeAssetPaths,
+  //  this.badgeAssetPaths,
     this.onSeeMore,
     this.onJoinNow,
   });
 
-  // Texts (safe literal defaults)
   final String title;
   final String seeMoreText;
   final String heroHeadline;
   final String heroBody;
 
-  // Assets (nullable -> resolved at runtime)
   final String? avatarImagePath;
   final String? sideImagePath;
   final String? topEmblemPath;
   final String? leftEmblemPath;
-  final List<String>? badgeAssetPaths;
+ // final List<String>? badgeAssetPaths;
 
-  // Actions
   final VoidCallback? onSeeMore;
   final VoidCallback? onJoinNow;
 
   @override
   Widget build(BuildContext context) {
-    // Resolve runtime defaults here (no const requirement)
     final String _avatarPath =
         avatarImagePath ?? AppAssetsManager.imgPhoto72x72;
     final String _sidePath = sideImagePath ?? AppAssetsManager.imgInfo;
     final String _topEmblem =
         topEmblemPath ?? AppAssetsManager.imgVectorWhiteA700;
     final String _leftEmblem = leftEmblemPath ?? AppAssetsManager.imgGroup;
-    final List<String> _badges =
-        badgeAssetPaths ??
-        [
-          AppAssetsManager.imgVectorWhiteA70050x66,
-          AppAssetsManager.imgVectorWhiteA70050x66,
-          AppAssetsManager.imgVectorWhiteA70050x66,
-          AppAssetsManager.imgVectorWhiteA70050x66,
-        ];
+    //final List<String>
+    final String badges =AppAssetsManager.imgVectorWhiteA70050x66;
+        // badgeAssetPaths ??
+        // [
+        //   ,
+        //   AppAssetsManager.imgVectorWhiteA70050x66,
+        //   AppAssetsManager.imgVectorWhiteA70050x66,
+        // ];
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -87,20 +80,20 @@ class SpeakersSection extends StatelessWidget {
             : 20.sH;
 
         final heroPadding = isDesktop
-            ? 24.sW
+            ? 30.sW
             : isTablet
-            ? 20.sW
-            : 16.sW;
+            ? 28.sW
+            : 24.sW;
         final heroImageHeight = isDesktop
-            ? 330.sH
+            ? 350.sH
             : isTablet
-            ? 300.sH
-            : 280.sH;
+            ? 325.sH
+            : 300.sH;
         final emblemSize = isDesktop
-            ? 75.sH
+            ? 75.sSp
             : isTablet
-            ? 55.sH
-            : 50.sH;
+            ? 55.sSp
+            : 49.sSp;
 
         final gap = 16.sW;
        // final wrapCtaToColumn = w < 520; // tight phones
@@ -108,58 +101,101 @@ class SpeakersSection extends StatelessWidget {
         return Column(
           children: [
             SizedBox(height: vSpacing),
-
-            // Hero (text card + image)
-            if (isMobile) ...[
-              _HeroTextCard(
-                cardRadius: cardRadius,
-                paddingAll: heroPadding,
-                emblemPath: _topEmblem,
-                emblemSize: emblemSize,
-                headline: heroHeadline,
-                body: heroBody,
-                desktop: false,
-              ),
-              SizedBox(height: gap),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(cardRadius),
-                child: CustomImageView(
-                  imagePath: _sidePath,
-                  height: heroImageHeight,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ] else ...[
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: _HeroTextCard(
-                      cardRadius: cardRadius,
-                      paddingAll: heroPadding,
-                      emblemPath: _topEmblem,
-                      emblemSize: emblemSize,
-                      headline: heroHeadline,
-                      body: heroBody,
-                      desktop: true,
-                    ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Speakers',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: isDesktop
+                        ? 24.sSp
+                        : isTablet
+                        ? 22.sSp
+                        : 20.sSp,
+                    fontWeight: FontWeight.w700,
+                    color: AppColor.black,
                   ),
-                 SizedBox(width: gap),
-                  Expanded(
-                    flex: 2,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(cardRadius),
-                      child: CustomImageView(
-                        imagePath: _sidePath,
-                        height: heroImageHeight,
-                        width: double.infinity,
-                        fit: BoxFit.contain,
+                ),
+                if (onSeeMore != null)
+                  GestureDetector(
+                    onTap: onSeeMore,
+                    child: Text(
+                      'See More',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: isDesktop ? 14.sSp : 13.sSp,
+                        fontWeight: FontWeight.w500,
+                        color: AppColor.gray600,
                       ),
                     ),
                   ),
-                ],
+              ],
+            ),
+
+            SizedBox(height: 24.sH),
+            // Hero (text card + image)
+            if (isMobile) ...[
+              Padding(
+                padding:  EdgeInsets.symmetric(horizontal: 8.0.sW),
+                child: _HeroTextCard(
+                  cardRadius: cardRadius,
+                  paddingAll: heroPadding,
+                  emblemPath: _topEmblem,
+                  emblemSize: emblemSize,
+                  headline: heroHeadline,
+                  body: heroBody,
+                  desktop: false,
+                ),
+              ),
+              //SizedBox(height: gap),
+              Padding(
+                padding:  EdgeInsets.symmetric(horizontal: 30.sW),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(cardRadius),
+                  child: CustomImageView(
+                    imagePath: _sidePath,
+                    height: heroImageHeight,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    alignment: Alignment.topCenter,
+                  ),
+                ),
+              ),
+            ] else ...[
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8.0.sW),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: _HeroTextCard(
+                        cardRadius: cardRadius,
+                        paddingAll: heroPadding,
+                        emblemPath: _topEmblem,
+                        emblemSize: emblemSize,
+                        headline: heroHeadline,
+                        body: heroBody,
+                        desktop: true,
+                      ),
+                    ),
+                   SizedBox(width: gap),
+                    Expanded(
+                      flex: 2,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(cardRadius),
+                        child: CustomImageView(
+                          imagePath: _sidePath,
+                          height: heroImageHeight,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          alignment: Alignment.topCenter,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
 
@@ -171,11 +207,11 @@ class SpeakersSection extends StatelessWidget {
                   imagePath: _avatarPath,
                   size: _avatarSize(isMobile, isTablet, isDesktop),
                 ),
-                SizedBox(width: 16.sW),
+                SizedBox(width: 8.sW),
                 Expanded(
                   child: _CtaPill(
                     leftEmblemPath: _leftEmblem,
-                    badgeAssetPaths: _badges,
+                    badgeAssetPaths: badges,
                     onJoinNow: onJoinNow,
                   ),
                 ),
@@ -228,7 +264,7 @@ class _HeroTextCard extends StatelessWidget {
         children: [
           // Emblem
           Padding(
-            padding: EdgeInsets.only(top:  devType == DeviceType.desktop ?  40.sH : 35.sH, left:  devType == DeviceType.desktop ? 10.sW:0),
+            padding: EdgeInsets.only(top:  devType == DeviceType.desktop ?  40.sH :1.sH, left:  devType == DeviceType.desktop ? 10.sW:0),
             child: CustomImageView(
               imagePath: emblemPath,
               height: emblemSize,
@@ -242,12 +278,10 @@ class _HeroTextCard extends StatelessWidget {
             constraints: BoxConstraints(maxWidth: desktop ? 560.sW : 520.sW),
             child: Text(
               headline,
-              style: TextStyleHelper.instance.headline24MediumInter.copyWith(
+              style: TextStyleHelper.instance.headline32BoldInter.copyWith(
                 height: 1.3,
                 color: Colors.white,
-                  fontSize:  devType == DeviceType.desktop ? 24.sSp : 16.sSp
-                // Optional: use Responsive.responsiveFontSize if you want extra tuning
-                //fontSize: Responsive.responsiveFontSize(context, 32).sSp,
+
               ),
             ),
           ),
@@ -261,7 +295,7 @@ class _HeroTextCard extends StatelessWidget {
               style: TextStyleHelper.instance.body14LightInter.copyWith(
                 color: AppColor.whiteCustom,
                 height: 1.5,
-                fontSize:  devType == DeviceType.desktop ? 14.sSp:12.sSp
+                //fontSize:  devType == DeviceType.desktop ? 14.sSp:12.sSp
               ),
             ),
           ),
@@ -297,16 +331,17 @@ class _CtaPill extends StatelessWidget {
   });
 
   final String leftEmblemPath;
-  final List<String> badgeAssetPaths;
+  final String badgeAssetPaths;
+  //final List<String> badgeAssetPaths;
   final VoidCallback? onJoinNow;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 6.sH, horizontal: 12.sW),
+      padding: EdgeInsets.symmetric(vertical: 6.sH, horizontal: 4.sW),
       decoration: BoxDecoration(
         color: AppColor.gray900,
-        borderRadius: BorderRadius.circular(24.sH),
+        borderRadius: BorderRadius.circular(20.sR),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -316,15 +351,8 @@ class _CtaPill extends StatelessWidget {
             child: Row(
               children: [
                 SizedBox(width: 8.sW),
-                CustomImageView(
-                  imagePath: leftEmblemPath,
-                  height: 30.sH,
-                  width: 45.sW,
-                ),
-
+                IconButton(onPressed: (){}, icon:Icon( Icons.volume_up,size:30.sSp ,color: AppColor.white,)),
                 SizedBox(width: 8.sW),
-
-                // Badges (scroll horizontally if tight)
                 Flexible(
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
@@ -333,7 +361,7 @@ class _CtaPill extends StatelessWidget {
                       children: [
                         for (int i = 0; i < badgeAssetPaths.length; i++) ...[
                           CustomImageView(
-                            imagePath: badgeAssetPaths[i],
+                            imagePath: badgeAssetPaths,
                             height: 55.sH,
                             width: 100.sW,
                           ),
@@ -347,8 +375,9 @@ class _CtaPill extends StatelessWidget {
               ],
             ),
           ),
+          SizedBox(width: 4.sW),
 
-          Spacer(),
+          //Spacer(),
           // CTA button
           CustomButton(
             text: 'Join Now',

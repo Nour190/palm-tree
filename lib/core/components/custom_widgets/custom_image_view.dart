@@ -10,7 +10,7 @@ class CustomImageView extends StatelessWidget {
   final double? width;
   final BorderRadius? radius;
   final BoxFit fit;
-
+  final AlignmentGeometry? alignment;
 
   CustomImageView({
     super.key,
@@ -19,6 +19,7 @@ class CustomImageView extends StatelessWidget {
     this.width,
     this.radius,
     this.fit = BoxFit.cover,
+    this.alignment=Alignment.center,
   });
 
   bool get _isNetwork {
@@ -49,6 +50,7 @@ class CustomImageView extends StatelessWidget {
           height: height,
           width: width,
           fit: fit,
+          alignment: alignment ?? Alignment.center,
           placeholderBuilder: (_) => SizedBox(
             height: height,
             width: width,
@@ -63,6 +65,8 @@ class CustomImageView extends StatelessWidget {
           height: height,
           width: width,
           fit: fit,
+          alignment: alignment ?? Alignment.center,
+
         );
       }
     } else {
@@ -73,6 +77,8 @@ class CustomImageView extends StatelessWidget {
           height: height,
           width: width,
           fit: fit,
+          alignment: alignment ?? Alignment.center,
+
           // Loading spinner
           loadingBuilder: (context, child, progress) {
             if (progress == null) return child;
@@ -97,6 +103,7 @@ class CustomImageView extends StatelessWidget {
           height: height,
           width: width,
           fit: fit,
+          alignment: alignment ?? Alignment.center,
           errorBuilder: (context, error, stackTrace) {
             return SizedBox(
               height: height,

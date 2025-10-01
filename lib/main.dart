@@ -1,8 +1,9 @@
 // // main.dart
 // import 'dart:async';
 // import 'dart:ui' as ui;
+// import 'package:device_preview/device_preview.dart';
+// import 'package:flutter/foundation.dart'; // for kReleaseMode
 // import 'package:baseqat/core/responsive/size_utils.dart';
-// import 'package:baseqat/core/services_locator/dependency_injection.dart';
 // import 'package:baseqat/core/resourses/app_secure_storage.dart';
 // import 'package:baseqat/core/resourses/theme_manager.dart';
 // import 'package:baseqat/core/network/remote/supabase_config.dart';
@@ -10,7 +11,6 @@
 // import 'package:baseqat/core/responsive/scale_config.dart';
 // import 'package:baseqat/modules/tabs/presentation/manger/tabs_cubit.dart';
 // import 'package:baseqat/modules/tabs/presentation/view/tabs_view.dart';
-//
 // import 'package:flutter/material.dart';
 // import 'package:flutter/services.dart';
 // import 'package:flutter_gemini/flutter_gemini.dart';
@@ -18,16 +18,6 @@
 // import 'package:flutter_bloc/flutter_bloc.dart';
 // import 'package:supabase_flutter/supabase_flutter.dart';
 // import 'package:easy_localization/easy_localization.dart';
-//
-// import 'modules/auth/auth/presentation/auth_gate.dart';
-// import 'modules/auth/logic/auth_gate_cubit/auth_cubit.dart';
-// import 'modules/auth/logic/login_cubit/login_cubit.dart';
-// import 'modules/profile/data/datasources/favorites_remote_data_source.dart';
-// import 'modules/profile/data/repositories/favorites_repository.dart';
-// import 'modules/profile/presentation/cubit/account_settings_cubit.dart';
-// import 'modules/profile/presentation/cubit/favorites_cubit.dart';
-// import 'modules/profile/presentation/cubit/notification_settings_cubit.dart';
-// import 'modules/profile/presentation/service/notification_settings_service.dart';
 //
 // void main() async {
 //   runZonedGuarded(() async {
@@ -56,24 +46,28 @@
 //       await AppSecureStorage().init();
 //       debugPrint('Secure storage initialized successfully');
 //
-//       await diInit();
-//       debugPrint('Dependency injection initialized successfully');
+//       // debugPrint('Dependency injection initialized successfully');
 //
 //       await SystemChrome.setPreferredOrientations([
 //         DeviceOrientation.portraitUp,
 //         DeviceOrientation.portraitDown,
 //       ]);
 //
+//       // --- WRAP EasyLocalization inside DevicePreview ---
 //       runApp(
-//         EasyLocalization(
-//           supportedLocales: const [
-//             Locale('en', 'US'),
-//             Locale('ar', 'SA'),
-//             Locale('de', 'DE'),
-//           ],
-//           path: 'assets/translations', useOnlyLangCode: true,
-//           fallbackLocale: const Locale('en', 'US'),
-//           child: const MyApp(),
+//         DevicePreview(
+//           enabled: !kReleaseMode, // off in release
+//           builder: (context) => EasyLocalization(
+//             supportedLocales: const [
+//               Locale('en', 'US'),
+//               Locale('ar', 'SA'),
+//               Locale('de', 'DE'),
+//             ],
+//             path: 'assets/translations',
+//             useOnlyLangCode: true,
+//             fallbackLocale: const Locale('en', 'US'),
+//             child: const MyApp(),
+//           ),
 //         ),
 //       );
 //     } catch (e, stackTrace) {
@@ -128,14 +122,12 @@
 //
 //         return MultiBlocProvider(
 //           providers: [
-//             BlocProvider(create: (_) => sl<LoginCubit>()),
 //             BlocProvider(create: (_) => TabsCubit()),
-//             BlocProvider(create: (_) => sl<AuthCubit>()),
-//             BlocProvider(create: (_) => sl<AccountSettingsCubit>()),
 //           ],
 //           child: Sizer(
 //             builder: (context, orientation, deviceType) {
 //               return MaterialApp(
+//                 key: ValueKey(context.locale.toString()), // Forces rebuild on locale change
 //                 debugShowCheckedModeBanner: false,
 //                 title: 'Ithra',
 //                 theme: AppTheme.light,
@@ -143,10 +135,14 @@
 //                 themeMode: ThemeMode.light,
 //                 localizationsDelegates: context.localizationDelegates,
 //                 supportedLocales: context.supportedLocales,
-//                 locale: context.locale,
+//                 // prefer DevicePreview locale (for preview) otherwise real locale
+//                 locale: DevicePreview.locale(context) ?? context.locale,
+//                 // important so DevicePreview's MediaQuery is used
+//                 useInheritedMediaQuery: true,
 //                 builder: (context, child) {
+//                   // keep your existing Directionality + MediaQuery wrapping
 //                   final isAr = context.locale.languageCode == 'ar';
-//                   return Directionality(
+//                   final app = Directionality(
 //                     textDirection: isAr ? ui.TextDirection.rtl : ui.TextDirection.ltr,
 //                     child: MediaQuery(
 //                       data: MediaQuery.of(context).copyWith(
@@ -155,8 +151,11 @@
 //                       child: child ?? const SizedBox.shrink(),
 //                     ),
 //                   );
+//
+//                   // wrap the app with DevicePreview.appBuilder so preview tools work
+//                   return DevicePreview.appBuilder(context, app);
 //                 },
-//                 home:  AuthGate(),
+//                 home: TabsViewScreen(),
 //               );
 //             },
 //           ),
@@ -165,17 +164,10 @@
 //     );
 //   }
 // }
-
-
-// main.dart (modified)
+// main.dart
 import 'dart:async';
 import 'dart:ui' as ui;
-
-import 'package:device_preview/device_preview.dart';
-import 'package:flutter/foundation.dart'; // for kReleaseMode
-
 import 'package:baseqat/core/responsive/size_utils.dart';
-import 'package:baseqat/core/services_locator/dependency_injection.dart';
 import 'package:baseqat/core/resourses/app_secure_storage.dart';
 import 'package:baseqat/core/resourses/theme_manager.dart';
 import 'package:baseqat/core/network/remote/supabase_config.dart';
@@ -183,7 +175,6 @@ import 'package:baseqat/core/responsive/responsive.dart';
 import 'package:baseqat/core/responsive/scale_config.dart';
 import 'package:baseqat/modules/tabs/presentation/manger/tabs_cubit.dart';
 import 'package:baseqat/modules/tabs/presentation/view/tabs_view.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
@@ -192,15 +183,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:easy_localization/easy_localization.dart';
 
-import 'modules/auth/auth/presentation/auth_gate.dart';
-import 'modules/auth/logic/auth_gate_cubit/auth_cubit.dart';
-import 'modules/auth/logic/login_cubit/login_cubit.dart';
-import 'modules/profile/data/datasources/favorites_remote_data_source.dart';
-import 'modules/profile/data/repositories/favorites_repository.dart';
-import 'modules/profile/presentation/cubit/account_settings_cubit.dart';
-import 'modules/profile/presentation/cubit/favorites_cubit.dart';
-import 'modules/profile/presentation/cubit/notification_settings_cubit.dart';
-import 'modules/profile/presentation/service/notification_settings_service.dart';
 
 void main() async {
   runZonedGuarded(() async {
@@ -229,7 +211,6 @@ void main() async {
       await AppSecureStorage().init();
       debugPrint('Secure storage initialized successfully');
 
-      await diInit();
       debugPrint('Dependency injection initialized successfully');
 
       await SystemChrome.setPreferredOrientations([
@@ -237,21 +218,16 @@ void main() async {
         DeviceOrientation.portraitDown,
       ]);
 
-      // --- WRAP EasyLocalization inside DevicePreview ---
       runApp(
-        DevicePreview(
-          enabled: !kReleaseMode, // off in release
-          builder: (context) => EasyLocalization(
-            supportedLocales: const [
-              Locale('en', 'US'),
-              Locale('ar', 'SA'),
-              Locale('de', 'DE'),
-            ],
-            path: 'assets/translations',
-            useOnlyLangCode: true,
-            fallbackLocale: const Locale('en', 'US'),
-            child: const MyApp(),
-          ),
+        EasyLocalization(
+          supportedLocales: const [
+            Locale('en', 'US'),
+            Locale('ar', 'SA'),
+            Locale('de', 'DE'),
+          ],
+          path: 'assets/translations', useOnlyLangCode: true,
+          fallbackLocale: const Locale('en', 'US'),
+          child: const MyApp(),
         ),
       );
     } catch (e, stackTrace) {
@@ -306,14 +282,14 @@ class MyApp extends StatelessWidget {
 
         return MultiBlocProvider(
           providers: [
-            BlocProvider(create: (_) => sl<LoginCubit>()),
+
             BlocProvider(create: (_) => TabsCubit()),
-            BlocProvider(create: (_) => sl<AuthCubit>()),
-            BlocProvider(create: (_) => sl<AccountSettingsCubit>()),
+
           ],
           child: Sizer(
             builder: (context, orientation, deviceType) {
               return MaterialApp(
+                key: ValueKey(context.locale.toString()),
                 debugShowCheckedModeBanner: false,
                 title: 'Ithra',
                 theme: AppTheme.light,
@@ -321,14 +297,10 @@ class MyApp extends StatelessWidget {
                 themeMode: ThemeMode.light,
                 localizationsDelegates: context.localizationDelegates,
                 supportedLocales: context.supportedLocales,
-                // prefer DevicePreview locale (for preview) otherwise real locale
-                locale: DevicePreview.locale(context) ?? context.locale,
-                // important so DevicePreview's MediaQuery is used
-                useInheritedMediaQuery: true,
+                locale: context.locale,
                 builder: (context, child) {
-                  // keep your existing Directionality + MediaQuery wrapping
                   final isAr = context.locale.languageCode == 'ar';
-                  final app = Directionality(
+                  return Directionality(
                     textDirection: isAr ? ui.TextDirection.rtl : ui.TextDirection.ltr,
                     child: MediaQuery(
                       data: MediaQuery.of(context).copyWith(
@@ -337,11 +309,8 @@ class MyApp extends StatelessWidget {
                       child: child ?? const SizedBox.shrink(),
                     ),
                   );
-
-                  // wrap the app with DevicePreview.appBuilder so preview tools work
-                  return DevicePreview.appBuilder(context, app);
                 },
-                home: AuthGate(),
+                home: TabsViewScreen(),
               );
             },
           ),

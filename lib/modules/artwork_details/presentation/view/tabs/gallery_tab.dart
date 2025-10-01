@@ -1,21 +1,24 @@
 import 'dart:collection';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:baseqat/core/responsive/size_utils.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// GalleryTab
-/// - Responsive grid (2/3/4 cols for mobile/tablet/web)
-/// - Deduplicates incoming image list (keeps order)
-/// - Tap -> full-screen lightbox (pinch to zoom, swipe, keyboard arrows)
-/// - Hero transition, fade-in, error fallbacks
-/// - Black is the primary accent (headers/overlays)
 class GalleryTab extends StatefulWidget {
-  const GalleryTab({super.key, required this.images});
+  const GalleryTab({
+    super.key,
+    required this.images,
+    this.title,
+    this.about,
+    this.hero,
+  });
 
-  /// Asset paths or http(s) URLs
   final List<String> images;
+  final String? title;
+  final String? about;
+  final String? hero;
 
   @override
   State<GalleryTab> createState() => _GalleryTabState();
@@ -27,7 +30,6 @@ class _GalleryTabState extends State<GalleryTab> {
   @override
   void initState() {
     super.initState();
-    // Stable de-duplication while keeping first occurrence order
     final seen = LinkedHashSet<String>();
     _items = [
       for (final p in widget.images)
@@ -37,83 +39,21 @@ class _GalleryTabState extends State<GalleryTab> {
 
   @override
   Widget build(BuildContext context) {
-    final w = SizeUtils.width;
-    final crossAxisCount = w >= 1200 ? 4 : (w >= 840 ? 3 : 3);
-    final radius = 14.h;
-
-    if (_items.isEmpty) {
-      return _EmptyState();
-    }
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: EdgeInsets.zero,
-      itemCount: _items.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        mainAxisSpacing: 12.h,
-        crossAxisSpacing: 12.h,
-        childAspectRatio: 1,
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if ((widget.about ?? '').isNotEmpty) ...[
+            SizedBox(height: 10.h),
+            _AboutBlock(text: widget.about!),
+            SizedBox(height: 12.h),
+          ],
+          if (_items.isEmpty)
+            _EmptyState()
+          else
+            _GalleryLayout(items: _items, onTap: _openLightbox),
+        ],
       ),
-      itemBuilder: (context, i) {
-        final path = _items[i];
-        final isNetwork = path.startsWith('http');
-        final heroTag = 'gallery:$path';
-
-        Widget image;
-        if (isNetwork) {
-          image = _FadeInNetworkImage(url: path, fit: BoxFit.cover);
-        } else {
-          image = Image.asset(
-            path,
-            fit: BoxFit.cover,
-            filterQuality: FilterQuality.low,
-          );
-        }
-
-        return Semantics(
-          label: 'Image ${i + 1} of ${_items.length}',
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(radius),
-            child: InkWell(
-              onTap: () => _openLightbox(context, i),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Hero(tag: heroTag, child: image),
-                  // Subtle hover/press overlay (desktop/web)
-                  Positioned.fill(
-                    child: _HoverOverlay(
-                      child: Align(
-                        alignment: Alignment.bottomRight,
-                        child: Padding(
-                          padding: EdgeInsets.all(8.h),
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8.h,
-                              vertical: 4.h,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.45),
-                              borderRadius: BorderRadius.circular(8.h),
-                            ),
-                            child: const Icon(
-                              Icons.fullscreen,
-                              size: 16,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -135,7 +75,144 @@ class _GalleryTabState extends State<GalleryTab> {
   }
 }
 
-/// Simple empty state
+class _GalleryLayout extends StatelessWidget {
+  const _GalleryLayout({required this.items, required this.onTap});
+
+  final List<String> items;
+  final Function(BuildContext, int) onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = 20.h;
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        final path = items[index];
+        final isNetwork = path.startsWith('http');
+        final heroTag = 'gallery:$path';
+
+        Widget image = isNetwork
+            ? _FadeInNetworkImage(url: path, fit: BoxFit.cover)
+            : Image.asset(path, fit: BoxFit.cover, filterQuality: FilterQuality.low);
+
+        final position = index % 5;
+        final isSingleImage = position == 0 || position == 1 || position == 3 || position == 4;
+
+        if (isSingleImage) {
+          return Padding(
+            padding: EdgeInsets.only(bottom: 16.h),
+            child: _GalleryImageCard(
+              heroTag: heroTag,
+              image: image,
+              radius: radius,
+              height: 300.h,
+              onTap: () => onTap(context, index),
+              index: index,
+              total: items.length,
+            ),
+          );
+        } else {
+          if (index + 1 < items.length) {
+            final nextPath = items[index + 1];
+            final nextIsNetwork = nextPath.startsWith('http');
+            final nextHeroTag = 'gallery:$nextPath';
+
+            Widget nextImage = nextIsNetwork
+                ? _FadeInNetworkImage(url: nextPath, fit: BoxFit.cover)
+                : Image.asset(nextPath, fit: BoxFit.cover, filterQuality: FilterQuality.low);
+
+            return Padding(
+              padding: EdgeInsets.only(bottom: 16.h),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _GalleryImageCard(
+                      heroTag: heroTag,
+                      image: image,
+                      radius: radius,
+                      height: 160.h,
+                      onTap: () => onTap(context, index),
+                      index: index,
+                      total: items.length,
+                    ),
+                  ),
+                  SizedBox(width: 16.h),
+                  Expanded(
+                    child: _GalleryImageCard(
+                      heroTag: nextHeroTag,
+                      image: nextImage,
+                      radius: radius,
+                      height: 160.h,
+                      onTap: () => onTap(context, index + 1),
+                      index: index + 1,
+                      total: items.length,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          } else {
+            return Padding(
+              padding: EdgeInsets.only(bottom: 16.h),
+              child: _GalleryImageCard(
+                heroTag: heroTag,
+                image: image,
+                radius: radius,
+                height: 300.h,
+                onTap: () => onTap(context, index),
+                index: index,
+                total: items.length,
+              ),
+            );
+          }
+        }
+      },
+    );
+  }
+}
+
+class _GalleryImageCard extends StatelessWidget {
+  const _GalleryImageCard({
+    required this.heroTag,
+    required this.image,
+    required this.radius,
+    required this.height,
+    required this.onTap,
+    required this.index,
+    required this.total,
+  });
+
+  final String heroTag;
+  final Widget image;
+  final double radius;
+  final double height;
+  final VoidCallback onTap;
+  final int index;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: 'image_semantics'
+          .tr(namedArgs: {'index': '${index + 1}', 'total': '$total'}),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(radius),
+        child: InkWell(
+          onTap: onTap,
+          child: SizedBox(
+            height: height,
+            child: Hero(tag: heroTag, child: image),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -143,19 +220,17 @@ class _EmptyState extends StatelessWidget {
       height: 160.h,
       decoration: BoxDecoration(
         color: AppColor.backgroundGray,
-        borderRadius: BorderRadius.circular(16.h),
+        borderRadius: BorderRadius.circular(24.h),
         border: Border.all(color: AppColor.gray200),
       ),
       child: Center(
         child: Row(
           mainAxisSize: MainAxisSize.min,
-          children: const [
-            Icon(Icons.photo_library_outlined, color: AppColor.gray600),
-            SizedBox(width: 8),
-            Text(
-              'No images available',
-              style: TextStyle(color: AppColor.gray600),
-            ),
+          children: [
+            const Icon(Icons.photo_library_outlined, color: AppColor.gray600),
+            const SizedBox(width: 8),
+            Text('no_images'.tr(),
+                style: const TextStyle(color: AppColor.gray600)),
           ],
         ),
       ),
@@ -163,7 +238,55 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-/// Fade-in network image with graceful error/placeholder
+class _AboutBlock extends StatefulWidget {
+  const _AboutBlock({required this.text});
+  final String text;
+
+  @override
+  State<_AboutBlock> createState() => _AboutBlockState();
+}
+
+class _AboutBlockState extends State<_AboutBlock> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final body = widget.text.trim();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'about_artist'.tr(),
+          style: const TextStyle(
+            color: Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        SizedBox(height: 8.h),
+        Text(
+          body,
+          style: const TextStyle(color: AppColor.gray700, height: 1.6, fontSize: 15),
+          maxLines: _expanded ? null : 6,
+          overflow: _expanded ? TextOverflow.visible : TextOverflow.ellipsis,
+        ),
+        if (body.length > 320) ...[
+          SizedBox(height: 6.h),
+          TextButton.icon(
+            onPressed: () => setState(() => _expanded = !_expanded),
+            icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more, size: 18),
+            label: Text(_expanded ? 'show_less'.tr() : 'read_more'.tr()),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.black,
+              padding: EdgeInsets.zero,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class _FadeInNetworkImage extends StatelessWidget {
   const _FadeInNetworkImage({required this.url, this.fit = BoxFit.cover});
 
@@ -214,36 +337,6 @@ class _FadeInNetworkImage extends StatelessWidget {
   }
 }
 
-/// Hover overlay for desktop/web; transparent on mobile
-class _HoverOverlay extends StatefulWidget {
-  const _HoverOverlay({required this.child});
-  final Widget child;
-
-  @override
-  State<_HoverOverlay> createState() => _HoverOverlayState();
-}
-
-class _HoverOverlayState extends State<_HoverOverlay> {
-  bool _hover = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final isMobile = SizeUtils.width < 840;
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hover = true),
-      onExit: (_) => setState(() => _hover = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        color: isMobile
-            ? Colors.transparent
-            : (_hover ? Colors.black.withOpacity(0.06) : Colors.transparent),
-        child: widget.child,
-      ),
-    );
-  }
-}
-
-/// Full-screen lightbox with swipe, pinch-zoom, keyboard controls, and actions
 class _GalleryLightbox extends StatefulWidget {
   const _GalleryLightbox({required this.images, required this.initialIndex});
 
@@ -258,7 +351,6 @@ class _GalleryLightboxState extends State<_GalleryLightbox> {
   late final PageController _ctrl;
   late int _index;
 
-  // Track scales per page so zoom state resets appropriately
   final Map<int, TransformationController> _transforms = {};
 
   @override
@@ -266,7 +358,6 @@ class _GalleryLightboxState extends State<_GalleryLightbox> {
     super.initState();
     _index = widget.initialIndex.clamp(0, widget.images.length - 1);
     _ctrl = PageController(initialPage: _index);
-    // Prefetch neighbors for smoother swipes
     _precacheAround(_index);
   }
 
@@ -280,7 +371,6 @@ class _GalleryLightboxState extends State<_GalleryLightbox> {
   }
 
   void _precacheAround(int i) {
-    // Best-effort; ignore errors
     if (!mounted) return;
     final ctx = context;
     Future<void> pre(String path) async {
@@ -289,9 +379,7 @@ class _GalleryLightboxState extends State<_GalleryLightbox> {
           : AssetImage(path) as ImageProvider;
       try {
         await precacheImage(provider, ctx);
-      } catch (_) {
-        /* ignore */
-      }
+      } catch (_) {}
     }
 
     pre(widget.images[i]);
@@ -307,27 +395,24 @@ class _GalleryLightboxState extends State<_GalleryLightbox> {
   Future<void> _copyPath(String path) async {
     await Clipboard.setData(ClipboardData(text: path));
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Copied')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('copied'.tr())),
+    );
   }
 
   Future<void> _openInBrowser(String path) async {
     try {
-      final ok = await launchUrl(
-        Uri.parse(path),
-        mode: LaunchMode.externalApplication,
-      );
+      final ok = await launchUrl(Uri.parse(path), mode: LaunchMode.externalApplication);
       if (!ok && mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Could not open link')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('could_not_open'.tr())),
+        );
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Invalid link')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('invalid_link'.tr())),
+        );
       }
     }
   }
@@ -344,125 +429,77 @@ class _GalleryLightboxState extends State<_GalleryLightbox> {
         elevation: 0,
         titleSpacing: 0,
         leading: IconButton(
-          tooltip: 'Close',
+          tooltip: 'close'.tr(),
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(
-          '${_index + 1} / $total',
-          style: const TextStyle(color: Colors.white),
-        ),
+        title: Text('${_index + 1} / $total',
+            style: const TextStyle(color: Colors.white)),
         actions: [
-          // Copy path / Open in browser (for network images)
           IconButton(
-            tooltip: 'Copy',
+            tooltip: 'copy'.tr(),
             icon: const Icon(Icons.copy_all),
             onPressed: () => _copyPath(widget.images[_index]),
           ),
           if (widget.images[_index].startsWith('http'))
             IconButton(
-              tooltip: 'Open in browser',
+              tooltip: 'open_in_browser'.tr(),
               icon: const Icon(Icons.open_in_new),
               onPressed: () => _openInBrowser(widget.images[_index]),
             ),
           SizedBox(width: 4.h),
         ],
       ),
-      body: Shortcuts(
-        shortcuts: <LogicalKeySet, Intent>{
-          LogicalKeySet(LogicalKeyboardKey.arrowRight): const NextFocusIntent(),
-          LogicalKeySet(LogicalKeyboardKey.arrowLeft):
-              const PreviousFocusIntent(),
-          LogicalKeySet(LogicalKeyboardKey.escape): const DismissIntent(),
+      body: PageView.builder(
+        controller: _ctrl,
+        onPageChanged: (i) {
+          setState(() => _index = i);
+          _precacheAround(i);
+          _resetScale(i);
         },
-        child: Actions(
-          actions: <Type, Action<Intent>>{
-            NextFocusIntent: CallbackAction<Intent>(
-              onInvoke: (_) {
-                if (_index < total - 1) {
-                  _ctrl.nextPage(
-                    duration: const Duration(milliseconds: 180),
-                    curve: Curves.easeOut,
-                  );
-                }
-                return null;
-              },
-            ),
-            PreviousFocusIntent: CallbackAction<Intent>(
-              onInvoke: (_) {
-                if (_index > 0) {
-                  _ctrl.previousPage(
-                    duration: const Duration(milliseconds: 180),
-                    curve: Curves.easeOut,
-                  );
-                }
-                return null;
-              },
-            ),
-            DismissIntent: CallbackAction<Intent>(
-              onInvoke: (_) {
-                Navigator.of(context).maybePop();
-                return null;
-              },
-            ),
-          },
-          child: Focus(
-            autofocus: true,
-            child: PageView.builder(
-              controller: _ctrl,
-              onPageChanged: (i) {
-                setState(() => _index = i);
-                _precacheAround(i);
-                _resetScale(i);
-              },
-              itemCount: total,
-              itemBuilder: (context, i) {
-                final path = widget.images[i];
-                final isNetwork = path.startsWith('http');
-                final heroTag = 'gallery:$path';
+        itemCount: total,
+        itemBuilder: (context, i) {
+          final path = widget.images[i];
+          final isNetwork = path.startsWith('http');
+          final heroTag = 'gallery:$path';
 
-                _transforms[i] ??= TransformationController();
+          _transforms[i] ??= TransformationController();
 
-                Widget img = isNetwork
-                    ? _FadeInNetworkImage(url: path, fit: BoxFit.contain)
-                    : Image.asset(path, fit: BoxFit.contain);
+          Widget img = isNetwork
+              ? _FadeInNetworkImage(url: path, fit: BoxFit.contain)
+              : Image.asset(path, fit: BoxFit.contain);
 
-                return GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onDoubleTap: () {
-                    // Toggle zoom 1x <-> 2.5x centered
-                    final t = _transforms[i]!;
-                    final curr = t.value;
-                    final isZoomed = curr.storage[0] > 1.01;
-                    t.value = isZoomed ? Matrix4.identity() : Matrix4.identity()
-                      ..scale(2.5);
-                    setState(() {});
-                  },
-                  child: Center(
-                    child: Hero(
-                      tag: heroTag,
-                      child: InteractiveViewer(
-                        transformationController: _transforms[i],
-                        minScale: 1,
-                        maxScale: 4,
-                        panEnabled: true,
-                        scaleEnabled: true,
-                        child: img,
-                      ),
-                    ),
-                  ),
-                );
-              },
+          return GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onDoubleTap: () {
+              final t = _transforms[i]!;
+              final curr = t.value;
+              final isZoomed = curr.storage[0] > 1.01;
+              t.value =
+              isZoomed ? Matrix4.identity() : Matrix4.identity()..scale(2.5);
+              setState(() {});
+            },
+            child: Center(
+              child: Hero(
+                tag: heroTag,
+                child: InteractiveViewer(
+                  transformationController: _transforms[i],
+                  minScale: 1,
+                  maxScale: 4,
+                  panEnabled: true,
+                  scaleEnabled: true,
+                  child: img,
+                ),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
       bottomNavigationBar: _CaptionBar(path: widget.images[_index]),
     );
   }
 }
 
-/// Bottom caption bar showing filename/last segment; black-primary look.
 class _CaptionBar extends StatelessWidget {
   const _CaptionBar({required this.path});
   final String path;
@@ -470,9 +507,8 @@ class _CaptionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     String label = path;
-    // Pull last segment for URLs and assets
     final uri = Uri.tryParse(path);
-    if (uri != null && (uri.pathSegments.isNotEmpty)) {
+    if (uri != null && uri.pathSegments.isNotEmpty) {
       label = uri.pathSegments.last;
     } else {
       final parts = path.split(RegExp(r'[\\/]+'));
@@ -487,16 +523,16 @@ class _CaptionBar extends StatelessWidget {
           color: Colors.black,
           border: Border(top: BorderSide(color: Colors.white24, width: 0.5)),
         ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 13,
-            height: 1.2,
-          ),
-        ),
+        child: Text(label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.white70, fontSize: 13)),
       ),
     );
   }
 }
+
+class NextFocusIntent extends Intent {}
+
+class PreviousFocusIntent extends Intent {}
+
+class DismissIntent extends Intent {}

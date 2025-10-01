@@ -8,14 +8,11 @@ import 'package:baseqat/modules/tabs/presentation/manger/tabs_cubit.dart';
 import 'package:baseqat/modules/tabs/presentation/manger/tabs_states.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../../../../core/responsive/responsive.dart';
 import '../../../events/presentation/view/events_screen_responsive.dart';
-import '../../../profile/presentation/view/profile_screen.dart';
 
 class TabsViewScreen extends StatelessWidget {
   const TabsViewScreen({super.key});
-
   @override
   Widget build(BuildContext context) {
     return const _TabsViewBody();
@@ -37,12 +34,7 @@ class _TabsViewBody extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // SizedBox(
-            //   height: Responsive.deviceTypeOf(context) == DeviceType.desktop
-            //       ? 0
-            //       : 16.h,
-            // ),
-
+           
             // ---------------- Top element in the view ----------------
             BlocBuilder<TabsCubit, TabsState>(
               builder: (context, state) {
@@ -58,7 +50,7 @@ class _TabsViewBody extends StatelessWidget {
                         'Home',
                         'Events',
                         'Maps',
-                        'Profile',
+                        //'Profile',
                       ],
                       selectedIndex: selectedIndex,
                       onItemTap: context
@@ -73,7 +65,7 @@ class _TabsViewBody extends StatelessWidget {
                             'Home',
                             'Events',
                             'Maps',
-                            'Profile',
+                           // 'Profile',
                           ],
                           selectedIndex: selectedIndex,
                           onItemTap: context
@@ -119,8 +111,8 @@ Widget _bodyForSelectedIndex(int selectedIndex) {
       return const MapView();
   // case 3: // Language
   //   return const SizedBox.shrink();
-    case 3: // Profile (desktop-only item)
-      return const ProfileScreen();
+  //   case 3: // Profile (desktop-only item)
+  //     return const ProfileScreen();
     default:
       return const HomeView();
   }

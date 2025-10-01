@@ -5,8 +5,8 @@ import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/core/resourses/style_manager.dart';
 import 'package:baseqat/core/resourses/assets_manager.dart';
 import 'package:baseqat/core/services/locale_service.dart';
-import 'package:baseqat/modules/auth/logic/auth_gate_cubit/auth_cubit.dart';
-import 'package:baseqat/modules/auth/logic/auth_gate_cubit/auth_state.dart';
+//import 'package:baseqat/modules/auth/logic/auth_gate_cubit/auth_cubit.dart';
+//import 'package:baseqat/modules/auth/logic/auth_gate_cubit/auth_state.dart';
  import 'dart:ui' as ui;
 
 import '../../responsive/responsive.dart';
@@ -289,44 +289,44 @@ class _IthraMenuScreenState extends State<IthraMenuScreen> {
                           margin: EdgeInsets.symmetric(vertical: 16.sSp),
                         ),
 
-                        SizedBox(height: 40.sH),
-
-                        // Login button
-                        BlocBuilder<AuthCubit, AuthState>(
-                          builder: (context, state) {
-                            final isAuthenticated = state is AuthAuthenticated;
-
-                            if (!isAuthenticated) {
-                              return Container(
-                                width: double.infinity,
-                                margin: EdgeInsets.only(bottom: 40.sH),
-                                child: GestureDetector(
-                                  onTap: () {
-                                    widget.onLoginTap?.call();
-                                    Navigator.of(context).pop();
-                                  },
-                                  child: Container(
-                                    height: 80.sH,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.black,
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        'Login',
-                                        style: TextStyleHelper.instance.headline24BoldInter.copyWith(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            } else {
-                              return const SizedBox.shrink();
-                            }
-                          },
-                        ),
+                        // SizedBox(height: 40.sH),
+                        //
+                        // // Login button
+                        // BlocBuilder<AuthCubit, AuthState>(
+                        //   builder: (context, state) {
+                        //     final isAuthenticated = state is AuthAuthenticated;
+                        //
+                        //     if (!isAuthenticated) {
+                        //       return Container(
+                        //         width: double.infinity,
+                        //         margin: EdgeInsets.only(bottom: 40.sH),
+                        //         child: GestureDetector(
+                        //           onTap: () {
+                        //             widget.onLoginTap?.call();
+                        //             Navigator.of(context).pop();
+                        //           },
+                        //           child: Container(
+                        //             height: 80.sH,
+                        //             decoration: const BoxDecoration(
+                        //               color: Colors.black,
+                        //             ),
+                        //             child: Center(
+                        //               child: Text(
+                        //                 'Login',
+                        //                 style: TextStyleHelper.instance.headline24BoldInter.copyWith(
+                        //                   color: Colors.white,
+                        //                   fontWeight: FontWeight.w600,
+                        //                 ),
+                        //               ),
+                        //             ),
+                        //           ),
+                        //         ),
+                        //       );
+                        //     } else {
+                        //       return const SizedBox.shrink();
+                        //     }
+                        //   },
+                        // ),
                       ],
                     ),
                   ),

@@ -70,5 +70,7 @@ class AppAssetsManager {
 
   //background
   static String background = '${_basePath}background.png';
+  static String footerBackground = '${_basePath}Footer.png';
+  static String ithraBackgroundLogo = '${_basePath}ithra.png';
 
 }

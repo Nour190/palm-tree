@@ -1,11 +1,13 @@
 // lib/modules/artwork_details/presentation/view/artwork_details_screen.dart
 
 import 'package:baseqat/core/resourses/constants_manager.dart';
+import 'package:baseqat/core/responsive/responsive.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/modules/artwork_details/presentation/view/tabs/chat_route.dart';
 import 'package:baseqat/modules/artwork_details/presentation/view/tabs/chat_tab_view.dart';
 import 'package:baseqat/modules/artwork_details/presentation/view/tabs/location_tab.dart';
 import 'package:baseqat/modules/artwork_details/presentation/widgets/artwork_desktop_navigation_bar.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -41,7 +43,7 @@ import 'package:baseqat/modules/artwork_details/presentation/widgets/hero_image.
 // ---- Events desktop nav reused for "same style"
 import 'package:baseqat/modules/events/presentation/widgets/desktop_navigation_bar.dart';
 import 'package:baseqat/modules/events/data/models/category_model.dart'
-    as events;
+as events;
 
 // ---- Models
 import 'package:baseqat/modules/home/data/models/artwork_model.dart';
@@ -73,6 +75,7 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
   late Animation<double> _loadingAnimation;
 
   int _selectedIndex = 0;
+  bool _isFavorite = false;
 
   // Left nav categories (same component & style as EventsDesktopView)
   late List<events.CategoryModel> _categories;
@@ -98,11 +101,11 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
     );
 
     _categories = [
-      events.CategoryModel(title: 'About', isSelected: _selectedIndex == 0),
-      events.CategoryModel(title: 'Gallery', isSelected: _selectedIndex == 1),
-      events.CategoryModel(title: 'Location', isSelected: _selectedIndex == 2),
-      events.CategoryModel(title: 'Chat AI', isSelected: _selectedIndex == 3),
-      events.CategoryModel(title: 'Feedback', isSelected: _selectedIndex == 4),
+      events.CategoryModel(title: 'about', isSelected: _selectedIndex == 0),
+      events.CategoryModel(title: 'gallery', isSelected: _selectedIndex == 1),
+      events.CategoryModel(title: 'location', isSelected: _selectedIndex == 2),
+      events.CategoryModel(title: 'chat_ai', isSelected: _selectedIndex == 3),
+      events.CategoryModel(title: 'feedback', isSelected: _selectedIndex == 4),
     ];
   }
 
@@ -139,7 +142,7 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
     final lon = artist?.longitude;
     if (lat == null || lon == null) {
       setState(() {
-        _distanceError = 'Artist location unavailable';
+        _distanceError = 'artist_location_unavailable'.tr();
         _isRefreshingDistance = false;
       });
       return;
@@ -149,7 +152,7 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
       final pos = await LocationService.getCurrentPosition();
       if (pos == null) {
         setState(() {
-          _distanceError = 'Location permission denied';
+          _distanceError = 'location_permission_denied'.tr();
           _isRefreshingDistance = false;
         });
         return;
@@ -167,19 +170,16 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
     } catch (e) {
       setState(() {
         _distanceError =
-            'Failed to get location: ${e.toString().split(':').last.trim()}';
+        '${'failed_to_get_location'.tr()}: ${e.toString().split(':').last.trim()}';
         _isRefreshingDistance = false;
       });
     }
   }
 
-  bool get _isMobile => MediaQuery.of(context).size.width < 768;
-  bool get _isTablet =>
-      MediaQuery.of(context).size.width >= 768 &&
-      MediaQuery.of(context).size.width < 1024;
 
   @override
   Widget build(BuildContext context) {
+    final devType = Responsive.deviceTypeOf(context);
     final client = Supabase.instance.client;
     final repo = ArtworkDetailsRepositoryImpl(
       remote: ArtworkDetailsRemoteDataSourceImpl(client),
@@ -201,7 +201,7 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
               // When artwork loads, fetch its artist
               BlocListener<ArtworkCubit, ArtworkState>(
                 listenWhen: (p, c) =>
-                    p.status != ArtworkStatus.loaded &&
+                p.status != ArtworkStatus.loaded &&
                     c.status == ArtworkStatus.loaded,
                 listener: (context, s) {
                   final artistId = s.artwork?.artistId;
@@ -213,14 +213,14 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
               // When artist loads, optionally compute distance
               BlocListener<ArtistCubit, ArtistState>(
                 listenWhen: (p, c) =>
-                    p.artist?.id != c.artist?.id &&
+                p.artist?.id != c.artist?.id &&
                     c.status == ArtistStatus.loaded,
                 listener: (context, s) {
                   _computeDistanceIfPossible(artist: s.artist);
                 },
               ),
             ],
-            child: _isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
+            child: devType == DeviceType.mobile ? _buildMobileLayout() : _buildDesktopLayout(),
           ),
         ),
       ),
@@ -233,6 +233,13 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
         // Mobile Header
         _MobileHeader(searchCtrl: _searchCtrl),
         // Mobile Tab Bar
+
+        if(_selectedIndex == 0 || _selectedIndex == 1 || _selectedIndex == 2)
+          _bannerImageWidget(),
+
+        if(_selectedIndex == 0 || _selectedIndex == 1 || _selectedIndex == 2)
+          SizedBox(height: 10.sH,),
+
         _MobileTabBar(
           selectedIndex: _selectedIndex,
           onTabSelected: _onCategoryTap,
@@ -250,11 +257,12 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
   }
 
   Widget _buildDesktopLayout() {
+    final devType = Responsive.deviceTypeOf(context);
     return Row(
       children: [
         // Left Sidebar
         Container(
-          width: _isTablet ? 240.sW : 280.sW,
+          width: devType == DeviceType.tablet ? 240.sW : 280.sW,
           decoration: BoxDecoration(
             color: AppColor.backgroundWhite,
             border: Border(
@@ -322,7 +330,101 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
     );
   }
 
+  Widget _bannerImageWidget(){
+    return BlocBuilder<ArtworkCubit, ArtworkState>(
+      builder: (context, artState) {
+        if (artState.status == ArtworkStatus.idle ||
+            artState.status == ArtworkStatus.loading) {
+          return _EnhancedLoadingView(animation: _loadingAnimation);
+        }
+        if (artState.status == ArtworkStatus.error &&
+            (artState.error ?? '').isNotEmpty) {
+          return _EnhancedErrorView(
+            message: artState.error!,
+            onRetry: () =>
+                context.read<ArtworkCubit>().getArtworkById(widget.artworkId),
+          );
+        }
+
+        final Artwork? artwork = artState.artwork;
+
+        return BlocBuilder<ArtistCubit, ArtistState>(
+          builder: (context, artistState) {
+            final Artist? artist = artistState.artist;
+            return Container(
+              height: 200.sH,
+              margin: EdgeInsets.symmetric(horizontal: 16.sW, vertical: 8.sH),
+              child: Stack(
+                alignment: Alignment.bottomLeft,
+                children: [
+                  Container(
+                    height: 200.sH,
+                    decoration: BoxDecoration(
+                      color: AppColor.backgroundGray,
+                      borderRadius: BorderRadius.circular(24),
+                      image: artwork?.gallery.isNotEmpty ?? false
+                          ? DecorationImage(
+                        image: NetworkImage(
+                          _selectedIndex == 1? artist!.profileImage!.isNotEmpty ? artist.profileImage! :artwork!.gallery.first  :artwork!.gallery.first,
+                        ),
+                        fit: BoxFit.fill,
+                      )
+                          : null,
+                    ),
+                  ),
+
+                  Positioned(
+                    left: 16.sW,
+                    bottom: 16.sH,
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() => _isFavorite = !_isFavorite);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(_isFavorite ? 'added_to_favorites'.tr() : 'removed_from_favorites'.tr()),
+                            duration: const Duration(milliseconds: 900),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                      child: Container(
+                        height: 40.sH,
+                        width: 40.sW,
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColor.white, width: 1.sW),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        alignment: Alignment.center,
+                        child: Icon(
+                          _isFavorite ? Icons.favorite : Icons.favorite_border,
+                          size: 20.sH,
+                          color: AppColor.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+        );
+      },
+    );
+  }
+
+
+
+
   Widget _buildTabBody({required int index, Artwork? artwork, Artist? artist}) {
+    final devType = Responsive.deviceTypeOf(context);
     switch (index) {
       case 0: // About
         final String? hero = (artwork?.gallery.isNotEmpty ?? false)
@@ -337,19 +439,20 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
               //   HeroImage(height: _isMobile ? 200 : 320, path: hero),
               //   SizedBox(height: 16.sH),
               // ],
-              Text(
-                artwork?.name ?? artist?.name ?? 'Artwork',
-                style: _isMobile
-                    ? TextStyleHelper.instance.headline20BoldInter
-                    : TextStyleHelper.instance.headline24BoldInter,
-              ),
-              SizedBox(height: 8.sH),
+              // Text(
+              //   artwork?.name ?? artist?.name ?? 'Artwork',
+              //   style: devType == DeviceType.mobile
+              //       ? TextStyleHelper.instance.headline20BoldInter
+              //       : TextStyleHelper.instance.headline24BoldInter,
+              // ),
+              // SizedBox(height: 8.sH),
               AboutTab(
                 title: artwork?.name ?? '—',
                 about: artwork?.description ?? '—',
                 materials: artwork?.materials ?? '—',
                 vision: artwork?.vision ?? '—',
                 galleryImages: artwork?.gallery ?? const [],
+                onAskAi: () => _onCategoryTap(3),
               ),
             ],
           ),
@@ -357,7 +460,17 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
 
       case 1: // Gallery
         final images = artist?.gallery ?? artwork?.gallery ?? const [];
-        return GalleryTab(images: images);
+        final title = artist?.name;
+        final about = artist?.about;
+        final hero = (artist?.profileImage?.isNotEmpty ?? false)
+            ? artist!.profileImage
+            : ((images.isNotEmpty) ? images.first : null);
+        return GalleryTab(
+          images: images,
+          title: title,
+          about: about,
+          hero: hero,
+        );
 
       case 2: // Location
         final lat = artist?.latitude;
@@ -365,8 +478,8 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
 
         return LocationTab(
           title: artist?.name != null
-              ? 'Navigate to ${artist!.name}'
-              : 'Location',
+              ? '${'navigate_to'.tr()} ${artist!.name}'
+              : 'location'.tr(),
           subtitle: (() {
             final parts = <String>[];
             if ((artist?.address ?? '').isNotEmpty) parts.add(artist!.address!);
@@ -375,29 +488,35 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
               artist?.country,
             ].where((e) => (e ?? '').isNotEmpty).join(', ');
             if (cityCountry.isNotEmpty) parts.add(cityCountry);
-            return parts.isEmpty ? 'Live map & navigation' : parts.join(' • ');
+            return parts.isEmpty ? 'live_map_navigation'.tr() : parts.join(' • ');
           })(),
           // These two are just initial labels; the widget will compute live values
-          distanceLabel: 'Distance',
-          destinationLabel: 'Destination',
+          distanceLabel: 'distance'.tr(),
+          destinationLabel: 'destination'.tr(),
           addressLine: artist?.address,
           city: artist?.city,
           country: artist?.country,
           latitude: lat,
           longitude: lon,
+          aboutTitle: (() {
+            final name = artwork?.name ?? artist?.name;
+            return name == null || name.isEmpty ? null : '${'about'.tr()}$name';
+          })(),
+          aboutDescription: artwork?.description ?? artist?.about,
           onStartNavigation: () {
             // Optional: analytics / toast
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Starting navigation…')),
+              SnackBar(content: Text('starting_navigation'.tr())),
             );
           },
         );
 
       case 3: // Chat AI
         return ChatRoute(
-          userId: AppConstants.userIdValue??"",
+          userId: "61d7cae6-ebeb-44b9-b541-549ae73d3ead",
+          //AppConstants.userIdValue??
           artworkId: artwork!.id.toString(),
-          userName: 'AbdelRahman Karawia',
+          userName: 'User',
           artwork: artwork, // or null
           artist: artist, // or null
           metadata: {'source': 'landing'},
@@ -420,7 +539,7 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
                         size: 20.sW,
                       ),
                       SizedBox(width: 8.sW),
-                      const Text('Thanks for your feedback!'),
+                      Text('thanks_feedback'.tr()),
                     ],
                   ),
                   backgroundColor: Colors.green,
@@ -456,7 +575,7 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
               onSubmit: (rating, message, tags) async {
                 if (id.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Artwork not ready yet.')),
+                    SnackBar(content: Text('artwork_not_ready'.tr())),
                   );
                   return;
                 }
@@ -491,36 +610,31 @@ class _MobileHeader extends StatelessWidget {
       padding: EdgeInsets.all(16.sW),
       decoration: BoxDecoration(
         color: AppColor.white,
-        border: Border(
-          bottom: BorderSide(color: AppColor.gray200, width: 1.sW),
-        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
                 onPressed: () => Navigator.of(context).pop(),
-                icon: Icon(Icons.arrow_back_ios, size: 20.sW),
+                icon: Icon(Icons.arrow_back, size: 20.sW),
                 padding: EdgeInsets.zero,
                 constraints: BoxConstraints(minWidth: 24.sW, minHeight: 24.sH),
               ),
-              SizedBox(width: 8.sW),
-              Expanded(
-                child: BlocBuilder<ArtworkCubit, ArtworkState>(
-                  builder: (context, state) {
-                    final title = state.status == ArtworkStatus.loaded
-                        ? (state.artwork?.name ?? 'Artwork Details')
-                        : 'Artwork Details';
-                    return Text(
-                      title,
-                      style: TextStyleHelper.instance.headline20BoldInter,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    );
-                  },
-                ),
+              BlocBuilder<ArtworkCubit, ArtworkState>(
+                builder: (context, state) {
+                  final title = state.status == ArtworkStatus.loaded
+                      ? (state.artwork?.name ?? 'artwork_details'.tr())
+                      : 'artwork_details'.tr();
+                  return Text(
+                    title,
+                    style: TextStyleHelper.instance.headline20BoldInter,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  );
+                },
               ),
             ],
           ),
@@ -545,57 +659,62 @@ class _MobileTabBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 50.sH,
+      padding: EdgeInsets.symmetric(horizontal: 8.sW, vertical: 8.sH),
       decoration: BoxDecoration(
         color: AppColor.white,
         border: Border(
           bottom: BorderSide(color: AppColor.gray200, width: 1.sW),
         ),
       ),
-      child: ListView.builder(
+      child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: 16.sW),
-        itemCount: categories.length,
-        itemBuilder: (context, index) {
-          final isSelected = index == selectedIndex;
-          return GestureDetector(
-            onTap: () => onTabSelected(index),
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.sW, vertical: 12.sH),
-              margin: EdgeInsets.only(right: 8.sW),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppColor.primaryColor.withOpacity(0.1)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(25),
-                border: Border.all(
-                  color: isSelected
-                      ? AppColor.primaryColor
-                      : Colors.transparent,
-                  width: 1,
+        child: Row(
+          children: List.generate(categories.length, (index) {
+            final category = categories[index];
+            final isSelected = index == selectedIndex;
+
+            return GestureDetector(
+              onTap: () => onTabSelected(index),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                margin: EdgeInsets.only(right: 8.sW),
+                padding: EdgeInsets.symmetric(horizontal: 16.sW, vertical: 8.sH),
+                decoration: BoxDecoration(
+                  color: isSelected ? AppColor.primaryColor : Colors.transparent,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: isSelected ? AppColor.primaryColor : AppColor.gray200,
+                    width: 1.5,
+                  ),
+                  boxShadow: isSelected
+                      ? [
+                    BoxShadow(
+                      color: AppColor.primaryColor.withOpacity(0.25),
+                      blurRadius: 6,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]
+                      : [],
                 ),
-              ),
-              child: Center(
                 child: Text(
-                  categories[index].title ?? "",
-                  style: TextStyleHelper.instance.title14BlackRegularInter
-                      .copyWith(
-                        color: isSelected
-                            ? AppColor.primaryColor
-                            : AppColor.gray600,
-                        fontWeight: isSelected
-                            ? FontWeight.w600
-                            : FontWeight.w400,
-                      ),
+                  category.title!.tr() ?? "",
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight:
+                    isSelected ? FontWeight.w600 : FontWeight.w500,
+                    color: isSelected ? Colors.white : Colors.black87,
+                  ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          }),
+        ),
       ),
     );
   }
 }
+
 
 // ------------------ Enhanced Loading View ------------------
 class _EnhancedLoadingView extends StatelessWidget {
@@ -650,7 +769,7 @@ class _EnhancedLoadingView extends StatelessWidget {
           ),
           SizedBox(height: 24.sH),
           Text(
-            'Loading artwork...',
+            'loading_artwork'.tr(),
             style: TextStyleHelper.instance.title16RegularInter.copyWith(
               color: AppColor.gray600,
             ),
@@ -665,14 +784,14 @@ class _EnhancedLoadingView extends StatelessWidget {
                 builder: (context, child) {
                   final delay = index * 0.3;
                   final opacity =
-                      (0.5 +
-                              0.5 *
-                                  ((animation.value + delay) % 1.0 < 0.5
-                                      ? ((animation.value + delay) % 1.0) * 2
-                                      : 2 -
-                                            ((animation.value + delay) % 1.0) *
-                                                2))
-                          .clamp(0.0, 1.0);
+                  (0.5 +
+                      0.5 *
+                          ((animation.value + delay) % 1.0 < 0.5
+                              ? ((animation.value + delay) % 1.0) * 2
+                              : 2 -
+                              ((animation.value + delay) % 1.0) *
+                                  2))
+                      .clamp(0.0, 1.0);
 
                   return Container(
                     margin: EdgeInsets.symmetric(horizontal: 2.sW),
@@ -720,7 +839,7 @@ class _EnhancedErrorView extends StatelessWidget {
             ),
             SizedBox(height: 24.sH),
             Text(
-              'Oops! Something went wrong',
+              'oops_error'.tr(),
               style: TextStyleHelper.instance.headline20BoldInter,
               textAlign: TextAlign.center,
             ),
@@ -737,7 +856,7 @@ class _EnhancedErrorView extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: onRetry,
               icon: Icon(Icons.refresh, size: 18.sW),
-              label: const Text('Try Again'),
+              label:Text('try_again'.tr()),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColor.primaryColor,
                 foregroundColor: Colors.white,
@@ -756,7 +875,7 @@ class _EnhancedErrorView extends StatelessWidget {
             TextButton.icon(
               onPressed: () => Navigator.of(context).pop(),
               icon: Icon(Icons.arrow_back, size: 18.sW),
-              label: const Text('Go Back'),
+              label:Text('go_back'.tr()),
               style: TextButton.styleFrom(
                 foregroundColor: AppColor.gray600,
                 padding: EdgeInsets.symmetric(

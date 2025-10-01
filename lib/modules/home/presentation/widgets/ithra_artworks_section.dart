@@ -93,6 +93,39 @@ class IthraArtworksSection extends StatelessWidget {
     );
   }
 
+  // Widget _buildArtworksHorizontalList(
+  //     BuildContext context, DeviceType deviceType) {
+  //   final bool isMobile = deviceType == DeviceType.mobile;
+  //   final bool isTablet = deviceType == DeviceType.tablet;
+  //
+  //   final double cardHeight = isMobile ? 420.sH : isTablet ? 480.sH : 520.sH;
+  //
+  //   return SizedBox(
+  //     height: cardHeight,
+  //     child: ListView.separated(
+  //       scrollDirection: Axis.horizontal,
+  //       itemCount: artworks.length,
+  //       separatorBuilder: (context, index) => SizedBox(width: 16.sW,
+  //       child:VerticalDivider(
+  //           width: 28.sW,
+  //         thickness: 2,
+  //         color: AppColor.gray400,
+  //       )
+  //       ),
+  //       itemBuilder: (context, index) {
+  //
+  //
+  //         return _IthraArtworkCard(
+  //           artwork: artworks[index],
+  //           index: index,
+  //           onTap: onArtworkTap,
+  //           onFavoriteTap: onFavoriteTap,
+  //           deviceType: deviceType,
+  //         );
+  //       },
+  //     ),
+  //   );
+  // }
   Widget _buildArtworksHorizontalList(
       BuildContext context, DeviceType deviceType) {
     final bool isMobile = deviceType == DeviceType.mobile;
@@ -100,24 +133,32 @@ class IthraArtworksSection extends StatelessWidget {
 
     final double cardHeight = isMobile ? 420.sH : isTablet ? 480.sH : 520.sH;
 
+    // sequence: Divider, Card, Divider, Card, ..., Divider
+    final int totalItems = artworks.length * 2 + 1;
+
     return SizedBox(
       height: cardHeight,
-      child: ListView.separated(
+      child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: artworks.length,
-        separatorBuilder: (context, index) => SizedBox(width: 16.sW,
-        child:VerticalDivider(
-            width: 28.sW,
-          thickness: 2,
-          color: AppColor.gray400,
-        )
-        ),
+        itemCount: totalItems,
         itemBuilder: (context, index) {
+          // even indices -> divider
+          if (index.isEven) {
+            return SizedBox(
+              width: 8.sW, // total space for the divider (including padding)
+              child: VerticalDivider(
+                width: 8.sW,
+                thickness: 2,
+                color: AppColor.gray400,
+              ),
+            );
+          }
 
-
+          // odd indices -> card
+          final int artworkIndex = index ~/ 2;
           return _IthraArtworkCard(
-            artwork: artworks[index],
-            index: index,
+            artwork: artworks[artworkIndex],
+            index: artworkIndex,
             onTap: onArtworkTap,
             onFavoriteTap: onFavoriteTap,
             deviceType: deviceType,
@@ -236,7 +277,7 @@ class _IthraArtworkCardState extends State<_IthraArtworkCard>
     final bool isMobile = widget.deviceType == DeviceType.mobile;
     final bool isTablet = widget.deviceType == DeviceType.tablet;
 
-    final double cardWidth = isMobile ? 260.sW : isTablet ? 300.sW : 340.sW;
+    final double cardWidth = isMobile ? 200.sW : isTablet ? 250.sW : 300.sW;
     final double imageHeight = isMobile ? 200.sH : isTablet ? 240.sH : 280.sH;
 
     return GestureDetector(
@@ -535,7 +576,7 @@ class _FavoriteButton extends StatelessWidget {
         child: Icon(
           Icons.favorite_border,
           size: iconSize,
-          color: AppColor.white,
+          color: AppColor.gray400,
         ),
       ),
     );
