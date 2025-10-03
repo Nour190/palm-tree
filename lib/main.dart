@@ -1,6 +1,8 @@
-// main.dart
+
+
 import 'dart:async';
 import 'dart:ui' as ui;
+
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart'; // for kReleaseMode
 import 'package:baseqat/core/responsive/size_utils.dart';
@@ -17,11 +19,13 @@ import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
-
+import 'package:flutter_inappwebview/flutter_inappwebview.dart'; // for InAppWebView
 void main() async {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
-
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      await InAppWebViewController.setWebContentsDebuggingEnabled(kDebugMode);
+    }
     await EasyLocalization.ensureInitialized();
 
     FlutterError.onError = (FlutterErrorDetails details) {
@@ -163,6 +167,7 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
 // main.dart
 // import 'dart:async';
 // import 'dart:ui' as ui;

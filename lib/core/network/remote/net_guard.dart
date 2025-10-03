@@ -6,7 +6,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 Future<void> ensureOnline() async {
   final status = await Connectivity().checkConnectivity();
   if (status.contains(ConnectivityResult.none)) {
-    throw const OfflineFailure();
+    throw  OfflineFailure();
   }
 }
 

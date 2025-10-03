@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:baseqat/core/resourses/assets_manager.dart';
 import 'package:baseqat/core/resourses/constants_manager.dart';
 import 'package:baseqat/core/responsive/responsive.dart';
@@ -28,7 +29,6 @@ import '../widgets/ithra_artworks_section.dart';
 import '../widgets/ithra_gallery_section.dart';
 import '../widgets/ithra_reviews_section.dart';
 import '../widgets/ithra_virtual_tour_section.dart';
-
 
 ErrorType _mapFailureToErrorType(Failure failure) {
   if (failure is OfflineFailure) return ErrorType.noInternet;
@@ -69,21 +69,29 @@ class HomeView extends StatelessWidget {
           if (state is HomeLoaded) {
             final msgs = <String>[];
             if (state.artistsError != null) {
-              msgs.add('Artists: ${state.artistsError!.message}');
+              msgs.add(
+                '${'home.label_artists'.tr()}: ${state.artistsError!.message}',
+              );
             }
             if (state.artworksError != null) {
-              msgs.add('Artworks: ${state.artworksError!.message}');
+              msgs.add(
+                '${'home.label_artworks'.tr()}: ${state.artworksError!.message}',
+              );
             }
             if (state.reviewsError != null) {
-              msgs.add('Reviews: ${state.reviewsError!.message}');
+              msgs.add(
+                '${'home.label_reviews'.tr()}: ${state.reviewsError!.message}',
+              );
             }
             if (state.infoError != null) {
-              msgs.add('Info: ${state.infoError!.message}');
+              msgs.add(
+                '${'home.label_info'.tr()}: ${state.infoError!.message}',
+              );
             }
             if (msgs.isNotEmpty) {
               context.showWarningSnackBar(
                 msgs.map((msg) => '- ' + msg).join('\n'),
-                title: 'Partial content loaded',
+                title: 'common.partial_content_loaded'.tr(),
               );
             }
           }
@@ -93,8 +101,9 @@ class HomeView extends StatelessWidget {
           if (state is HomeInitial || state is HomeLoading) {
             final loadingMessage = state is HomeLoading ? state.message : null;
             return LoadingPage(
-              message: loadingMessage ?? 'Curating your experience...',
-              subtitle: 'Please wait while we fetch the latest highlights.',
+              message:
+              loadingMessage ?? 'home.curating_experience'.tr(),
+              subtitle: 'home.curating_subtitle'.tr(),
             );
           }
 
@@ -128,7 +137,7 @@ class HomeView extends StatelessWidget {
             body: LoadingOverlay(
               isLoading: loaded.isRefreshing,
               message: loaded.isRefreshing
-                  ? 'Refreshing the collection...'
+                  ? 'home.refreshing_collection'.tr()
                   : null,
               overlayColor: Colors.white.withOpacity(0.85),
               child: RefreshIndicator(
@@ -139,15 +148,6 @@ class HomeView extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // IthraAppHeader(
-                      //   onMenuTap: () {
-                      //     // Handle menu tap
-                      //   },
-                      //   onSearchTap: () {
-                      //     // Handle search tap
-                      //   },
-                      // ),
-
                       if (info != null) ...[
                         IthraWelcomeSection(
                           title: info.mainTitle,
@@ -161,24 +161,22 @@ class HomeView extends StatelessWidget {
                               force: true,
                             ),
                             margin: EdgeInsets.symmetric(
-                              horizontal: isDesktop ? 48.sW : isTablet ? 32.sW : 18.sW,
+                              horizontal:
+                              isDesktop ? 48.sW : isTablet ? 32.sW : 18.sW,
                               vertical: 12.sH,
                             ),
                           ),
                       ] else ...[
                         // If no info yet but we're refreshing, show lightweight placeholder
                         if (loaded.isRefreshing)
-                          const Padding(
-                            padding: EdgeInsets.all(16),
+                          Padding(
+                            padding: const EdgeInsets.all(16),
                             child: LinearProgressIndicator(),
                           ),
                       ],
 
-                      BlocSelector<
-                          HomeCubit,
-                          HomeState,
-                          ({List artists, Object? error, bool refreshing})
-                      >(
+                      BlocSelector<HomeCubit, HomeState,
+                          ({List artists, Object? error, bool refreshing})>(
                         selector: (state) {
                           if (state is HomeLoaded) {
                             return (
@@ -206,11 +204,11 @@ class HomeView extends StatelessWidget {
                               if (errSel != null)
                                 SectionErrorBanner(
                                   message: (errSel as dynamic).message,
-                                  onRetry: () => context
-                                      .read<HomeCubit>()
-                                      .reloadArtists(),
+                                  onRetry: () =>
+                                      context.read<HomeCubit>().reloadArtists(),
                                   margin: EdgeInsets.symmetric(
-                                    horizontal: isDesktop ? 48.sW : isTablet ? 32.sW : 18.sW,
+                                    horizontal:
+                                    isDesktop ? 48.sW : isTablet ? 32.sW : 18.sW,
                                     vertical: 12.sH,
                                   ),
                                 ),
@@ -235,11 +233,8 @@ class HomeView extends StatelessWidget {
                         },
                       ),
 
-                      BlocSelector<
-                          HomeCubit,
-                          HomeState,
-                          ({List artworks, Object? error, bool refreshing})
-                      >(
+                      BlocSelector<HomeCubit, HomeState,
+                          ({List artworks, Object? error, bool refreshing})>(
                         selector: (state) {
                           if (state is HomeLoaded) {
                             return (
@@ -267,11 +262,11 @@ class HomeView extends StatelessWidget {
                               if (errSel != null)
                                 SectionErrorBanner(
                                   message: (errSel as dynamic).message,
-                                  onRetry: () => context
-                                      .read<HomeCubit>()
-                                      .reloadArtworks(),
+                                  onRetry: () =>
+                                      context.read<HomeCubit>().reloadArtworks(),
                                   margin: EdgeInsets.symmetric(
-                                    horizontal: isDesktop ? 48.sW : isTablet ? 32.sW : 18.sW,
+                                    horizontal:
+                                    isDesktop ? 48.sW : isTablet ? 32.sW : 18.sW,
                                     vertical: 12.sH,
                                   ),
                                 ),
@@ -286,8 +281,7 @@ class HomeView extends StatelessWidget {
                                     context,
                                     ArtWorkDetailsScreen(
                                       artworkId:
-                                      (artworksSel[index] as dynamic)
-                                          .id,
+                                      (artworksSel[index] as dynamic).id,
                                       userId: AppConstants.userIdValue ?? "",
                                     ),
                                   );
@@ -297,10 +291,14 @@ class HomeView extends StatelessWidget {
                           );
                         },
                       ),
+
                       Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8.0.sH,horizontal: 8.sW),
+                        padding: EdgeInsets.symmetric(
+                          vertical: 8.0.sH,
+                          horizontal: 8.sW,
+                        ),
                         child: TextLineBanner(
-                          text: 'ATE WITH THE  *  YOUR DATE WITH THE  *',
+                          text: 'home.textline_banner'.tr(),
                           enableMarquee: true,
                           speed: 50.0,
                           gap: 50.0,
@@ -311,27 +309,20 @@ class HomeView extends StatelessWidget {
                           showEntryAnimation: true,
                         ),
                       ),
+
                       Padding(
-                        padding:  EdgeInsets.symmetric(horizontal: isDesktop?12.sW:8.0.sW),
+                        padding:
+                        EdgeInsets.symmetric(horizontal: isDesktop ? 12.sW : 8.0.sW),
                         child: SpeakersSection(
-                          onSeeMore: () => context
-                              .read<TabsCubit>()
-                              .changeSelectedIndex(1),
-                          onJoinNow: () => context
-                              .read<TabsCubit>()
-                              .changeSelectedIndex(1),
-                          //speakerImagePath: AppAssetsManager.imgInfo,
+                          onSeeMore: () => context.read<TabsCubit>().changeSelectedIndex(1),
+                          onJoinNow: () => context.read<TabsCubit>().changeSelectedIndex(1),
                         ),
                       ),
 
-
-
                       IthraVirtualTourSection(
-                        onTryNow: () => context
-                            .read<TabsCubit>()
-                            .changeSelectedIndex(1),virtualTourImage: AppAssetsManager.imgImage,
-                        peopleImage :AppAssetsManager.imgUsers
-                        //previewImages: info?.images,
+                        onTryNow: () => context.read<TabsCubit>().changeSelectedIndex(1),
+                        virtualTourImage: AppAssetsManager.imgImage,
+                        peopleImage: AppAssetsManager.imgUsers,
                       ),
 
                       BlocSelector<HomeCubit, HomeState, List<String>>(
@@ -342,13 +333,10 @@ class HomeView extends StatelessWidget {
                           return const <String>[];
                         },
                         builder: (context, imagesSel) {
-                          if (imagesSel.isEmpty)
-                            return const SizedBox.shrink();
+                          if (imagesSel.isEmpty) return const SizedBox.shrink();
                           return IthraGallerySection(
                             imageUrls: imagesSel,
-                            onSeeMore: () => context
-                                .read<TabsCubit>()
-                                .changeSelectedIndex(1),
+                            onSeeMore: () => context.read<TabsCubit>().changeSelectedIndex(1),
                             onImageTap: (index) {
                               // Handle image tap - could open lightbox
                             },
@@ -356,11 +344,8 @@ class HomeView extends StatelessWidget {
                         },
                       ),
 
-                      BlocSelector<
-                          HomeCubit,
-                          HomeState,
-                          ({List reviews, Object? error, bool refreshing})
-                      >(
+                      BlocSelector<HomeCubit, HomeState,
+                          ({List reviews, Object? error, bool refreshing})>(
                         selector: (state) {
                           if (state is HomeLoaded) {
                             return (
@@ -385,11 +370,10 @@ class HomeView extends StatelessWidget {
                               if (errSel != null)
                                 SectionErrorBanner(
                                   message: (errSel as dynamic).message,
-                                  onRetry: () => context
-                                      .read<HomeCubit>()
-                                      .reloadReviews(),
+                                  onRetry: () => context.read<HomeCubit>().reloadReviews(),
                                   margin: EdgeInsets.symmetric(
-                                    horizontal: isDesktop ? 48.sW : isTablet ? 32.sW : 18.sW,
+                                    horizontal:
+                                    isDesktop ? 48.sW : isTablet ? 32.sW : 18.sW,
                                     vertical: 12.sH,
                                   ),
                                 ),
@@ -403,8 +387,7 @@ class HomeView extends StatelessWidget {
                       ),
 
                       BlocSelector<HomeCubit, HomeState, dynamic>(
-                        selector: (state) =>
-                        state is HomeLoaded ? state.info : null,
+                        selector: (state) => state is HomeLoaded ? state.info : null,
                         builder: (context, infoSel) {
                           if (infoSel == null) return const SizedBox.shrink();
                           return AboutInfo(
@@ -414,8 +397,8 @@ class HomeView extends StatelessWidget {
                         },
                       ),
 
-                      // Footer (keeping existing)
-                       Footer(),
+                      // Footer
+                      Footer(),
                     ],
                   ),
                 ),

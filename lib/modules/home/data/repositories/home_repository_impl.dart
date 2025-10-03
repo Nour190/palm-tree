@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:baseqat/core/network/remote/error_mapper.dart';
 import 'package:baseqat/core/network/remote/logger.dart';
 import 'package:baseqat/core/network/remote/net_guard.dart';
@@ -29,15 +30,18 @@ class HomeRepositoryImpl implements HomeRepository {
     try {
       final l = clampLimit(limit);
       final list = await _r.retry(
-        () => remote.fetchArtists(limit: l, offset: offset),
+            () => remote.fetchArtists(limit: l, offset: offset),
         // ignore: unnecessary_type_check
         retryIf: (e) => e is Failure || e is Exception,
-        onRetry: (e) => log.w('Retry artists: $e'),
+        onRetry: (e) => log.w(
+          'logs.retry_artists'.tr(namedArgs: {'error': e.toString()}),
+        ),
       );
       return Right(list);
     } catch (e, st) {
       final f = mapError(e, st);
-      log.e('Artists load failed', error: e, stackTrace: st);
+      log.e('logs.artists_load_failed'.tr(namedArgs: {'error': e.toString()}),
+          error: e, stackTrace: st);
       return Left(f);
     }
   }
@@ -50,15 +54,18 @@ class HomeRepositoryImpl implements HomeRepository {
     try {
       final l = clampLimit(limit);
       final list = await _r.retry(
-        () => remote.fetchArtworks(limit: l, offset: offset),
+            () => remote.fetchArtworks(limit: l, offset: offset),
         // ignore: unnecessary_type_check
         retryIf: (e) => e is Failure || e is Exception,
-        onRetry: (e) => log.w('Retry artworks: $e'),
+        onRetry: (e) => log.w(
+          'logs.retry_artworks'.tr(namedArgs: {'error': e.toString()}),
+        ),
       );
       return Right(list);
     } catch (e, st) {
       final f = mapError(e, st);
-      log.e('Artworks load failed', error: e, stackTrace: st);
+      log.e('logs.artworks_load_failed'.tr(namedArgs: {'error': e.toString()}),
+          error: e, stackTrace: st);
       return Left(f);
     }
   }
@@ -67,18 +74,21 @@ class HomeRepositoryImpl implements HomeRepository {
   Future<Either<Failure, InfoModel>> getInfo() async {
     try {
       final info = await _r.retry(
-        () => remote.fetchInfoSingleOrNull(),
+            () => remote.fetchInfoSingleOrNull(),
         // ignore: unnecessary_type_check
         retryIf: (e) => e is Failure || e is Exception,
-        onRetry: (e) => log.w('Retry info: $e'),
+        onRetry: (e) => log.w(
+          'logs.retry_info'.tr(namedArgs: {'error': e.toString()}),
+        ),
       );
       if (info == null) {
-        return Left(const NotFoundFailure('No info row found.'));
+        return Left(NotFoundFailure('errors.data_not_found'.tr()));
       }
       return Right(info);
     } catch (e, st) {
       final f = mapError(e, st);
-      log.e('Info load failed', error: e, stackTrace: st);
+      log.e('logs.info_load_failed'.tr(namedArgs: {'error': e.toString()}),
+          error: e, stackTrace: st);
       return Left(f);
     }
   }
@@ -91,15 +101,18 @@ class HomeRepositoryImpl implements HomeRepository {
     try {
       final l = clampLimit(limit);
       final list = await _r.retry(
-        () => remote.fetchReviews(limit: l, offset: offset),
+            () => remote.fetchReviews(limit: l, offset: offset),
         // ignore: unnecessary_type_check
         retryIf: (e) => e is Failure || e is Exception,
-        onRetry: (e) => log.w('Retry reviews: $e'),
+        onRetry: (e) => log.w(
+          'logs.retry_reviews'.tr(namedArgs: {'error': e.toString()}),
+        ),
       );
       return Right(list);
     } catch (e, st) {
       final f = mapError(e, st);
-      log.e('Reviews load failed', error: e, stackTrace: st);
+      log.e('logs.reviews_load_failed'.tr(namedArgs: {'error': e.toString()}),
+          error: e, stackTrace: st);
       return Left(f);
     }
   }

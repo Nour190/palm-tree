@@ -35,6 +35,15 @@
     "passwords_dont_match": "Passwords don't match"
   },
   "home": {
+    "label_artists": "Artists",
+    "label_artworks": "Artworks",
+    "label_reviews": "Reviews",
+    "label_info": "Info",
+    "curating_experience": "Curating your experience...",
+    "curating_subtitle": "Please wait while we fetch the latest highlights.",
+    "refreshing_collection": "Refreshing the collection...",
+    "textline_banner": "ATE WITH THE  *  YOUR DATE WITH THE  *",
+
     "speakers": "Speakers",
     "see_more": "See More",
     "speakers_headline": "A lineup of 300+ voices from industry leaders",
@@ -55,7 +64,9 @@
     "no_reviews_available": "No reviews available",
     "unknown_artist": "Unknown Artist",
     "artist": "Artist",
-    "virtual_gallery": "Virtual Gallery"
+    "virtual_gallery": "Virtual Gallery",
+    "about":"About"
+
   },
   "footer": {
     "email": "Email",
@@ -68,7 +79,41 @@
     "subscribed_success": "Subscribed with {email}",
     "invalid_email": "Please enter a valid email address"
   },
+  "logs": {
+    "retry_artists": "Retry artists: {error}",
+    "retry_artworks": "Retry artworks: {error}",
+    "retry_info": "Retry info: {error}",
+    "retry_reviews": "Retry reviews: {error}",
+
+    "artists_load_failed": "Artists load failed: {error}",
+    "artworks_load_failed": "Artworks load failed: {error}",
+    "info_load_failed": "Info load failed: {error}",
+    "reviews_load_failed": "Reviews load failed: {error}"
+  },
   "errors": {
+
+
+    "request_failed": "Request failed",
+    "resource_not_found": "Resource not found",
+    "you_are_offline": "You are offline. Check your connection.",
+    "request_timed_out": "Request timed out. Please try again.",
+
+    "artists_timed_out": "Artists timed out.",
+    "artworks_timed_out": "Artworks timed out.",
+    "info_timed_out": "Info timed out.",
+    "reviews_timed_out": "Reviews timed out.",
+
+    "artists_failed": "Artists failed.",
+    "artworks_failed": "Artworks failed.",
+    "info_failed": "Info failed.",
+    "reviews_failed": "Reviews failed.",
+
+    "refreshing_artists": "Refreshing artists…",
+    "refreshing_reviews": "Refreshing reviews…",
+    "refreshing_artworks": "Refreshing artworks…",
+
+    "failed_to_load_all": "Failed to load artists, artworks, reviews, and info.",
+
     "server_failure": "Server error occurred",
     "offline_failure": "No internet connection",
     "unexpected_error": "An unexpected error occurred",
@@ -124,6 +169,8 @@
     "edge_function_error": "Edge function error"
   },
   "common": {
+    "partial_content_loaded": "Partial content loaded",
+
     "loading": "Loading...",
     "refreshing": "Refreshing...",
     "processing": "Processing...",
@@ -146,6 +193,11 @@
     "close": "Close",
     "open": "Open",
     "select_language": "Select Language"
+  },
+  "language": {
+    "Arabic": "Arabic",
+    "English": "English",
+    "Germany": "Germany"
   },
   "navigation": {
     "home": "Home",

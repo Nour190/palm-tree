@@ -1,28 +1,33 @@
+import 'package:easy_localization/easy_localization.dart';
+
 abstract class Failure {
   final String message;
   final Object? cause;
   final StackTrace? stackTrace;
-  const Failure(this.message, {this.cause, this.stackTrace});
+
+  Failure(this.message, {this.cause, this.stackTrace});
+
   @override
   String toString() => message;
 }
 
 class OfflineFailure extends Failure {
-  const OfflineFailure([super.msg = 'You are offline. Check your connection.']);
+  OfflineFailure([String? msg])
+      : super(msg ?? 'errors.offline_failure'.tr());
 }
 
 class TimeoutFailure extends Failure {
-  const TimeoutFailure([super.msg = 'Request timed out. Please try again.']);
+  TimeoutFailure([String? msg]) : super(msg ?? 'errors.timeout_error'.tr());
 }
 
 class NetworkFailure extends Failure {
-  const NetworkFailure(super.message, {super.cause, super.stackTrace});
+  NetworkFailure(super.message, {super.cause, super.stackTrace});
 }
 
 class NotFoundFailure extends Failure {
-  const NotFoundFailure(super.message);
+  NotFoundFailure(super.message);
 }
 
 class UnknownFailure extends Failure {
-  const UnknownFailure(super.message, {super.cause, super.stackTrace});
+  UnknownFailure(super.message, {super.cause, super.stackTrace});
 }

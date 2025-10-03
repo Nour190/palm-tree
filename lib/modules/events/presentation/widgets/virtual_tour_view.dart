@@ -1,16 +1,13 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
-import 'package:webview_flutter_android/webview_flutter_android.dart';
-import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import '../../../../core/resourses/color_manager.dart';
 import '../../../../core/resourses/style_manager.dart';
 import '../../../../core/responsive/size_ext.dart';
 
 class VirtualTourView extends StatefulWidget {
   final String url;
-  
+
   const VirtualTourView({
     super.key,
     this.url = 'https://www.3dvista.com/en/',
@@ -21,74 +18,12 @@ class VirtualTourView extends StatefulWidget {
 }
 
 class _VirtualTourViewState extends State<VirtualTourView> {
-  late final WebViewController _controller;
+  InAppWebViewController? _webViewController;
   bool _isLoading = true;
   String? _errorMessage;
   int _loadingProgress = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeWebView();
-  }
-
-  void _initializeWebView() {
-    // Create platform-specific parameters
-    late final PlatformWebViewControllerCreationParams params;
-    
-    if (WebViewPlatform.instance is WebKitWebViewPlatform) {
-      params = WebKitWebViewControllerCreationParams(
-        allowsInlineMediaPlayback: true,
-        mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
-      );
-    } else {
-      params = const PlatformWebViewControllerCreationParams();
-    }
-
-    _controller = WebViewController.fromPlatformCreationParams(params)
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(AppColor.white)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onProgress: (int progress) {
-            setState(() {
-              _loadingProgress = progress;
-            });
-          },
-          onPageStarted: (String url) {
-            setState(() {
-              _isLoading = true;
-              _errorMessage = null;
-            });
-          },
-          onPageFinished: (String url) {
-            setState(() {
-              _isLoading = false;
-            });
-          },
-          onWebResourceError: (WebResourceError error) {
-            setState(() {
-              _isLoading = false;
-              _errorMessage = error.description;
-            });
-          },
-          onNavigationRequest: (NavigationRequest request) {
-            // Allow all navigation within the webview
-            return NavigationDecision.navigate;
-          },
-        ),
-      );
-
-    // Platform-specific configurations
-    if (_controller.platform is AndroidWebViewController) {
-      AndroidWebViewController.enableDebugging(kDebugMode);
-      (_controller.platform as AndroidWebViewController)
-          .setMediaPlaybackRequiresUserGesture(false);
-    }
-
-    // Load the URL
-    _controller.loadRequest(Uri.parse(widget.url));
-  }
+  int _crashCount = 0;
+  static const int _maxCrashRetries = 2;
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +33,105 @@ class _VirtualTourViewState extends State<VirtualTourView> {
 
     return Stack(
       children: [
-        WebViewWidget(controller: _controller),
+        InAppWebView(
+          initialUrlRequest: URLRequest(
+            url: WebUri(widget.url),
+          ),
+          initialSettings: InAppWebViewSettings(
+            javaScriptEnabled: true,
+            domStorageEnabled: true,
+            databaseEnabled: true,
+            useHybridComposition: false,
+            allowsInlineMediaPlayback: true,
+            mediaPlaybackRequiresUserGesture: true,
+            supportZoom: true,
+            builtInZoomControls: true,
+            displayZoomControls: false,
+            useShouldOverrideUrlLoading: false,
+            transparentBackground: false,
+            hardwareAcceleration: false,
+            mixedContentMode: MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
+            allowFileAccessFromFileURLs: true,
+            allowUniversalAccessFromFileURLs: true,
+            cacheEnabled: true,
+            cacheMode: CacheMode.LOAD_CACHE_ELSE_NETWORK,
+            clearCache: false,
+            thirdPartyCookiesEnabled: true,
+            allowContentAccess: true,
+            allowFileAccess: true,
+            disableVerticalScroll: false,
+            disableHorizontalScroll: false,
+            minimumFontSize: 8,
+            supportMultipleWindows: false,
+            verticalScrollBarEnabled: true,
+            horizontalScrollBarEnabled: true,
+          ),
+          onWebViewCreated: (controller) {
+            _webViewController = controller;
+          },
+          onLoadStart: (controller, url) {
+            setState(() {
+              _isLoading = true;
+              _errorMessage = null;
+            });
+          },
+          onLoadStop: (controller, url) {
+            setState(() {
+              _isLoading = false;
+            });
+          },
+          onProgressChanged: (controller, progress) {
+            setState(() {
+              _loadingProgress = progress;
+            });
+          },
+          onRenderProcessGone: (controller, detail) {
+            _crashCount++;
+
+            if (_crashCount <= _maxCrashRetries) {
+              // Auto-retry for first few crashes
+              setState(() {
+                _isLoading = true;
+              });
+
+              // Reload after a short delay
+              Future.delayed(const Duration(seconds: 1), () {
+                if (mounted) {
+                  _webViewController?.reload();
+                }
+              });
+            } else {
+              // Show error after max retries
+              setState(() {
+                _isLoading = false;
+                _errorMessage = 'The virtual tour content is too heavy for this device. '
+                    'Try using a lighter browser or reducing graphics quality.';
+              });
+            }
+            return null;
+          },
+          onReceivedError: (controller, request, error) {
+            if (request.isForMainFrame!) {
+              setState(() {
+                _isLoading = false;
+                _errorMessage = 'Failed to load: ${error.description}';
+              });
+            }
+          },
+          onReceivedHttpError: (controller, request, errorResponse) {
+            if (request.isForMainFrame! && errorResponse.statusCode! >= 400) {
+              setState(() {
+                _isLoading = false;
+                _errorMessage = 'HTTP Error ${errorResponse.statusCode}: Unable to load the page';
+              });
+            }
+          },
+          onConsoleMessage: (controller, consoleMessage) {
+            if (kDebugMode) {
+              print('[WebView Console] ${consoleMessage.message}');
+            }
+          },
+        ),
         if (_isLoading) _buildLoadingOverlay(),
       ],
     );
@@ -136,6 +169,15 @@ class _VirtualTourViewState extends State<VirtualTourView> {
                 color: AppColor.gray500,
               ),
             ),
+            if (_crashCount > 0) ...[
+              SizedBox(height: 12.sH),
+              Text(
+                'Retry attempt $_crashCount of $_maxCrashRetries',
+                style: TextStyleHelper.instance.body14RegularInter.copyWith(
+                  color: AppColor.gray400,
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -182,8 +224,11 @@ class _VirtualTourViewState extends State<VirtualTourView> {
                 setState(() {
                   _errorMessage = null;
                   _isLoading = true;
+                  _crashCount = 0;
                 });
-                _controller.loadRequest(Uri.parse(widget.url));
+                _webViewController?.loadUrl(
+                  urlRequest: URLRequest(url: WebUri(widget.url)),
+                );
               },
               icon: const Icon(Icons.refresh),
               label: const Text('Retry'),

@@ -10,6 +10,7 @@ import 'package:baseqat/core/services/locale_service.dart';
  import 'dart:ui' as ui;
 
 import '../../responsive/responsive.dart';
+import '../../utils/rtl_helper.dart';
 
 class IthraMenuScreen extends StatefulWidget {
   const IthraMenuScreen({
@@ -40,9 +41,9 @@ class _IthraMenuScreenState extends State<IthraMenuScreen> {
 
 
   final List<Map<String, dynamic>> _languages = [
-    {'name': 'Arabic', 'code': 'ar', 'locale': const Locale('ar', 'SA'), 'flag': '🇸🇦'},
-    {'name': 'English', 'code': 'en', 'locale': const Locale('en', 'US'), 'flag': '🇬🇧'},
-    {'name': 'Germany', 'code': 'de', 'locale': const Locale('de', 'DE'), 'flag': '🇩🇪'},
+    {'name': 'language.Arabic'.tr(), 'code': 'ar', 'locale': const Locale('ar', 'SA'), 'flag': '🇸🇦'},
+    {'name': 'language.English'.tr(), 'code': 'en', 'locale': const Locale('en', 'US'), 'flag': '🇬🇧'},
+    {'name': 'language.Germany'.tr(), 'code': 'de', 'locale': const Locale('de', 'DE'), 'flag': '🇩🇪'},
   ];
 
   Future<void> _changeLanguage(Map<String, dynamic> language) async {
@@ -80,7 +81,7 @@ class _IthraMenuScreenState extends State<IthraMenuScreen> {
                 // Header
                 Container(
                   height: 80.sH,
-                 // padding: EdgeInsets.symmetric( vertical: 1.sSp),
+                  padding: EdgeInsets.symmetric( horizontal: 12.sSp),
                   child: Row(
                     children: [
                       Row(
@@ -115,7 +116,7 @@ class _IthraMenuScreenState extends State<IthraMenuScreen> {
                               child: Container(
                                 width: 48.sW,
                                 height: 48.sH,
-                                margin: EdgeInsets.only(right: 12.sSp),
+                                margin: RTLHelper.getDirectionalPadding(end: 12.sSp),
                                 decoration: const BoxDecoration(
                                   color: Colors.black,
                                   shape: BoxShape.circle,
@@ -212,7 +213,7 @@ class _IthraMenuScreenState extends State<IthraMenuScreen> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    'Language',
+                                    'common.select_language'.tr(),
                                     style: TextStyleHelper.instance.headline32BoldInter.copyWith(
                                       color: Colors.black,
                                       fontWeight: FontWeight.w600,

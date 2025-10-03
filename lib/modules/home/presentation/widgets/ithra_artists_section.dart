@@ -101,7 +101,7 @@ class IthraArtistsSection extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: displayArtists.length,
-        separatorBuilder: (context, index) =>SizedBox.shrink(),
+        separatorBuilder: (context, index) =>SizedBox(width:15.sW),
         itemBuilder: (context, index) {
           return _IthraArtistCard(
             artist: displayArtists[index],
@@ -216,7 +216,7 @@ class _IthraArtistCardState extends State<_IthraArtistCard>
     final bool isMobile = widget.deviceType == DeviceType.mobile;
     final bool isTablet = widget.deviceType == DeviceType.tablet;
 
-    final double cardWidth = isMobile ? 70.sW : isTablet ? 90.sW : 110.sW;
+    final double cardWidth = isMobile ? 90.sW : isTablet ? 100.sW : 120.sW;
 
     return GestureDetector(
       onTapDown: (_) => _controller.forward(),
@@ -234,8 +234,8 @@ class _IthraArtistCardState extends State<_IthraArtistCard>
                 children: [
                   // Circular avatar
                   Container(
-                    width: 80.sH,
-                    height: 80.sH,
+                    width: 110.sW,
+                    height: 90.sH,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
@@ -255,13 +255,13 @@ class _IthraArtistCardState extends State<_IthraArtistCard>
                     ),
                   ),
 
-                  SizedBox(height: 12.sH),
+                  SizedBox(height: 14.sH),
 
                   // Artist name
                   Text(
                     widget.artist.name,
                     textAlign: TextAlign.center,
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontFamily: 'Inter',

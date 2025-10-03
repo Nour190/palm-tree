@@ -9,6 +9,8 @@ import 'package:baseqat/core/services/locale_service.dart';
 import 'package:baseqat/core/components/custom_widgets/ithra_menu_screen.dart';
  import 'dart:ui' as ui;
 
+import '../../utils/rtl_helper.dart';
+
 class TopBar extends StatelessWidget {
   TopBar({
     super.key,
@@ -68,7 +70,7 @@ class TopBar extends StatelessWidget {
       textDirection: isRTL ? ui.TextDirection.rtl : ui.TextDirection.ltr,
       child: Container(
         height: 80.sH,
-        padding: EdgeInsets.symmetric( vertical: 16.sSp),
+        padding: EdgeInsets.symmetric( vertical: 16.sSp, horizontal: 12.sSp),
         decoration: const BoxDecoration(
           color: Colors.white,
           border: Border(
@@ -107,7 +109,7 @@ class TopBar extends StatelessWidget {
                 child: Container(
                   width: 48.sW,
                   height: 48.sH,
-                  margin: EdgeInsets.only(right: 12.sSp),
+                  margin:RTLHelper.getDirectionalPadding(end: 12.sSp),
                   decoration: BoxDecoration(
                     color: Colors.black,
                     //borderRadius: BorderRadius.circular(8.sH),

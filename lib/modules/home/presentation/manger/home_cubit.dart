@@ -11,21 +11,17 @@ import 'package:baseqat/modules/home/data/models/artwork_model.dart';
 import 'package:baseqat/modules/home/data/models/review_model.dart';
 import 'package:baseqat/modules/home/data/repositories/home_repository.dart';
 import 'package:baseqat/modules/home/presentation/manger/home_state.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class HomeCubit extends Cubit<HomeState> {
   HomeCubit(this.repo) : super(const HomeInitial());
 
   final HomeRepository repo;
 
-  // Prevent stale emissions (poor-man’s cancellation)
   int _loadSeq = 0;
 
-  // Tune per-call deadline (keeps UI snappy)
   static const Duration _callTimeout = Duration(seconds: 10);
 
-  /// Load artists, artworks, info, reviews concurrently.
-  /// - Keeps last-good-data on partial failures.
-  /// - Emits a light "refreshing" state if data already exists (no full-screen spinner).
   Future<void> loadAll({bool force = false}) async {
     final seq = ++_loadSeq;
 
@@ -54,15 +50,15 @@ class HomeCubit extends Cubit<HomeState> {
       infoEither = results[2] as Either<Failure, InfoModel>;
       reviewsEither = results[3] as Either<Failure, List<ReviewModel>>;
     } on TimeoutException {
-      artistsEither = const Left(TimeoutFailure('Artists timed out.'));
-      artworksEither = const Left(TimeoutFailure('Artworks timed out.'));
-      infoEither = const Left(TimeoutFailure('Info timed out.'));
-      reviewsEither = const Left(TimeoutFailure('Reviews timed out.'));
+      artistsEither = Left(TimeoutFailure('errors.artists_timed_out'.tr()));
+      artworksEither = Left(TimeoutFailure('errors.artworks_timed_out'.tr()));
+      infoEither = Left(TimeoutFailure('errors.info_timed_out'.tr()));
+      reviewsEither = Left(TimeoutFailure('errors.reviews_timed_out'.tr()));
     } catch (_) {
-      artistsEither = const Left(UnknownFailure('Artists failed.'));
-      artworksEither = const Left(UnknownFailure('Artworks failed.'));
-      infoEither = const Left(UnknownFailure('Info failed.'));
-      reviewsEither = const Left(UnknownFailure('Reviews failed.'));
+      artistsEither = Left(UnknownFailure('errors.artists_failed'.tr()));
+      artworksEither = Left(UnknownFailure('errors.artworks_failed'.tr()));
+      infoEither = Left(UnknownFailure('errors.info_failed'.tr()));
+      reviewsEither = Left(UnknownFailure('errors.reviews_failed'.tr()));
     }
 
     // A newer request finished; ignore this one.
@@ -104,9 +100,9 @@ class HomeCubit extends Cubit<HomeState> {
         infoErr != null &&
         nothingLoaded) {
       emit(
-        const HomeError(
+         HomeError(
           UnknownFailure(
-            'Failed to load artists, artworks, reviews, and info.',
+            'errors.failed_to_load_all'.tr(),
           ),
         ),
       );
@@ -131,21 +127,20 @@ class HomeCubit extends Cubit<HomeState> {
     );
   }
 
-  /// Refresh artists only, preserving everything else.
   Future<void> reloadArtists() async {
     final seq = ++_loadSeq;
 
     if (state is HomeLoaded) {
       emit((state as HomeLoaded).copyWith(isRefreshingArtists: true));
     } else {
-      emit(const HomeLoading(message: 'Refreshing artists…'));
+      emit( HomeLoading(message: 'errors.refreshing_artists'.tr()));
     }
 
     final res = await repo
         .getArtists(limit: 10)
         .timeout(
           _callTimeout,
-          onTimeout: () => const Left(TimeoutFailure('Artists timed out.')),
+          onTimeout: () =>  Left(TimeoutFailure('errors.artists_timed_out'.tr())),
         );
 
     if (seq != _loadSeq) return;
@@ -183,21 +178,20 @@ class HomeCubit extends Cubit<HomeState> {
     );
   }
 
-  /// Refresh reviews only, preserving everything else.
   Future<void> reloadReviews() async {
     final seq = ++_loadSeq;
 
     if (state is HomeLoaded) {
       emit((state as HomeLoaded).copyWith(isRefreshingReviews: true));
     } else {
-      emit(const HomeLoading(message: 'Refreshing reviews…'));
+      emit( HomeLoading(message: 'errors.refreshing_reviews'.tr()));
     }
 
     final res = await repo
         .getReviews(limit: 10)
         .timeout(
           _callTimeout,
-          onTimeout: () => const Left(TimeoutFailure('Reviews timed out.')),
+          onTimeout: () =>  Left(TimeoutFailure('errors.artworks_timed_out'.tr())),
         );
 
     if (seq != _loadSeq) return;
@@ -242,14 +236,14 @@ class HomeCubit extends Cubit<HomeState> {
     if (state is HomeLoaded) {
       emit((state as HomeLoaded).copyWith(isRefreshingArtworks: true));
     } else {
-      emit(const HomeLoading(message: 'Refreshing artworks…'));
+      emit( HomeLoading(message: 'errors.refreshing_artworks'.tr()));
     }
 
     final res = await repo
         .getArtworks(limit: 10)
         .timeout(
           _callTimeout,
-          onTimeout: () => const Left(TimeoutFailure('Artworks timed out.')),
+          onTimeout: () =>  Left(TimeoutFailure('errors.artworks_timed_out'.tr())),
         );
 
     if (seq != _loadSeq) return;

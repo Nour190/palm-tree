@@ -35,6 +35,28 @@
     "passwords_dont_match": "كلمات المرور غير متطابقة"
   },
   "errors": {
+
+    "request_failed": "فشل الطلب",
+    "resource_not_found": "المورد غير موجود",
+    "you_are_offline": "أنت غير متصل. تحقق من الاتصال.",
+    "request_timed_out": "انتهت مهلة الطلب. الرجاء المحاولة مجدداً.",
+
+    "artists_timed_out": "انتهت مهلة تحميل المتحدثين.",
+    "artworks_timed_out": "انتهت مهلة تحميل الأعمال الفنية.",
+    "info_timed_out": "انتهت مهلة تحميل المعلومات.",
+    "reviews_timed_out": "انتهت مهلة تحميل التقييمات.",
+
+    "artists_failed": "فشل تحميل المتحدثين.",
+    "artworks_failed": "فشل تحميل الأعمال الفنية.",
+    "info_failed": "فشل تحميل المعلومات.",
+    "reviews_failed": "فشل تحميل التقييمات.",
+
+    "refreshing_artists": "جاري تحديث المتحدثين…",
+    "refreshing_reviews": "جاري تحديث التقييمات…",
+    "refreshing_artworks": "جاري تحديث الأعمال الفنية…",
+
+    "failed_to_load_all": "فشل تحميل المتحدثين، الأعمال الفنية، التقييمات، والمعلومات.",
+
     "server_failure": "حدث خطأ في الخادم",
     "offline_failure": "لا يوجد اتصال بالإنترنت",
     "unexpected_error": "حدث خطأ غير متوقع",
@@ -89,7 +111,19 @@
     "realtime_subscription_error": "خطأ في الاشتراك الفوري",
     "edge_function_error": "خطأ في وظيفة الحافة"
   },
+  "logs": {
+    "retry_artists": "إعادة محاولة تحميل المتحدثين: {error}",
+    "retry_artworks": "إعادة محاولة تحميل الأعمال الفنية: {error}",
+    "retry_info": "إعادة محاولة تحميل المعلومات: {error}",
+    "retry_reviews": "إعادة محاولة تحميل التقييمات: {error}",
+
+    "artists_load_failed": "فشل تحميل المتحدثين: {error}",
+    "artworks_load_failed": "فشل تحميل الأعمال الفنية: {error}",
+    "info_load_failed": "فشل تحميل المعلومات: {error}",
+    "reviews_load_failed": "فشل تحميل التقييمات: {error}"
+  },
   "common": {
+    "partial_content_loaded": "تم تحميل محتوى جزئي",
     "loading": "جاري التحميل...",
     "refreshing": "جاري التحديث...",
     "processing": "جاري المعالجة...",
@@ -113,7 +147,20 @@
     "open": "فتح",
     "select_language": "اختر اللغة"
   },
+  "language": {
+    "Arabic": "العربية",
+    "English": "الانجليزية",
+    "Germany": "الالمانية"
+  },
   "home": {
+    "label_artists": "المتحدثون",
+    "label_artworks": "الأعمال الفنية",
+    "label_reviews": "التقييمات",
+    "label_info": "المعلومات",
+    "curating_experience": "نقوم بتنظيم تجربتك...",
+    "curating_subtitle": "يرجى الانتظار بينما نسترجع أبرز المحتويات.",
+    "refreshing_collection": "جاري تحديث المجموعة...",
+    "textline_banner": "اجعل موعدك مع * موعدك معنا *",
     "speakers": "المتحدثون",
     "see_more": "عرض المزيد",
     "speakers_headline": "تشكيلة من أكثر من 300 صوت من قادة الصناعة",
@@ -134,7 +181,8 @@
     "no_reviews_available": "لا توجد تقييمات متاحة",
     "unknown_artist": "فنان غير معروف",
     "artist": "فنان",
-    "virtual_gallery": "معرض افتراضي"
+    "virtual_gallery": "معرض افتراضي",
+    "about":"عن"
   },
    "footer": {
     "email": "البريد الإلكتروني",

@@ -220,7 +220,7 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
                 },
               ),
             ],
-            child: devType == DeviceType.mobile ? _buildMobileLayout() : _buildDesktopLayout(),
+            child: devType == DeviceType.desktop ? _buildDesktopLayout() :_buildMobileLayout() ,
           ),
         ),
       ),

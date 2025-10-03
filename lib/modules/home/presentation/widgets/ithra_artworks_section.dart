@@ -90,13 +90,12 @@ class IthraArtworksSection extends StatelessWidget {
       ),
     );
   }
-
   Widget _buildArtworksHorizontalList(
       BuildContext context, DeviceType deviceType) {
     final bool isMobile = deviceType == DeviceType.mobile;
     final bool isTablet = deviceType == DeviceType.tablet;
 
-    final double cardHeight = isMobile ? 420.sH : isTablet ? 480.sH : 520.sH;
+    final double cardHeight = isMobile ? 370.sH : isTablet ? 430.sH : 470.sH;
 
     // sequence: Divider, Card, Divider, Card, ..., Divider
     final int totalItems = artworks.length * 2 + 1;
@@ -137,7 +136,7 @@ class IthraArtworksSection extends StatelessWidget {
     final bool isMobile = deviceType == DeviceType.mobile;
     final bool isTablet = deviceType == DeviceType.tablet;
 
-    final double cardHeight = isMobile ? 420.sH : isTablet ? 480.sH : 520.sH;
+    final double cardHeight = isMobile ? 430.sH : isTablet ? 490.sH : 520.sH;
 
     return SizedBox(
       height: cardHeight,
@@ -242,7 +241,7 @@ class _IthraArtworkCardState extends State<_IthraArtworkCard>
     final bool isMobile = widget.deviceType == DeviceType.mobile;
     final bool isTablet = widget.deviceType == DeviceType.tablet;
 
-    final double cardWidth = isMobile ? 200.sW : isTablet ? 250.sW : 300.sW;
+    final double cardWidth = isMobile ? 230.sW : isTablet ? 270.sW : 320.sW;
     final double imageHeight = isMobile ? 200.sH : isTablet ? 240.sH : 280.sH;
 
     return GestureDetector(
@@ -277,23 +276,23 @@ class _IthraArtworkCardState extends State<_IthraArtworkCard>
                         ),
                       ),
                       // Heart icon at bottom-right of image
-                      Positioned(
-                        right: 30.sW,
-                        bottom: 30.sH,
-                        child: _FavoriteButton(
-                          onPressed: widget.onFavoriteTap != null
-                              ? () => widget.onFavoriteTap!(widget.index)
-                              : null,
-                          size: isMobile ? 42.sW : 46.sW,
-                          iconSize: isMobile ? 38.sSp : 36.sSp,
-                        ),
-                      ),
+                      // Positioned(
+                      //   right: 30.sW,
+                      //   bottom: 30.sH,
+                      //   child: _FavoriteButton(
+                      //     onPressed: widget.onFavoriteTap != null
+                      //         ? () => widget.onFavoriteTap!(widget.index)
+                      //         : null,
+                      //     size: isMobile ? 42.sW : 46.sW,
+                      //     iconSize: isMobile ? 38.sSp : 36.sSp,
+                      //   ),
+                      // ),
                     ],
                   ),
 
                   // Content section
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.sW, vertical: 4.sSp),
+                    padding: EdgeInsets.symmetric(horizontal: 16.sW),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -498,44 +497,44 @@ class _IthraArtworkCardState extends State<_IthraArtworkCard>
 // ============================================================================
 // FAVORITE BUTTON
 // ============================================================================
-class _FavoriteButton extends StatelessWidget {
-  final VoidCallback? onPressed;
-  final double size;
-  final double iconSize;
-
-  const _FavoriteButton({
-    required this.onPressed,
-    required this.size,
-    required this.iconSize,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: AppColor.primaryColor.withOpacity(0.5),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: AppColor.black.withOpacity(0.15),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Icon(
-          Icons.favorite_border,
-          size: iconSize,
-          color: AppColor.gray400,
-        ),
-      ),
-    );
-  }
-}
+// class _FavoriteButton extends StatelessWidget {
+//   final VoidCallback? onPressed;
+//   final double size;
+//   final double iconSize;
+//
+//   const _FavoriteButton({
+//     required this.onPressed,
+//     required this.size,
+//     required this.iconSize,
+//   });
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return GestureDetector(
+//       onTap: onPressed,
+//       child: Container(
+//         width: size,
+//         height: size,
+//         decoration: BoxDecoration(
+//           color: AppColor.primaryColor.withOpacity(0.5),
+//           shape: BoxShape.circle,
+//           boxShadow: [
+//             BoxShadow(
+//               color: AppColor.black.withOpacity(0.15),
+//               blurRadius: 8,
+//               offset: const Offset(0, 2),
+//             ),
+//           ],
+//         ),
+//         child: Icon(
+//           Icons.favorite_border,
+//           size: iconSize,
+//           color: AppColor.gray400,
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 // ============================================================================
 // LOADING CARD

@@ -30,6 +30,7 @@ import 'tabs/artist_tab.dart';
 import 'tabs/speakers_tab.dart';
 import 'tabs/gallery_tav_view.dart';
 import '../widgets/desktop_navigation_bar.dart';
+import '../widgets/virtual_tour_view.dart';
 
 class EventsDesktopView extends StatefulWidget {
   const EventsDesktopView({super.key});
@@ -205,7 +206,7 @@ class _EventsDesktopViewState extends State<EventsDesktopView> {
                                     ),
                                     child: Column(
                                       crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                      CrossAxisAlignment.start,
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Text(
@@ -223,8 +224,8 @@ class _EventsDesktopViewState extends State<EventsDesktopView> {
                                               .instance
                                               .title16RegularInter
                                               .copyWith(
-                                                color: AppColor.gray600,
-                                              ),
+                                            color: AppColor.gray600,
+                                          ),
                                           overflow: TextOverflow.ellipsis,
                                           maxLines: 1,
                                         ),
@@ -238,22 +239,22 @@ class _EventsDesktopViewState extends State<EventsDesktopView> {
                                                   height: 60.sH,
                                                   child: CustomSearchView(
                                                     controller:
-                                                        searchController,
+                                                    searchController,
                                                     hintText:
-                                                        'Search events, artists, artworks...',
+                                                    'Search events, artists, artworks...',
                                                     prefixIcon: AppAssetsManager
                                                         .imgSearch,
                                                     fillColor: AppColor
                                                         .backgroundWhite,
                                                     borderColor:
-                                                        AppColor.gray400,
+                                                    AppColor.gray400,
                                                     iconSize: 24.sSp,
                                                     onChanged: (value) {
                                                       ctx
                                                           .read<EventsCubit>()
                                                           .setSearchQuery(
-                                                            value,
-                                                          );
+                                                        value,
+                                                      );
                                                     },
                                                   ),
                                                 ),
@@ -264,12 +265,12 @@ class _EventsDesktopViewState extends State<EventsDesktopView> {
                                                   _selectedIndex == 3)
                                                 _FavToggleChip(
                                                   active:
-                                                      switch (_selectedIndex) {
-                                                        1 => _favOnlyArtworks,
-                                                        2 => _favOnlyArtists,
-                                                        3 => _favOnlySpeakers,
-                                                        _ => false,
-                                                      },
+                                                  switch (_selectedIndex) {
+                                                    1 => _favOnlyArtworks,
+                                                    2 => _favOnlyArtists,
+                                                    3 => _favOnlySpeakers,
+                                                    _ => false,
+                                                  },
                                                   onTap: () =>
                                                       _toggleFavOnlyForCurrentTab(
                                                         ctx,
@@ -314,10 +315,10 @@ class _EventsDesktopViewState extends State<EventsDesktopView> {
           userId: _userId ?? '',
           onToggleFavorite: (_userId != null)
               ? (id) => ctx.read<EventsCubit>().toggleFavorite(
-                  userId: _userId!,
-                  kind: EntityKind.artwork,
-                  entityId: id,
-                )
+            userId: _userId!,
+            kind: EntityKind.artwork,
+            entityId: id,
+          )
               : null,
           onRetry: () =>
               ctx.read<EventsCubit>().loadArtworks(limit: 10, force: true),
@@ -328,10 +329,10 @@ class _EventsDesktopViewState extends State<EventsDesktopView> {
           userId: _userId ?? '',
           onToggleFavorite: (_userId != null)
               ? (id) => ctx.read<EventsCubit>().toggleFavorite(
-                  userId: _userId!,
-                  kind: EntityKind.artist,
-                  entityId: id,
-                )
+            userId: _userId!,
+            kind: EntityKind.artist,
+            entityId: id,
+          )
               : null,
           onRetry: () =>
               ctx.read<EventsCubit>().loadArtists(limit: 10, force: true),
@@ -342,10 +343,10 @@ class _EventsDesktopViewState extends State<EventsDesktopView> {
           userId: _userId ?? '',
           onToggleFavorite: (_userId != null)
               ? (id) => ctx.read<EventsCubit>().toggleFavorite(
-                  userId: _userId!,
-                  kind: EntityKind.speaker,
-                  entityId: id,
-                )
+            userId: _userId!,
+            kind: EntityKind.speaker,
+            entityId: id,
+          )
               : null,
           onRetry: () =>
               ctx.read<EventsCubit>().loadSpeakers(limit: 10, force: true),
@@ -360,7 +361,9 @@ class _EventsDesktopViewState extends State<EventsDesktopView> {
         );
 
       case 5:
-        return const ComingSoon('Virtual Tour');
+        return const VirtualTourView(
+          url: 'https://www.3dvista.com/en/',
+        );
 
       default:
         return const SizedBox.shrink();
@@ -375,10 +378,10 @@ class _EventsSliceView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final events = context.select<EventsCubit, List<Event>>(
-      (c) => c.state.events,
+          (c) => c.state.events,
     );
     final status = context.select<EventsCubit, SliceStatus>(
-      (c) => c.state.eventsStatus,
+          (c) => c.state.eventsStatus,
     );
 
     if (status == SliceStatus.error) {
@@ -426,10 +429,10 @@ class _ArtworksSliceView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final artworks = context.select<EventsCubit, List<Artwork>>(
-      (c) => c.state.artworks,
+          (c) => c.state.artworks,
     );
     final status = context.select<EventsCubit, SliceStatus>(
-      (c) => c.state.artworksStatus,
+          (c) => c.state.artworksStatus,
     );
 
     if (status == SliceStatus.error) {
@@ -469,10 +472,10 @@ class _ArtistsSliceView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final artists = context.select<EventsCubit, List<Artist>>(
-      (c) => c.state.artists,
+          (c) => c.state.artists,
     );
     final status = context.select<EventsCubit, SliceStatus>(
-      (c) => c.state.artistsStatus,
+          (c) => c.state.artistsStatus,
     );
 
     if (status == SliceStatus.error) {
@@ -511,10 +514,10 @@ class _SpeakersSliceView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final speakers = context.select<EventsCubit, List<Speaker>>(
-      (c) => c.state.speakers,
+          (c) => c.state.speakers,
     );
     final status = context.select<EventsCubit, SliceStatus>(
-      (c) => c.state.speakersStatus,
+          (c) => c.state.speakersStatus,
     );
 
     if (status == SliceStatus.error) {
@@ -542,7 +545,7 @@ class _SpeakersSliceView extends StatelessWidget {
           week: monthData.week,
           speakers: speakers,
           ctaSubtitle:
-              "Don't miss the exciting sessions on dates and palm cultivation.",
+          "Don't miss the exciting sessions on dates and palm cultivation.",
           ctaTitle: "We look forward\nto seeing you\ntomorrow",
           onNextMonth: monthData.nextMonth,
           onPrevMonth: monthData.prevMonth,
@@ -560,10 +563,10 @@ class _GallerySliceView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gallery = context.select<EventsCubit, List<GalleryItem>>(
-      (c) => c.state.gallery,
+          (c) => c.state.gallery,
     );
     final status = context.select<EventsCubit, SliceStatus>(
-      (c) => c.state.galleryStatus,
+          (c) => c.state.galleryStatus,
     );
 
     if (status == SliceStatus.error) {

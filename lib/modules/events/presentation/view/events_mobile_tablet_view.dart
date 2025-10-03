@@ -30,6 +30,7 @@ import '../../data/repositories/events/events_repository_impl.dart';
 
 import '../manger/events/events_cubit.dart';
 import '../manger/events/events_state.dart';
+import '../widgets/virtual_tour_view.dart';
 
 class EventsMobileTabletView extends StatefulWidget {
   const EventsMobileTabletView({super.key});
@@ -55,15 +56,6 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
   // Tabs
   late List<CategoryModel> _categories;
 
-  // final List<CategoryModel> _categories =  [
-  //   CategoryModel(title: 'Events', isSelected: true), // 0
-  //   CategoryModel(title: 'Art Works', isSelected: false), // 1
-  //   CategoryModel(title: 'Artist', isSelected: false), // 2
-  //   CategoryModel(title: 'Speakers', isSelected: false), // 3
-  //   CategoryModel(title: 'Gallery', isSelected: false), // 4
-  //   CategoryModel(title: 'Virtual Tour', isSelected: false), // 5
-  // ];
-
   @override
   void initState() {
     super.initState();
@@ -79,18 +71,6 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
     ];
   }
 
-  // void _onCategoryTap(BuildContext ctx, int index) {
-  //   if (_selectedIndex == index) return;
-  //   setState(() {
-  //     _selectedIndex = index;
-  //     for (int i = 0; i < _categories.length; i++) {
-  //       _categories[i] = CategoryModel(
-  //         title: _categories[i].title,
-  //         isSelected: i == index,
-  //       );
-  //     }
-  //   });
-  // }
   void _onCategoryTap(BuildContext ctx, int index) {
     if (_selectedIndex == index) return;
     setState(() {
@@ -223,7 +203,7 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
                                       .setSearchQuery(query),
                                   decoration: InputDecoration(
                                     hintText:
-                                        'Search events, artists, artworks...',
+                                    'Search events, artists, artworks...',
                                     hintStyle: TextStyle(
                                       color: AppColor.gray500,
                                       fontSize: 14.sSp,
@@ -344,7 +324,9 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
         );
 
       case 5: // VIRTUAL TOUR
-        return const ComingSoon('Virtual Tour');
+        return const VirtualTourView(
+          url: 'https://www.3dvista.com/en/',
+        );
 
       default:
         return const SizedBox.shrink();
@@ -363,10 +345,10 @@ class _EventsSliceView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final events = context.select<EventsCubit, List<Event>>(
-      (c) => c.state.events,
+          (c) => c.state.events,
     );
     final status = context.select<EventsCubit, SliceStatus>(
-      (c) => c.state.eventsStatus,
+          (c) => c.state.eventsStatus,
     );
 
     if (status == SliceStatus.error) {
@@ -406,10 +388,10 @@ class _ArtworksSliceView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final artworks = context.select<EventsCubit, List<Artwork>>(
-      (c) => c.state.artworks,
+          (c) => c.state.artworks,
     );
     final status = context.select<EventsCubit, SliceStatus>(
-      (c) => c.state.artworksStatus,
+          (c) => c.state.artworksStatus,
     );
 
     if (status == SliceStatus.error) {
@@ -449,10 +431,10 @@ class _ArtistsSliceView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final artists = context.select<EventsCubit, List<Artist>>(
-      (c) => c.state.artists,
+          (c) => c.state.artists,
     );
     final status = context.select<EventsCubit, SliceStatus>(
-      (c) => c.state.artistsStatus,
+          (c) => c.state.artistsStatus,
     );
 
     if (status == SliceStatus.error) {
@@ -492,10 +474,10 @@ class _SpeakersSliceView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final speakers = context.select<EventsCubit, List<Speaker>>(
-      (c) => c.state.speakers,
+          (c) => c.state.speakers,
     );
     final status = context.select<EventsCubit, SliceStatus>(
-      (c) => c.state.speakersStatus,
+          (c) => c.state.speakersStatus,
     );
 
     if (status == SliceStatus.error) {
@@ -523,7 +505,7 @@ class _SpeakersSliceView extends StatelessWidget {
           week: monthData.week,
           speakers: speakers,
           ctaSubtitle:
-              "Don't miss the exciting sessions on dates and palm cultivation.",
+          "Don't miss the exciting sessions on dates and palm cultivation.",
           ctaTitle: "We look forward\nto seeing you\ntomorrow",
           onNextMonth: monthData.nextMonth,
           onPrevMonth: monthData.prevMonth,
@@ -541,10 +523,10 @@ class _GallerySliceView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gallery = context.select<EventsCubit, List<GalleryItem>>(
-      (c) => c.state.gallery,
+          (c) => c.state.gallery,
     );
     final status = context.select<EventsCubit, SliceStatus>(
-      (c) => c.state.galleryStatus,
+          (c) => c.state.galleryStatus,
     );
 
     if (status == SliceStatus.error) {
@@ -665,15 +647,5 @@ class _InlineError extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class ComingSoon extends StatelessWidget {
-  final String title;
-  const ComingSoon(this.title, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(child: Text('$title — coming soon'));
   }
 }

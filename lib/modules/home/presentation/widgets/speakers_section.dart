@@ -306,7 +306,7 @@ class _CtaPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 6.sH, horizontal: 4.sW),
+      padding: EdgeInsets.symmetric(horizontal: 4.sW),
       decoration: BoxDecoration(
         color: AppColor.gray900,
         borderRadius: BorderRadius.circular(20.sR),
@@ -329,8 +329,8 @@ class _CtaPill extends StatelessWidget {
                       children: [
                         CustomImageView(
                           imagePath: badgeAssetPaths,
-                          height: 55.sH,
-                          width: 100.sW,
+                          height: 30.sH,
+                         // width: 100.sW,
                         ),
                       ],
                     ),
@@ -343,15 +343,17 @@ class _CtaPill extends StatelessWidget {
 
           // CTA button
           CustomButton(
+            height:40.sH,
             text: 'home.join_now'.tr(),
             backgroundColor: AppColor.whiteCustom,
             textColor: AppColor.gray900,
             fontSize: 24.sSp,
             fontWeight: FontWeight.w700,
-            borderRadius: 16.sH,
-            padding: EdgeInsets.symmetric(vertical: 10.sH, horizontal: 20.sW),
+            borderRadius: 10.sH,
+            padding: EdgeInsets.symmetric(horizontal: 20.sW),
             onPressed: onJoinNow ?? () {},
           ),
+          SizedBox(width: 6.sW),
         ],
       ),
     );

@@ -54,6 +54,8 @@ dependencies:
   image_picker: ^1.2.0
   easy_localization: ^3.0.8
   carousel_slider: ^5.1.1
+  flutter_inappwebview: ^6.0.0
+
 #  image_picker_for_web: ^3.1.0
 
 dev_dependencies:
@@ -69,6 +71,7 @@ flutter:
     - assets/
     - assets/images/
     - assets/translations/
+    - assets/animations/
 
   fonts: 
     - family: Inter

@@ -141,14 +141,14 @@ class IthraVirtualTourSection extends StatelessWidget {
                       Spacer(),
                       if (onTryNow != null)
                         SizedBox(
-                          width: 80.sW,
+                          width: 120.sW,
                           child: GestureDetector(
                             onTap: onTryNow,
                             child: Container(
                               padding: EdgeInsets.symmetric(vertical: 14.sH),
                               decoration: BoxDecoration(
                                 color: AppColor.black,
-                                borderRadius: BorderRadius.circular(15.sR),
+                                borderRadius: BorderRadius.circular(10.sR),
                               ),
                               child: Center(
                                 child: Text(

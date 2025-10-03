@@ -37,8 +37,7 @@ class _ArtistDetailsViewState extends State<ArtistDetailsView>
   @override
   Widget build(BuildContext context) {
     final deviceType = Responsive.deviceTypeOf(context);
-    // final isDesktop = deviceType == DeviceType.desktop;
-    // final isMobile = deviceType == DeviceType.mobile;
+
 
     return deviceType == DeviceType.desktop
         ? _buildDesktopLayout()

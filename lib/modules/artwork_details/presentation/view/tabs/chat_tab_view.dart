@@ -713,39 +713,39 @@ ${facts.join('\n')}
                   child: Icon(
                     widget.botAvatarIcon,
                     color: Colors.white,
-                    size: 18,
+                    size: 18.sSp,
                   ),
                 ),
-                const SizedBox(width: 10),
+                 SizedBox(width: 10.sW),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       widget.artwork?.name ?? widget.botName,
-                      style: t.title18Inter,
+                      style:TextStyleHelper.instance.body14MediumInter,
                     ),
                     Row(
                       children: [
                         Container(
-                          width: 8,
-                          height: 8,
+                          width: 8.sW,
+                          height: 8.sH,
                           decoration: BoxDecoration(
                             color: _isSending ? Colors.orange : Colors.green,
                             shape: BoxShape.circle,
                           ),
                         ),
-                        const SizedBox(width: 6),
+                         SizedBox(width: 6.sW),
                         Text(
                           _isSending ? 'Typing…' : 'Online',
-                          style: t.body14MediumInter.copyWith(
+                          style: TextStyleHelper.instance.body12MediumInter.copyWith(
                             color: AppColor.gray400,
                           ),
                         ),
                         if ((widget.userName ?? '').isNotEmpty) ...[
-                          const SizedBox(width: 10),
+                           SizedBox(width: 10.sW),
                           Text(
                             'Visitor: ${widget.userName}',
-                            style: t.body14MediumInter.copyWith(
+                            style: TextStyleHelper.instance.body12MediumInter.copyWith(
                               color: AppColor.gray400,
                             ),
                           ),
@@ -754,58 +754,57 @@ ${facts.join('\n')}
                     ),
                   ],
                 ),
+
               ],
             ),
+
             actions: [
               // TTS/Translation Language selector (five languages)
-              Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: PopupMenuButton<String>(
-                  tooltip: 'TTS/Translation language',
-                  onSelected: (code) async {
-                    // Update cubit (for speak + translation toggles)
-                    cubit.setTtsLocale(code);
-                    // Align TTS engine
-                    await _applyTtsLocale(code);
-                    if (mounted) setState(() {});
-                  },
-                  itemBuilder: (ctx) => _ttsChoices
-                      .map(
-                        (m) => PopupMenuItem<String>(
-                          value: m['code']!,
-                          child: Row(
-                            children: [
-                              const Icon(Icons.translate_rounded, size: 18),
-                              const SizedBox(width: 8),
-                              Text('${m['label']}  •  ${m['code']}'),
-                            ],
-                          ),
+              PopupMenuButton<String>(
+                tooltip: 'TTS/Translation language',
+                onSelected: (code) async {
+                  // Update cubit (for speak + translation toggles)
+                  cubit.setTtsLocale(code);
+                  // Align TTS engine
+                  await _applyTtsLocale(code);
+                  if (mounted) setState(() {});
+                },
+                itemBuilder: (ctx) => _ttsChoices
+                    .map(
+                      (m) => PopupMenuItem<String>(
+                        value: m['code']!,
+                        child: Row(
+                          children: [
+                            const Icon(Icons.translate_rounded, size: 18),
+                            const SizedBox(width: 8),
+                            Text('${m['label']}  •  ${m['code']}'),
+                          ],
                         ),
-                      )
-                      .toList(),
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(
-                      vertical: 8,
-                      horizontal: 6,
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppColor.gray400, width: 1),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.translate_rounded, size: 18),
-                        const SizedBox(width: 6),
-                        Text(
-                          _labelForLocale(state.ttsLocale),
-                          style: t.body14MediumInter,
-                        ),
-                      ],
-                    ),
+                      ),
+                    )
+                    .toList(),
+                child: Container(
+                  margin:  EdgeInsets.symmetric(
+                    vertical: 8.sH,
+                    horizontal: 6.sW,
+                  ),
+                  padding:  EdgeInsets.symmetric(
+                    horizontal: 10.sW,
+                    vertical: 6.sH,
+                  ),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColor.gray400, width: 1),
+                    borderRadius: BorderRadius.circular(10.sR),
+                  ),
+                  child: Row(
+                    children: [
+                       Icon(Icons.translate_rounded, size: 18.sSp),
+                       SizedBox(width: 6.sW),
+                      Text(
+                        _labelForLocale(state.ttsLocale),
+                        style: t.body14MediumInter,
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -819,7 +818,7 @@ ${facts.join('\n')}
                 icon: const Icon(Icons.clear_all_rounded),
                 onPressed: _confirmClear,
               ),
-              const SizedBox(width: 4),
+              // SizedBox(width: 4.sW),
             ],
           ),
           body: SafeArea(
