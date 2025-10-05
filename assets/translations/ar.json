@@ -197,12 +197,12 @@
   },
   "navigation": {
     "home": "الرئيسية",
-    "events": "الفعاليات",
+    "programs": "البرامج",
     "artists": "الفنانون",
     "artworks": "الأعمال الفنية",
     "profile": "الملف الشخصي",
     "settings": "الإعدادات",
-    "favorites": "المفضلة",
+    "virtual_tour": "جولة افتراضية",
     "notifications": "الإشعارات",
     "maps": "الخرائط"
   },

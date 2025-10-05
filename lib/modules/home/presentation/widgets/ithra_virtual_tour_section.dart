@@ -199,7 +199,7 @@ class IthraVirtualTourSection extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.horizontal(left: Radius.circular(20.sR)),
               child: AspectRatio(
-                aspectRatio: isTablet ? 4 / 4 : 3 / 2,
+                aspectRatio: isTablet ? 4 / 4 : 4 / 2,
                 child: virtualTourImage != null
                     ? HomeImage(
                   path: virtualTourImage!,
@@ -216,7 +216,7 @@ class IthraVirtualTourSection extends StatelessWidget {
               padding: EdgeInsets.all(isTablet ? 28.sW : 36.sW),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Text(
                     'home.virtual_tour_title'.tr(),
@@ -239,7 +239,7 @@ class IthraVirtualTourSection extends StatelessWidget {
                       height: 1.6,
                     ),
                   ),
-                  SizedBox(height: 24.sH),
+                  SizedBox(height: 80.sH),
                   Text(
                     'home.virtual_tour_journey'.tr(),
                     style: TextStyle(
@@ -250,12 +250,13 @@ class IthraVirtualTourSection extends StatelessWidget {
                       height: 1.5,
                     ),
                   ),
-                  SizedBox(height: 16.sH),
+                 //Spacer(),
+                  SizedBox(height: 8.sH),
                   Row(
                     children: [
                       HomeImage(
                         path: peopleImage,
-                        fit: BoxFit.cover,
+                        fit: BoxFit.cover,width:120.sW,height:40.sH,
                         errorChild: Container(
                           color: AppColor.gray200,
                           child: Icon(

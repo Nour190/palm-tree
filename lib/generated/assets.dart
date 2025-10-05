@@ -16,6 +16,7 @@ class Assets {
   static const String imagesAppLogo = 'assets/images/app_logo.png';
   static const String imagesAppleLogo = 'assets/images/apple_logo.png';
   static const String imagesBackground = 'assets/images/background.png';
+  static const String imagesFooter = 'assets/images/Footer.png';
   static const String imagesGoogleLogo = 'assets/images/google_Logo.png';
   static const String imagesImageNotFound = 'assets/images/image_not_found.png';
   static const String imagesImgArrowIcon = 'assets/images/img_arrow_icon.svg';
@@ -53,6 +54,8 @@ class Assets {
   static const String imagesImgVectorWhiteA700 = 'assets/images/img_vector_white_a700.png';
   static const String imagesImgVectorWhiteA70050x66 = 'assets/images/img_vector_white_a700_50x66.png';
   static const String imagesImgWithWideWidth = 'assets/images/img_with_wide_width.png';
+  static const String imagesIthra = 'assets/images/ithra.png';
+  static const String imagesLogoBlack = 'assets/images/logo_black.png';
   static const String translationsAr = 'assets/translations/ar.json';
   static const String translationsDe = 'assets/translations/de.json';
   static const String translationsEn = 'assets/translations/en.json';

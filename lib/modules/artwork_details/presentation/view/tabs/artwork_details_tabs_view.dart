@@ -41,7 +41,6 @@ import 'package:baseqat/modules/artwork_details/presentation/view/tabs/feedback_
 import 'package:baseqat/modules/artwork_details/presentation/widgets/hero_image.dart';
 
 // ---- Events desktop nav reused for "same style"
-import 'package:baseqat/modules/events/presentation/widgets/desktop_navigation_bar.dart';
 import 'package:baseqat/modules/events/data/models/category_model.dart'
 as events;
 

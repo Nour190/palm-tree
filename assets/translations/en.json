@@ -201,12 +201,12 @@
   },
   "navigation": {
     "home": "Home",
-    "events": "Events",
+    "programs": "Programs",
     "artists": "Artists",
     "artworks": "Artworks",
     "profile": "Profile",
     "settings": "Settings",
-    "favorites": "Favorites",
+    "virtual_tour": "Virtual Tour",
     "notifications": "Notifications",
     "maps": "Maps"
   },

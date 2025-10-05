@@ -8,7 +8,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/responsive/responsive.dart';
-import '../../../events/presentation/view/events_screen_responsive.dart';
+import '../../../events/presentation/view/layouts/events_screen_responsive.dart';
 
 class TabsViewScreen extends StatelessWidget {
   const TabsViewScreen({super.key});
@@ -47,8 +47,8 @@ class _TabsViewBody extends StatelessWidget {
                         ? DesktopTopBar(
                       items: [
                         "navigation.home".tr(),
-                        "navigation.events".tr(),
-                        "navigation.maps".tr(),
+                        "navigation.programs".tr(),
+                        "navigation.virtual_tour".tr(),
                         //'Profile',
                       ],
                       selectedIndex: selectedIndex,
@@ -62,8 +62,8 @@ class _TabsViewBody extends StatelessWidget {
                         : TopBar(
                           items:  [
                             "navigation.home".tr(),
-                            "navigation.events".tr(),
-                            "navigation.maps".tr(),
+                            "navigation.programs".tr(),
+                            "navigation.virtual_tour".tr(),
                            // 'Profile',
                           ],
                           selectedIndex: selectedIndex,
@@ -107,7 +107,7 @@ Widget _bodyForSelectedIndex(int selectedIndex) {
     case 1: // Events
       return const EventsScreenResponsive();
     case 2: // Maps
-      return const MapView();
+      return const SizedBox.shrink();
   // case 3: // Language
   //   return const SizedBox.shrink();
   //   case 3: // Profile (desktop-only item)

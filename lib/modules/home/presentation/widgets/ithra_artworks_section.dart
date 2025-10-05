@@ -136,7 +136,7 @@ class IthraArtworksSection extends StatelessWidget {
     final bool isMobile = deviceType == DeviceType.mobile;
     final bool isTablet = deviceType == DeviceType.tablet;
 
-    final double cardHeight = isMobile ? 430.sH : isTablet ? 490.sH : 520.sH;
+    final double cardHeight = isMobile ? 440.sH : isTablet ? 490.sH : 520.sH;
 
     return SizedBox(
       height: cardHeight,

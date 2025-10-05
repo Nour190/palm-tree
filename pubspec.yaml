@@ -55,6 +55,7 @@ dependencies:
   easy_localization: ^3.0.8
   carousel_slider: ^5.1.1
   flutter_inappwebview: ^6.0.0
+  flag: ^7.0.2
 
 #  image_picker_for_web: ^3.1.0
 

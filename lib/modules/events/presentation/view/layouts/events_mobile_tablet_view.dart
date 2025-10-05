@@ -3,12 +3,10 @@ import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/modules/events/data/models/fav_extension.dart';
 import 'package:baseqat/modules/events/data/models/gallery_item.dart';
 import 'package:baseqat/modules/events/data/models/month_data.dart';
-import 'package:baseqat/modules/events/presentation/view/tabs/art_works_view.dart';
+import 'package:baseqat/modules/events/presentation/view/tabs/art_works_tab.dart';
 import 'package:baseqat/modules/events/presentation/view/tabs/artist_tab.dart';
-import 'package:baseqat/modules/events/presentation/view/tabs/events_tab_view.dart';
-import 'package:baseqat/modules/events/presentation/view/tabs/gallery_tav_view.dart';
+import 'package:baseqat/modules/events/presentation/view/tabs/gallery_tav_tab.dart';
 import 'package:baseqat/modules/events/presentation/view/tabs/speakers_tab.dart';
-import 'package:baseqat/modules/home/data/models/events_model.dart';
 import 'package:baseqat/modules/home/data/models/artist_model.dart';
 import 'package:baseqat/modules/home/data/models/artwork_model.dart';
 import 'package:baseqat/modules/home/data/models/speaker_model.dart';
@@ -16,21 +14,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../../core/responsive/size_utils.dart';
-import '../../../../core/resourses/assets_manager.dart';
-import '../../../../core/resourses/color_manager.dart';
-import '../../../../core/resourses/style_manager.dart';
+import '../../../../../core/responsive/size_utils.dart';
+import '../../../../../core/resourses/assets_manager.dart';
+import '../../../../../core/resourses/color_manager.dart';
+import '../../../../../core/resourses/style_manager.dart';
 
-import '../../../../core/components/alerts/custom_loading.dart';
-import '../../../../core/components/alerts/custom_error_page.dart';
-import '../../../../core/components/alerts/custom_snackbar.dart';
+import '../../../../../core/components/alerts/custom_loading.dart';
+import '../../../../../core/components/alerts/custom_error_page.dart';
 
-import '../../data/datasources/events_remote_data_source.dart';
-import '../../data/repositories/events/events_repository_impl.dart';
+import '../../../data/datasources/events_remote_data_source.dart';
+import '../../../data/repositories/events/events_repository_impl.dart';
 
-import '../manger/events/events_cubit.dart';
-import '../manger/events/events_state.dart';
-import '../widgets/virtual_tour_view.dart';
+import '../../manger/events/events_cubit.dart';
+import '../../manger/events/events_state.dart';
+import '../tabs/virtual_tour_tab.dart';
 
 class EventsMobileTabletView extends StatefulWidget {
   const EventsMobileTabletView({super.key});
@@ -42,11 +39,6 @@ class EventsMobileTabletView extends StatefulWidget {
 class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
   int _selectedIndex = 0;
   final TextEditingController searchController = TextEditingController();
-
-  // Favorites-only flags per tab
-  bool _favOnlyArtworks = false;
-  bool _favOnlyArtists = false;
-  bool _favOnlySpeakers = false;
 
   // repo + user id (stable)
   late final SupabaseClient _client;
@@ -62,10 +54,9 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
     _client = Supabase.instance.client;
     _repo = EventsRepositoryImpl(EventsRemoteDataSourceImpl(_client));
     _categories = [
-      CategoryModel(title: 'Events', isSelected: true),
-      CategoryModel(title: 'Art Works', isSelected: false),
+      CategoryModel(title: 'Art Works', isSelected: true),
       CategoryModel(title: 'Artist', isSelected: false),
-      CategoryModel(title: 'Speakers', isSelected: false),
+      CategoryModel(title: 'Calender', isSelected: false),
       CategoryModel(title: 'Gallery', isSelected: false),
       CategoryModel(title: 'Virtual Tour', isSelected: false),
     ];
@@ -84,38 +75,6 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
       }
       _categories = newList;
     });
-  }
-
-  void _toggleFavOnlyForCurrentTab(BuildContext ctx) {
-    final cubit = ctx.read<EventsCubit>();
-    switch (_selectedIndex) {
-      case 1: // Artworks
-        final next = !_favOnlyArtworks;
-        setState(() => _favOnlyArtworks = next);
-        cubit.setFavoritesOnly(kind: EntityKind.artwork, value: next);
-        ctx.showInfoSnackBar(
-          next ? 'Showing favorite artworks' : 'Showing all artworks',
-        );
-        break;
-      case 2: // Artists
-        final next = !_favOnlyArtists;
-        setState(() => _favOnlyArtists = next);
-        cubit.setFavoritesOnly(kind: EntityKind.artist, value: next);
-        ctx.showInfoSnackBar(
-          next ? 'Showing favorite artists' : 'Showing all artists',
-        );
-        break;
-      case 3: // Speakers
-        final next = !_favOnlySpeakers;
-        setState(() => _favOnlySpeakers = next);
-        cubit.setFavoritesOnly(kind: EntityKind.speaker, value: next);
-        ctx.showInfoSnackBar(
-          next ? 'Showing favorite speakers' : 'Showing all speakers',
-        );
-        break;
-      default:
-        break;
-    }
   }
 
   bool _isAnyLoading(EventsState s) {
@@ -150,33 +109,7 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 16.h),
-
-                    // ---------------- Heading ----------------
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.h),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Discover Events',
-                            style: TextStyleHelper.instance.headline24BoldInter,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                          SizedBox(height: 6.sH),
-                          Text(
-                            'What do you want to see today?',
-                            style: TextStyleHelper.instance.title16RegularInter
-                                .copyWith(color: AppColor.gray600),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    SizedBox(height: 10.sH),
+                    SizedBox(height: 20.h),
 
                     // ---------------- Search row (hide on Gallery & Virtual Tour) ----------------
                     if (_selectedIndex != 4 && _selectedIndex != 5)
@@ -227,19 +160,12 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
                               ),
                             ),
                             SizedBox(width: 12.sW),
-                            if (_selectedIndex == 1 ||
-                                _selectedIndex == 2 ||
-                                _selectedIndex == 3)
-                              _FavToggleChip(
-                                active: switch (_selectedIndex) {
-                                  1 => _favOnlyArtworks,
-                                  2 => _favOnlyArtists,
-                                  3 => _favOnlySpeakers,
-                                  _ => false,
-                                },
-                                onTap: () => _toggleFavOnlyForCurrentTab(ctx),
-                              ),
-                          ],
+                             Text(
+                            'Programs',
+                            style: TextStyleHelper.instance.headline24BoldInter,
+                            maxLines: 1,
+                          ),
+                            ]
                         ),
                       ),
 
@@ -251,7 +177,9 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
                       onTap: (i) => _onCategoryTap(ctx, i),
                       enableScrollIndicators: false,
                       animationDuration: const Duration(milliseconds: 250),
-                      height: 60.sH,
+                     // runHeight: 60.sH,
+                     // minChipWidth: 130,
+
                     ),
 
                     // ---------------- Body ----------------
@@ -273,13 +201,8 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
   // ============================ Body by Tab ============================
   Widget _buildBody(BuildContext ctx) {
     switch (_selectedIndex) {
-      case 0: // EVENTS (LIVE)
-        return _EventsSliceView(
-          onRetry: () =>
-              ctx.read<EventsCubit>().loadEvents(limit: 10, force: true),
-        );
 
-      case 1: // ARTWORKS
+      case 0: // ARTWORKS
         return _ArtworksSliceView(
           userId: _userId,
           onToggleFavorite: (id) => ctx.read<EventsCubit>().toggleFavorite(
@@ -291,7 +214,7 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
               ctx.read<EventsCubit>().loadArtworks(limit: 10, force: true),
         );
 
-      case 2: // ARTISTS
+      case 1: // ARTISTS
         return _ArtistsSliceView(
           userId: _userId,
           onToggleFavorite: (id) => ctx.read<EventsCubit>().toggleFavorite(
@@ -303,7 +226,7 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
               ctx.read<EventsCubit>().loadArtists(limit: 10, force: true),
         );
 
-      case 3: // SPEAKERS
+      case 2: // SPEAKERS
         return _SpeakersSliceView(
           userId: _userId,
           onToggleFavorite: (id) => ctx.read<EventsCubit>().toggleFavorite(
@@ -315,7 +238,7 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
               ctx.read<EventsCubit>().loadSpeakers(limit: 10, force: true),
         );
 
-      case 4: // GALLERY
+      case 3: // GALLERY
         return _GallerySliceView(
           onRetry: () => ctx.read<EventsCubit>().loadGallery(
             limitArtists: 10,
@@ -323,7 +246,7 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
           ),
         );
 
-      case 5: // VIRTUAL TOUR
+      case 4: // VIRTUAL TOUR
         return const VirtualTourView(
           url: 'https://www.3dvista.com/en/',
         );
@@ -331,47 +254,6 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
       default:
         return const SizedBox.shrink();
     }
-  }
-}
-
-// ===================================================================
-// Slice Views — match Desktop behaviors (error handling + overlay)
-// ===================================================================
-
-class _EventsSliceView extends StatelessWidget {
-  final VoidCallback onRetry;
-  const _EventsSliceView({required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    final events = context.select<EventsCubit, List<Event>>(
-          (c) => c.state.events,
-    );
-    final status = context.select<EventsCubit, SliceStatus>(
-          (c) => c.state.eventsStatus,
-    );
-
-    if (status == SliceStatus.error) {
-      return _InlineError(
-        title: 'Couldn\'t load events',
-        onRetry: onRetry,
-        onShowDetails: () => context.showErrorPage(
-          errorType: ErrorType.generic,
-          customMessage: 'Couldn\'t load events',
-          details: 'Tap retry to attempt fetching events again.',
-          onRetry: onRetry,
-          canContactSupport: false,
-          showDetails: true,
-        ),
-      );
-    }
-
-    return EventsTab(
-      events: events,
-      onOpen: (e) => ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Open: ${e.title}'))),
-    );
   }
 }
 
@@ -549,50 +431,6 @@ class _GallerySliceView extends StatelessWidget {
 }
 
 // ------------------ Helper widgets (mirroring Desktop) ------------------
-
-class _FavToggleChip extends StatelessWidget {
-  final bool active;
-  final VoidCallback onTap;
-  const _FavToggleChip({required this.active, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final bg = active
-        ? AppColor.primaryColor.withValues(alpha: 0.1)
-        : AppColor.gray50;
-    final border = active ? AppColor.primaryColor : AppColor.gray200;
-    final fg = active ? AppColor.primaryColor : AppColor.gray700;
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: onTap,
-      child: Container(
-        height: 40,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: bg,
-          border: Border.all(color: border),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              active ? Icons.favorite : Icons.favorite_border,
-              size: 18,
-              color: fg,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              'Favorites only',
-              style: TextStyle(color: fg, fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _InlineError extends StatelessWidget {
   final String title;

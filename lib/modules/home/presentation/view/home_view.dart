@@ -27,7 +27,7 @@ import '../widgets/common/ithra_welcome_section.dart';
 import '../widgets/ithra_artists_section.dart';
 import '../widgets/ithra_artworks_section.dart';
 import '../widgets/ithra_gallery_section.dart';
-import '../widgets/ithra_reviews_section.dart';
+import '../widgets/reviews_section.dart';
 import '../widgets/ithra_virtual_tour_section.dart';
 
 ErrorType _mapFailureToErrorType(Failure failure) {
@@ -377,9 +377,10 @@ class HomeView extends StatelessWidget {
                                     vertical: 12.sH,
                                   ),
                                 ),
-                              IthraReviewsSection(
-                                reviews: List.from(reviewsSel),
-                                isLoading: isRefreshingSel,
+                              Reviews(
+
+                                isLoading: isRefreshingSel, reviewsData:List.from(reviewsSel),
+
                               ),
                             ],
                           );

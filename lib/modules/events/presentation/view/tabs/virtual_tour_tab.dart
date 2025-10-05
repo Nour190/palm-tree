@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import '../../../../core/resourses/color_manager.dart';
-import '../../../../core/resourses/style_manager.dart';
-import '../../../../core/responsive/size_ext.dart';
+import '../../../../../core/resourses/color_manager.dart';
+import '../../../../../core/resourses/style_manager.dart';
+import '../../../../../core/responsive/size_ext.dart';
 
 class VirtualTourView extends StatefulWidget {
   final String url;

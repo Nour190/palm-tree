@@ -234,7 +234,7 @@ class _IthraArtistCardState extends State<_IthraArtistCard>
                 children: [
                   // Circular avatar
                   Container(
-                    width: 110.sW,
+                    width: 80.sW,
                     height: 90.sH,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,

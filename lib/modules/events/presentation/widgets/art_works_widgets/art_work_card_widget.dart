@@ -1,5 +1,4 @@
 // ===================== ArtWorkCardWidget =====================
-import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/modules/home/data/models/artwork_model.dart';
 import 'package:flutter/material.dart';
 import 'package:baseqat/core/responsive/size_utils.dart';
@@ -12,7 +11,6 @@ class ArtWorkCardWidget extends StatefulWidget {
   final VoidCallback? onTap;
   final ArtworkCardViewType viewType;
 
-  /// NEW: favorite state & handler
   final bool isFavorite;
   final VoidCallback? onFavoriteTap;
 
@@ -32,14 +30,12 @@ class ArtWorkCardWidget extends StatefulWidget {
 class _ArtWorkCardWidgetState extends State<ArtWorkCardWidget>
     with TickerProviderStateMixin {
   late final AnimationController _hoverCtrl = AnimationController(
-    duration: const Duration(milliseconds: 200),
+    duration: const Duration(milliseconds: 160),
     vsync: this,
   );
 
-  late final Animation<double> _hoverScale = Tween(
-    begin: 1.0,
-    end: 1.02,
-  ).animate(CurvedAnimation(parent: _hoverCtrl, curve: Curves.easeOut));
+  late final Animation<double> _hoverScale = Tween(begin: 1.0, end: 1.015)
+      .animate(CurvedAnimation(parent: _hoverCtrl, curve: Curves.easeOut));
 
   bool _isHovered = false;
 
@@ -62,10 +58,7 @@ class _ArtWorkCardWidgetState extends State<ArtWorkCardWidget>
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 768;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return MouseRegion(
       onEnter: (_) => _onHover(true),
       onExit: (_) => _onHover(false),
@@ -74,490 +67,301 @@ class _ArtWorkCardWidgetState extends State<ArtWorkCardWidget>
         builder: (context, child) {
           return Transform.scale(
             scale: _hoverScale.value,
-            child: GestureDetector(
+            child: _VerticalArtworkCard(
+              artwork: widget.artwork,
+              isFavorite: widget.isFavorite,
+              onFavoriteTap: widget.onFavoriteTap,
               onTap: widget.onTap,
-              child: widget.viewType == ArtworkCardViewType.list
-                  ? _buildListCard(isDark, isMobile)
-                  : _buildGridCard(isDark, isMobile),
+              isDark: isDark,
             ),
           );
         },
       ),
     );
   }
+}
 
-  Widget _buildListCard(bool isDark, bool isMobile) {
-    final art = widget.artwork;
-    final cover = _pickCover(art);
-    final isAlternate = art.id.hashCode % 2 == 0;
+class _VerticalArtworkCard extends StatelessWidget {
+  final Artwork artwork;
+  final bool isFavorite;
+  final VoidCallback? onFavoriteTap;
+  final VoidCallback? onTap;
+  final bool isDark;
 
-    final heartIcon = widget.isFavorite
-        ? Icons.favorite
-        : Icons.favorite_border;
-    final heartColor = widget.isFavorite
-        ? AppColor.primaryColor
-        : (isAlternate
-              ? AppColor.white
-              : (isDark ? AppColor.white : AppColor.gray600));
+  const _VerticalArtworkCard({
+    required this.artwork,
+    required this.isFavorite,
+    required this.onFavoriteTap,
+    required this.onTap,
+    required this.isDark,
+  });
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isAlternate
-            ? AppColor.backgroundBlack
-            : (isDark ? AppColor.gray700 : AppColor.white),
-        borderRadius: BorderRadius.circular(16.h),
-        border: isAlternate
-            ? null
-            : Border.all(
-                color: isDark ? AppColor.gray600 : AppColor.gray200,
-                width: 1,
-              ),
-        boxShadow: isAlternate
-            ? [
-                BoxShadow(
-                  color: AppColor.black.withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ]
-            : null,
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(16.h),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Cover
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12.h),
-              child: Container(
-                width: isMobile ? 100.sW : 140.sW,
-                height: isMobile ? 100.sH : 140.sH,
-                decoration: BoxDecoration(
-                  color: isDark ? AppColor.gray700 : AppColor.gray100,
-                ),
-                child: cover == null || cover.isEmpty
-                    ? _buildImagePlaceholder(isDark)
-                    : Image.network(
-                        cover,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            _buildImagePlaceholder(isDark),
+  @override
+  Widget build(BuildContext context) {
+    // Alternate dark/light card like the reference
+    final isAlt = artwork.id.hashCode.isEven;
+
+    final cardBg = isAlt ? AppColor.backgroundBlack
+                         : (isDark ? AppColor.gray700 : AppColor.white);
+    final cardBorder = isAlt
+        ? null
+        : Border.all(
+            color: isDark ? AppColor.gray200.withOpacity(.15) : AppColor.gray200,
+            width: 1,
+          );
+
+    final textPrimary   = isAlt ? AppColor.white : (isDark ? AppColor.white : AppColor.gray900);
+    final textSecondary = isAlt ? AppColor.gray400 : (isDark ? AppColor.gray400 : AppColor.gray600);
+
+    // Arrow contrast aligns with card style
+    final arrowBg   = isAlt ? AppColor.white : AppColor.black;
+    final arrowIcon = isAlt ? AppColor.black : AppColor.white;
+
+    final rCard  = 20.h;
+    final rMedia = 16.h;
+
+    final cover = _pickCover(artwork);
+
+    return Material(
+      color: cardBg,
+      shadowColor: isAlt ? AppColor.black.withOpacity(0.28) : Colors.transparent,
+      elevation: isAlt ? 8 : 0,
+      borderRadius: BorderRadius.circular(rCard),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(rCard),
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(rCard),
+            border: cardBorder,
+          ),
+          padding: EdgeInsets.all(12.h),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ---- Top media with heart chip ----
+              ClipRRect(
+                borderRadius: BorderRadius.circular(rMedia),
+                child: Stack(
+                  children: [
+                    AspectRatio(
+                      aspectRatio: 16 / 9,
+                      child: Container(
+                        color: isDark ? AppColor.gray600 : AppColor.gray100,
+                        child: (cover == null || cover.isEmpty)
+                            ? _buildImagePlaceholder(isDark)
+                            : Image.network(
+                                cover,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) =>
+                                    _buildImagePlaceholder(isDark),
+                              ),
                       ),
-              ),
-            ),
-
-            SizedBox(width: 16.h),
-
-            // Info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    art.name,
-                    style: TextStyle(
-                      fontSize: isMobile ? 18.fSize : 22.fSize,
-                      fontWeight: FontWeight.w600,
-                      color: isAlternate
-                          ? AppColor.white
-                          : (isDark ? AppColor.white : AppColor.gray900),
-                      height: 1.2,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                    // Heart chip (top-left)
+                    Positioned(
+                      left: 12.h,
+                      top: 12.h,
+                      child: _RoundIconButton(
+                        size: 34.h,
+                        bg: Colors.white.withOpacity(isAlt ? 0.12 : 0.92),
+                        icon: isFavorite ? Icons.favorite : Icons.favorite_border,
+                        iconColor: isFavorite
+                            ? AppColor.primaryColor
+                            : (isAlt ? AppColor.white : AppColor.gray700),
+                        borderColor: isAlt
+                            ? AppColor.white.withOpacity(0.24)
+                            : AppColor.gray400,
+                        onTap: onFavoriteTap,
+                        semanticsLabel: isFavorite ? 'Unfavorite' : 'Favorite',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 12.h),
+
+              // ---- Title ----
+              Text(
+                artwork.name,
+                style: TextStyle(
+                  fontSize: 16.fSize,
+                  fontWeight: FontWeight.w600,
+                  color: textPrimary,
+                  height: 1.25,
+                  letterSpacing: .2,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+
+              SizedBox(height: 6.h),
+
+              // ---- Long description ----
+              if (artwork.description != null && artwork.description!.isNotEmpty)
+                Text(
+                  artwork.description!,
+                  style: TextStyle(
+                    fontSize: 13.fSize,
+                    color: textSecondary,
+                    height: 1.42,
                   ),
-                  SizedBox(height: 8.h),
-                  if (art.description != null && art.description!.isNotEmpty)
-                    Text(
-                      art.description!,
-                      style: TextStyle(
-                        fontSize: isMobile ? 14.fSize : 16.fSize,
-                        color: isAlternate
-                            ? AppColor.gray400
-                            : (isDark ? AppColor.gray400 : AppColor.gray600),
-                        height: 1.5,
+                  maxLines: 6,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+              SizedBox(height: 12.h),
+
+              // ---- Footer: avatar, name + role, arrow ----
+              Row(
+                children: [
+                  Container(
+                    width: 36.h,
+                    height: 36.h,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isAlt
+                            ? AppColor.gray500
+                            : (isDark ? AppColor.gray600 : AppColor.gray400),
+                        width: 2,
                       ),
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                  SizedBox(height: 16.h),
-                  Row(
-                    children: [
-                      Container(
-                        width: 32.h,
-                        height: 32.h,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: isAlternate
-                                ? AppColor.gray500
-                                : (isDark
-                                      ? AppColor.gray600
-                                      : AppColor.gray400),
-                            width: 2,
+                    child: ClipOval(
+                      child: (artwork.artistProfileImage == null ||
+                              artwork.artistProfileImage!.isEmpty)
+                          ? Container(
+                              color: isDark ? AppColor.gray700 : AppColor.gray100,
+                              child: Icon(
+                                Icons.person,
+                                size: 18.h,
+                                color: isDark ? AppColor.gray400 : AppColor.gray600,
+                              ),
+                            )
+                          : Image.network(
+                              artwork.artistProfileImage!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                color: isDark ? AppColor.gray700 : AppColor.gray100,
+                                child: Icon(
+                                  Icons.person,
+                                  size: 18.h,
+                                  color: isDark ? AppColor.gray400 : AppColor.gray600,
+                                ),
+                              ),
+                            ),
+                    ),
+                  ),
+                  SizedBox(width: 10.h),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          artwork.artistName ?? 'Unknown Artist',
+                          style: TextStyle(
+                            fontSize: 14.fSize,
+                            fontWeight: FontWeight.w600,
+                            color: textPrimary,
+                            height: 1.05,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          'Artist',
+                          style: TextStyle(
+                            fontSize: 12.fSize,
+                            color: textSecondary,
                           ),
                         ),
-                        child: ClipOval(
-                          child:
-                              art.artistProfileImage == null ||
-                                  art.artistProfileImage!.isEmpty
-                              ? Container(
-                                  color: isDark
-                                      ? AppColor.gray700
-                                      : AppColor.gray100,
-                                  child: Icon(
-                                    Icons.person,
-                                    size: 16.h,
-                                    color: isDark
-                                        ? AppColor.gray400
-                                        : AppColor.gray600,
-                                  ),
-                                )
-                              : Image.network(
-                                  art.artistProfileImage!,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => Container(
-                                    color: isDark
-                                        ? AppColor.gray700
-                                        : AppColor.gray100,
-                                    child: Icon(
-                                      Icons.person,
-                                      size: 16.h,
-                                      color: isDark
-                                          ? AppColor.gray400
-                                          : AppColor.gray600,
-                                    ),
-                                  ),
-                                ),
-                        ),
-                      ),
-                      SizedBox(width: 8.h),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              art.artistName ?? 'Unknown Artist',
-                              style: TextStyle(
-                                fontSize: 14.fSize,
-                                fontWeight: FontWeight.w500,
-                                color: isAlternate
-                                    ? AppColor.white
-                                    : (isDark
-                                          ? AppColor.white
-                                          : AppColor.gray900),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Text(
-                              'Artist',
-                              style: TextStyle(
-                                fontSize: 12.fSize,
-                                color: isAlternate
-                                    ? AppColor.gray400
-                                    : (isDark
-                                          ? AppColor.gray400
-                                          : AppColor.gray600),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
+                  ),
+                  _RoundIconButton(
+                    size: 40.h,
+                    bg: arrowBg,
+                    icon: Icons.north_east_rounded,
+                    iconColor: arrowIcon,
+                    borderColor: isAlt
+                        ? AppColor.gray600
+                        : AppColor.gray900.withOpacity(.75),
+                    onTap: onTap,
+                    semanticsLabel: 'Open details',
                   ),
                 ],
               ),
-            ),
-
-            SizedBox(width: 16.h),
-
-            // Actions
-            Column(
-              children: [
-                // Favorite
-                Container(
-                  width: 44.h,
-                  height: 44.h,
-                  decoration: BoxDecoration(
-                    color: isAlternate
-                        ? AppColor.gray700
-                        : (isDark ? AppColor.gray700 : AppColor.gray100),
-                    borderRadius: BorderRadius.circular(22.h),
-                    border: Border.all(
-                      color: isAlternate
-                          ? AppColor.gray600
-                          : (isDark ? AppColor.gray600 : AppColor.gray200),
-                    ),
-                  ),
-                  child: Material(
-                    color: AppColor.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(22.h),
-                      onTap: widget.onFavoriteTap,
-                      child: Icon(heartIcon, color: heartColor, size: 20.h),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 12.h),
-
-                // Navigate
-                Container(
-                  width: 44.h,
-                  height: 44.h,
-                  decoration: BoxDecoration(
-                    color: isAlternate
-                        ? AppColor.gray700
-                        : (isDark ? AppColor.gray700 : AppColor.gray100),
-                    borderRadius: BorderRadius.circular(22.h),
-                    border: Border.all(
-                      color: isAlternate
-                          ? AppColor.gray600
-                          : (isDark ? AppColor.gray600 : AppColor.gray200),
-                    ),
-                  ),
-                  child: Material(
-                    color: AppColor.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(22.h),
-                      onTap: widget.onTap,
-                      child: Icon(
-                        Icons.arrow_forward,
-                        color: isAlternate
-                            ? AppColor.white
-                            : (isDark ? AppColor.white : AppColor.gray600),
-                        size: 20.h,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildGridCard(bool isDark, bool isMobile) {
-    final art = widget.artwork;
-    final cover = _pickCover(art);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColor.gray700 : AppColor.white,
-        borderRadius: BorderRadius.circular(16.h),
-        border: Border.all(color: isDark ? AppColor.gray600 : AppColor.gray200),
-        boxShadow: [
-          BoxShadow(
-            color: AppColor.black.withOpacity(isDark ? 0.2 : 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Image + fav overlay
-          Expanded(
-            flex: 3,
-            child: Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(16.h),
-                  ),
-                  child: Container(
-                    width: double.infinity,
-                    height: double.infinity,
-                    decoration: BoxDecoration(
-                      color: isDark ? AppColor.gray600 : AppColor.gray100,
-                    ),
-                    child: cover == null || cover.isEmpty
-                        ? _buildImagePlaceholder(isDark)
-                        : Image.network(
-                            cover,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) =>
-                                _buildImagePlaceholder(isDark),
-                          ),
-                  ),
-                ),
-                Positioned(
-                  top: 12.h,
-                  right: 12.h,
-                  child: Container(
-                    width: 36.h,
-                    height: 36.h,
-                    decoration: BoxDecoration(
-                      color: AppColor.white.withOpacity(0.9),
-                      borderRadius: BorderRadius.circular(18.h),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColor.black.withOpacity(0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Material(
-                      color: AppColor.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(18.h),
-                        onTap: widget.onFavoriteTap,
-                        child: Icon(
-                          widget.isFavorite
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          color: widget.isFavorite
-                              ? AppColor.primaryColor
-                              : AppColor.gray600,
-                          size: 18.h,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Content
-          Expanded(
-            flex: 2,
-            child: Padding(
-              padding: EdgeInsets.all(12.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    art.name,
-                    style: TextStyle(
-                      fontSize: 16.fSize,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? AppColor.white : AppColor.gray900,
-                      height: 1.2,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 6.h),
-                  if (art.description != null && art.description!.isNotEmpty)
-                    Text(
-                      art.description!,
-                      style: TextStyle(
-                        fontSize: 13.fSize,
-                        color: isDark ? AppColor.gray400 : AppColor.gray600,
-                        height: 1.3,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  SizedBox(height: 18.h),
-                  Row(
-                    children: [
-                      Container(
-                        width: 24.h,
-                        height: 24.h,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: isDark ? AppColor.gray600 : AppColor.gray200,
-                          ),
-                        ),
-                        child: ClipOval(
-                          child:
-                              art.artistProfileImage == null ||
-                                  art.artistProfileImage!.isNotEmpty == false
-                              ? Container(
-                                  color: isDark
-                                      ? AppColor.gray600
-                                      : AppColor.gray100,
-                                  child: Icon(
-                                    Icons.person,
-                                    size: 12.h,
-                                    color: isDark
-                                        ? AppColor.gray400
-                                        : AppColor.gray600,
-                                  ),
-                                )
-                              : Image.network(
-                                  art.artistProfileImage!,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => Container(
-                                    color: isDark
-                                        ? AppColor.gray600
-                                        : AppColor.gray100,
-                                    child: Icon(
-                                      Icons.person,
-                                      size: 12.h,
-                                      color: isDark
-                                          ? AppColor.gray400
-                                          : AppColor.gray600,
-                                    ),
-                                  ),
-                                ),
-                        ),
-                      ),
-                      SizedBox(width: 6.h),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              art.artistName ?? 'Unknown Artist',
-                              style: TextStyle(
-                                fontSize: 13.fSize,
-                                fontWeight: FontWeight.w500,
-                                color: isDark
-                                    ? AppColor.white
-                                    : AppColor.gray900,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Text(
-                              'Artist',
-                              style: TextStyle(
-                                fontSize: 11.fSize,
-                                color: isDark
-                                    ? AppColor.gray400
-                                    : AppColor.gray600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildImagePlaceholder(bool isDark) {
-    return Container(
-      width: double.infinity,
-      height: double.infinity,
-      decoration: BoxDecoration(
-        color: isDark ? AppColor.gray600 : AppColor.gray100,
-      ),
+    return Center(
       child: Icon(
         Icons.image_rounded,
-        size: 32.h,
-        color: isDark ? AppColor.gray400 : AppColor.gray600,
+        size: 28.h,
+        color: isDark ? AppColor.gray400 : AppColor.gray500,
       ),
     );
   }
 
-  String? _pickCover(Artwork a) {
-    if (a.gallery.isNotEmpty) return a.gallery.first;
-    return null;
+  String? _pickCover(Artwork a) =>
+      a.gallery.isNotEmpty ? a.gallery.first : null;
+}
+
+// Reusable circular icon button (heart + arrow)
+class _RoundIconButton extends StatelessWidget {
+  final IconData icon;
+  final Color bg;
+  final Color iconColor;
+  final Color? borderColor;
+  final double size;
+  final VoidCallback? onTap;
+  final String? semanticsLabel;
+
+  const _RoundIconButton({
+    required this.icon,
+    required this.bg,
+    required this.iconColor,
+    required this.size,
+    this.borderColor,
+    this.onTap,
+    this.semanticsLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: semanticsLabel,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(size / 2),
+          border: borderColor != null ? Border.all(color: borderColor!) : null,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(size / 2),
+            onTap: onTap,
+            child: Icon(icon, color: iconColor, size: size * 0.48),
+          ),
+        ),
+      ),
+    );
   }
 }

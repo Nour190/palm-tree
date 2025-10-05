@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/responsive/responsive.dart';
+import '../../../../../core/responsive/responsive.dart';
 import 'events_desktop_view.dart';
 import 'events_mobile_tablet_view.dart';
 

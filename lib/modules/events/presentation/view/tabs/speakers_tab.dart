@@ -1,30 +1,33 @@
+import 'package:baseqat/core/resourses/navigation_manger.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
-import 'package:baseqat/modules/events/data/models/week_model.dart';
+import 'package:baseqat/modules/events/presentation/view/more_details_views_tabs/speakers_info_view.dart';
 import 'package:baseqat/modules/events/presentation/widgets/speaker_widgets/bottom_cta.dart';
 import 'package:baseqat/modules/events/presentation/widgets/speaker_widgets/month_selector.dart';
 import 'package:baseqat/modules/events/presentation/widgets/speaker_widgets/schedule_list.dart';
+import 'package:baseqat/modules/events/presentation/widgets/speaker_widgets/schedule_tabs.dart';
 import 'package:baseqat/modules/events/presentation/widgets/speaker_widgets/speaker_header.dart';
 import 'package:baseqat/modules/events/presentation/widgets/speaker_widgets/week_strip.dart';
-
 import 'package:baseqat/modules/home/data/models/speaker_model.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
-
 import '../../../../../core/resourses/style_manager.dart';
 
+/// -------------------------
+/// SpeakersTabContent (page)
+/// -------------------------
 class SpeakersTabContent extends StatefulWidget {
   final String headerTitle;
   final String monthLabel;
   final DateTime currentMonth;
-  final WeekModel week;
-  final List<Speaker> speakers;
+  final dynamic week; // kept for compatibility
+  final List<Speaker> speakers; // startAt in UTC
   final String ctaTitle;
   final String ctaSubtitle;
   final IconData ctaIcon;
   final VoidCallback onPrevMonth;
   final VoidCallback onNextMonth;
   final String userId;
-
   final Function(Speaker)? onSpeakerTap;
 
   const SpeakersTabContent({
@@ -48,454 +51,483 @@ class SpeakersTabContent extends StatefulWidget {
 }
 
 class _SpeakersTabContentState extends State<SpeakersTabContent> {
-  // 30-day window starting from the first day of currentMonth (UTC at 00:00)
-  late DateTime _windowStartUtc;
-  static const int _windowDays = 30;
-
-  // Index of the first day of the current 7-day slice inside the 30-day array
-  int _sliceStart = 0; // 0..(30-7)=23
-  static const int _sliceLen = 7;
-
-  // Which day is selected within the current 7-day slice (0..6)
-  int _selectedIndexInSlice = 0;
-
-  // Precomputed 30 dates (UTC) for the window
-  late List<DateTime> _days30;
+  late List<DateTime> _daysInMonth;
+  int _selectedIndex = 0; // in _daysInMonth
+  int _tabIndex = 0; // 0 = Speakers, 1 = Workshop
 
   @override
   void initState() {
     super.initState();
-    _resetWindowFromMonth(widget.currentMonth);
+    _rebuildMonth(widget.currentMonth);
   }
 
   @override
   void didUpdateWidget(covariant SpeakersTabContent oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // If parent changes the month, rebuild our window & reset slice/selection
     if (oldWidget.currentMonth.year != widget.currentMonth.year ||
         oldWidget.currentMonth.month != widget.currentMonth.month) {
-      _resetWindowFromMonth(widget.currentMonth);
+      _rebuildMonth(widget.currentMonth);
     }
   }
 
-  void _resetWindowFromMonth(DateTime monthAnchorLocal) {
-    // seed = first day of this month, in UTC
-    final firstDayLocal = DateTime(
-      monthAnchorLocal.year,
-      monthAnchorLocal.month,
-      1,
-    );
-    _windowStartUtc = DateTime.utc(
-      firstDayLocal.year,
-      firstDayLocal.month,
-      firstDayLocal.day,
-    );
-    _days30 = List.generate(
-      _windowDays,
-      (i) => _windowStartUtc.add(Duration(days: i)),
-    );
-    _sliceStart = 0;
-    _selectedIndexInSlice = 0;
+  void _rebuildMonth(DateTime month) {
+    _daysInMonth = _buildMonthDays(month);
+    _selectedIndex = _initialSelectedIndex(_daysInMonth, month);
     setState(() {});
   }
 
-  // Slice navigation
-  void _prev7Days() {
-    if (_sliceStart == 0) return;
-    setState(() {
-      _sliceStart = (_sliceStart - _sliceLen).clamp(0, _windowDays - _sliceLen);
-      _selectedIndexInSlice = 0; // reset selection to first visible day
-    });
+  // All local days of the month
+  List<DateTime> _buildMonthDays(DateTime month) {
+    final first = DateTime(month.year, month.month, 1);
+    final last = DateTime(month.year, month.month + 1, 0);
+    return List.generate(last.day, (i) => DateTime(first.year, first.month, i + 1));
   }
 
-  void _next7Days() {
-    if (_sliceStart >= _windowDays - _sliceLen) return;
-    setState(() {
-      _sliceStart = (_sliceStart + _sliceLen).clamp(0, _windowDays - _sliceLen);
-      _selectedIndexInSlice = 0; // reset selection to first visible day
-    });
+  // Preselect today if it's in the current month, else day 1
+  int _initialSelectedIndex(List<DateTime> days, DateTime month) {
+    final now = DateTime.now();
+    if (now.year != month.year || now.month != month.month) return 0;
+    final today = DateTime(now.year, now.month, now.day);
+    final idx = days.indexWhere((d) => d.year == today.year && d.month == today.month && d.day == today.day);
+    return idx >= 0 ? idx : 0;
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 768;
-    final isTablet = screenWidth >= 768 && screenWidth < 1024;
-    final isDesktop = screenWidth >= 1024;
+    final isDesktop = MediaQuery.of(context).size.width >= 1024;
 
-    // Build the current 7-day slice
-    final slice = _days30.sublist(_sliceStart, _sliceStart + _sliceLen);
+    // Pick selected day and filter sessions by UTC day-range
+    final selectedDay = _daysInMonth[_selectedIndex];
+    final dayStartUtc = DateTime.utc(selectedDay.year, selectedDay.month, selectedDay.day);
+    final dayEndUtc = DateTime.utc(selectedDay.year, selectedDay.month, selectedDay.day, 23, 59, 59, 999);
 
-    // Build a WeekModel from the slice for the WeekStrip
-    final week = WeekModel(
-      weekdays: slice.map((d) => _weekdayShort(d)).toList(growable: false),
-      dates: slice.map((d) => d.day).toList(growable: false),
-      selectedIndex: _selectedIndexInSlice,
-    );
-
-    // Selected day exact UTC range
-    final selectedDay = slice[_selectedIndexInSlice];
-    final dayStart = DateTime.utc(
-      selectedDay.year,
-      selectedDay.month,
-      selectedDay.day,
-    );
-    final dayEnd = DateTime.utc(
-      selectedDay.year,
-      selectedDay.month,
-      selectedDay.day,
-      23,
-      59,
-      59,
-      999,
-    );
-
-    // Filter speakers to selected day, sort by startAt
-    final daySpeakers = widget.speakers.where((sp) {
-      final t = sp.startAt; // UTC instant in your model
-      return !t.isBefore(dayStart) && !t.isAfter(dayEnd);
-    }).toList()..sort((a, b) => a.startAt.compareTo(b.startAt));
+    final daySpeakers = widget.speakers
+        .where((sp) => !sp.startAt.isBefore(dayStartUtc) && !sp.startAt.isAfter(dayEndUtc))
+        .toList()
+      ..sort((a, b) => a.startAt.compareTo(b.startAt));
 
     return Scaffold(
       backgroundColor: AppColor.white,
       body: SafeArea(
-        child: isDesktop
-            ? _buildDesktopLayout(slice, week, daySpeakers)
-            : _buildMobileTabletLayout(slice, week, daySpeakers, isMobile),
-      ),
-    );
-  }
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(isDesktop ? 24 : 16),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1200),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SpeakersHeader(title: widget.headerTitle, isDesktop: isDesktop),
+                  SizedBox(height: isDesktop ? 24 : 16),
 
-  Widget _buildDesktopLayout(
-    List<DateTime> slice,
-    WeekModel week,
-    List<Speaker> daySpeakers,
-  ) {
-    return Container(
-      constraints: const BoxConstraints(maxWidth: 1200),
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 24),
-            SpeakersHeader(title: widget.headerTitle, isDesktop: true),
-            const SizedBox(height: 32),
-
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Left sidebar with controls
-                SizedBox(
-                  width: 350,
-                  child: Column(
-                    children: [
-                      MonthSelector(
-                        monthLabel: widget.monthLabel,
-                        onPrev: widget.onPrevMonth,
-                        onNext: widget.onNextMonth,
-                        isDesktop: true,
-                      ),
-                      const SizedBox(height: 24),
-                      _SliceHeader(
-                        start: slice.first,
-                        end: slice.last,
-                        onPrev7: (_sliceStart == 0) ? null : _prev7Days,
-                        onNext7: (_sliceStart >= _windowDays - _sliceLen)
-                            ? null
-                            : _next7Days,
-                        isDesktop: true,
-                      ),
-                      const SizedBox(height: 16),
-                      WeekStrip(
-                        week: week,
-                        selectedIndex: _selectedIndexInSlice,
-                        onDaySelected: (i) =>
-                            setState(() => _selectedIndexInSlice = i),
-                        isDesktop: true,
-                      ),
-                      const SizedBox(height: 24),
-                      BottomCta(
-                        title: widget.ctaTitle,
-                        subtitle: widget.ctaSubtitle,
-                        icon: widget.ctaIcon,
-                        isDesktop: true,
-                      ),
-                    ],
+                  MonthSelector(
+                    monthLabel: widget.monthLabel,
+                    onPrev: widget.onPrevMonth,
+                    onNext: widget.onNextMonth,
+                    isDesktop: isDesktop,
                   ),
-                ),
+                  SizedBox(height: isDesktop ? 14 : 12),
 
-                SizedBox(width: 15.sW),
-
-                // Right content area
-                Expanded(
-                  child: ScheduleList(
-                    speakers: daySpeakers,
-                    userId: widget.userId,
-                    onTap: (index) {
-                      if (widget.onSpeakerTap != null &&
-                          index < daySpeakers.length) {
-                        widget.onSpeakerTap!(daySpeakers[index]);
-                      }
-                    },
-                    isDesktop: true,
+                  // Full-month strip (horizontal scroll)
+                  WeekStrip(
+                    days: _daysInMonth,
+                    selectedIndex: _selectedIndex,
+                    onDaySelected: (i) => setState(() => _selectedIndex = i),
+                    isDesktop: isDesktop,
                   ),
-                ),
-              ],
+                  SizedBox(height: isDesktop ? 20 : 18),
+
+                  ScheduleTabs(
+                    tabs: const ['Speakers', 'Workshop'],
+                    index: _tabIndex,
+                    onChanged: (i) => setState(() => _tabIndex = i),
+                  ),
+                  SizedBox(height: isDesktop ? 14 : 8),
+
+                  // CONTENT
+                  if (_tabIndex == 0)
+                    ScheduleList(
+                      speakers: daySpeakers,
+                      userId: widget.userId,
+                      isDesktop: isDesktop,
+                    )
+                  else
+                    WorkshopList(
+                      workshops: daySpeakers, // reuse filtered list (or swap to a dedicated workshops list)
+                      userId: widget.userId,
+                      isDesktop: isDesktop,
+                    ),
+
+                  SizedBox(height: isDesktop ? 28 : 20),
+                  BottomCta(
+                    title: widget.ctaTitle,
+                    subtitle: widget.ctaSubtitle,
+                    icon: widget.ctaIcon,
+                    isDesktop: isDesktop,
+                  ),
+                  const SizedBox(height: 8),
+                  Container(height: 1, color: AppColor.grey200),
+                ],
+              ),
             ),
-
-            const SizedBox(height: 32),
-          ],
+          ),
         ),
       ),
     );
   }
-
-  Widget _buildMobileTabletLayout(
-    List<DateTime> slice,
-    WeekModel week,
-    List<Speaker> daySpeakers,
-    bool isMobile,
-  ) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(isMobile ? 16 : 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          //   const SizedBox(height: 10),
-          SpeakersHeader(title: widget.headerTitle, isDesktop: false),
-          SizedBox(height: 20.sH),
-
-          // Month controls
-          MonthSelector(
-            monthLabel: widget.monthLabel,
-            onPrev: widget.onPrevMonth,
-            onNext: widget.onNextMonth,
-            isDesktop: false,
-          ),
-
-          SizedBox(height: 16.sH),
-
-          // 7-day strip + slice navigation buttons
-          _SliceHeader(
-            start: slice.first,
-            end: slice.last,
-            onPrev7: (_sliceStart == 0) ? null : _prev7Days,
-            onNext7: (_sliceStart >= _windowDays - _sliceLen)
-                ? null
-                : _next7Days,
-            isDesktop: false,
-          ),
-          SizedBox(height: 10.sH),
-          WeekStrip(
-            week: week,
-            selectedIndex: _selectedIndexInSlice,
-            onDaySelected: (i) => setState(() => _selectedIndexInSlice = i),
-            isDesktop: false,
-          ),
-          SizedBox(height: 24.sH),
-
-          // Schedule list for the selected day
-          Center(
-            child: ScheduleList(
-              speakers: daySpeakers,
-              userId: widget.userId,
-
-              onTap: (index) {
-                if (widget.onSpeakerTap != null && index < daySpeakers.length) {
-                  widget.onSpeakerTap!(daySpeakers[index]);
-                }
-              },
-              isDesktop: false,
-            ),
-          ),
-
-          const SizedBox(height: 24),
-          BottomCta(
-            title: widget.ctaTitle,
-            subtitle: widget.ctaSubtitle,
-            icon: widget.ctaIcon,
-            isDesktop: false,
-          ),
-          const SizedBox(height: 8),
-          Container(height: 1, color: AppColor.grey200),
-        ],
-      ),
-    );
-  }
-
-  String _weekdayShort(DateTime d) {
-    switch (d.weekday) {
-      case DateTime.monday:
-        return 'Mon';
-      case DateTime.tuesday:
-        return 'Tue';
-      case DateTime.wednesday:
-        return 'Wed';
-      case DateTime.thursday:
-        return 'Thu';
-      case DateTime.friday:
-        return 'Fri';
-      case DateTime.saturday:
-        return 'Sat';
-      default:
-        return 'Sun';
-    }
-  }
 }
 
-class _SliceHeader extends StatelessWidget {
-  final DateTime start;
-  final DateTime end;
-  final VoidCallback? onPrev7;
-  final VoidCallback? onNext7;
+/// -------------------------
+/// WorkshopList
+/// -------------------------
+class WorkshopList extends StatelessWidget {
+  final List<Speaker> workshops; // sessions for the selected day
+  final String userId;
   final bool isDesktop;
 
-  const _SliceHeader({
-    required this.start,
-    required this.end,
-    this.onPrev7,
-    this.onNext7,
-    required this.isDesktop,
+  const WorkshopList({
+    super.key,
+    required this.workshops,
+    required this.userId,
+    this.isDesktop = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final label = _rangeLabel(start, end);
-
-    if (isDesktop) {
-      return Row(
-        children: [
-          Text(
-            label,
-            style: TextStyleHelper.instance.title16BoldInter.copyWith(
-              color: AppColor.gray900,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: onPrev7,
-                    icon: const Icon(
-                      Icons.chevron_left,
-                      size: 16,
-                      color: AppColor.blueGray100,
-                    ),
-                    label: Text(
-                      'Prev 7',
-                      style: TextStyleHelper.instance.body14RegularInter,
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      side: BorderSide(color: AppColor.blueGray100),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: onNext7,
-                    icon: const Icon(Icons.chevron_right, size: 16),
-                    label: Text(
-                      'Next 7',
-                      style: TextStyleHelper.instance.body14RegularInter,
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      side: BorderSide(color: AppColor.blueGray100),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+    if (workshops.isEmpty) {
+      return Container(
+        padding: EdgeInsets.all(isDesktop ? 24 : 20),
+        decoration: BoxDecoration(
+          color: AppColor.white,
+          borderRadius: BorderRadius.circular(isDesktop ? 16 : 12),
+          border: Border.all(color: AppColor.blueGray100),
+        ),
+        child: const Text('No workshops for this day.'),
       );
     }
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        // space between label & buttons
-        Expanded(
+    // Parent is a SingleChildScrollView, so we keep a simple Column (no ListView/Expanded).
+    return Column(
+      children: List.generate(workshops.length, (i) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: i == workshops.length - 1 ? 0 : 12.sH),
+          child: WorkshopCard(
+            speaker: workshops[i],
+            userId: userId,
+            index: i,
+            isDesktop: isDesktop,
+          ),
+        );
+      }),
+    );
+  }
+}
+
+/// -------------------------
+/// WorkshopCard
+/// -------------------------
+class WorkshopCard extends StatelessWidget {
+  final Speaker speaker;
+  final String userId;
+  final int index;
+  final bool isDesktop;
+
+  const WorkshopCard({
+    super.key,
+    required this.speaker,
+    required this.userId,
+    required this.index,
+    this.isDesktop = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const bandWidth = 30.0;
+    final imageW = isDesktop ? 120.0 : 110.0;
+    final imageH = isDesktop ? 82.0 : 76.0;
+
+    // Keep "first is Live" behavior to match the mock; prefer isLive flag if present.
+    final isLive = (speaker.isLive == true) || index == 0;
+    final timeRange = _timeRange(speaker.startAt, speaker.endAt);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => navigateTo(context, SpeakersInfoScreen(speaker: speaker, userId: userId)),
+        child: IntrinsicHeight( // guarantees finite height for stretch/hit testing
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: onPrev7,
-                  icon: const Icon(Icons.chevron_left, size: 16),
-                  label: Text(
-                    'Prev 7',
-                    style: TextStyleHelper.instance.body14RegularInter,
+              // Left vertical band
+              Container(
+                width: bandWidth,
+                decoration: const BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(8),
+                    bottomLeft: Radius.circular(8),
                   ),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
+                ),
+                child: Center(
+                  child: RotatedBox(
+                    quarterTurns: 3,
+                    child: Text(
+                      isLive ? 'Live Now' : timeRange,
+                      style: TextStyleHelper.instance.body12MediumInter
+                          .copyWith(color: Colors.white, letterSpacing: .3),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    side: BorderSide(color: AppColor.blueGray100),
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8.sW),
+
+              // White Card
               Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: onNext7,
-                  icon: const Icon(Icons.chevron_right, size: 16),
-                  label: Text(
-                    'Next 7',
-                    style: TextStyleHelper.instance.body14RegularInter,
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 110), // ensures tappable area
+                  decoration: BoxDecoration(
+                    color: AppColor.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColor.blueGray100, width: 1),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
+                  child: Padding(
+                    padding: EdgeInsets.all(isDesktop ? 14 : 12),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Thumbnail
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: SizedBox(
+                            width: imageW,
+                            height: imageH,
+                            child: _buildCover(),
+                          ),
+                        ),
+                        SizedBox(width: 12.sW),
+
+                        // Title + description + presenter row
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Title
+                              Text(
+                                _safeTitle(),
+                                style: TextStyleHelper.instance.title16BoldInter
+                                    .copyWith(color: AppColor.black),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              SizedBox(height: 6.sH),
+
+                              // Description
+                              Text(
+                                _safeDescription(),
+                                style: TextStyleHelper.instance.body12MediumInter
+                                    .copyWith(color: AppColor.gray600, height: 1.35),
+                                maxLines: isDesktop ? 3 : 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              SizedBox(height: 10.sH),
+
+                              // Presenter + Arrow
+                              Row(
+                                children: [
+                                  // Avatar
+                                  ClipOval(
+                                    child: SizedBox(
+                                      width: 28,
+                                      height: 28,
+                                      child: _buildAvatar(),
+                                    ),
+                                  ),
+                                  SizedBox(width: 8.sW),
+
+                                  // Name + role
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          _presenter(),
+                                          style: TextStyleHelper.instance.body12MediumInter
+                                              .copyWith(color: AppColor.black),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        Text(
+                                          'Artist',
+                                          style: TextStyleHelper.instance.caption12RegularInter
+                                              .copyWith(color: AppColor.gray500),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  // NE arrow
+                                  _CircleIconButton(
+                                    icon: Icons.north_east_rounded,
+                                    size: 36,
+                                    iconSize: 18,
+                                    bgColor: Colors.white,
+                                    borderColor: AppColor.blueGray100,
+                                    iconColor: AppColor.gray700,
+                                    onTap: () => navigateTo(
+                                      context,
+                                      SpeakersInfoScreen(speaker: speaker, userId: userId),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    side: BorderSide(color: AppColor.blueGray100),
                   ),
                 ),
               ),
             ],
           ),
         ),
-        SizedBox(width: 16.sH),
-        Text(
-          label,
-          style: TextStyleHelper.instance.title14BoldInter.copyWith(
-            color: AppColor.gray900,
-          ),
-        ),
-      ],
+      ),
     );
   }
 
-  String _rangeLabel(DateTime a, DateTime b) {
-    String m(int x) => const [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ][x - 1];
-    if (a.month == b.month && a.year == b.year) {
-      return "${m(a.month)} ${a.day}–${b.day}, ${a.year}";
+  // ---------- helpers ----------
+
+  String _safeTitle() =>
+      (speaker.topicName?.trim().isNotEmpty ?? false)
+          ? speaker.topicName!.trim()
+          : (speaker.name ?? 'Workshop');
+
+  String _safeDescription() =>
+      (speaker.topicDescription?.trim().isNotEmpty ?? false)
+          ? speaker.topicDescription!.trim()
+          : (speaker.bio ?? '');
+
+  String _presenter() =>
+      (speaker.name?.trim().isNotEmpty ?? false)
+          ? speaker.name!.trim()
+          : (speaker.name ?? 'Speaker');
+
+  String _timeRange(DateTime startUtc, DateTime? endUtc) {
+    final f = DateFormat.jm();
+    final a = f.format(startUtc.toLocal());
+    final b = endUtc == null ? null : f.format(endUtc.toLocal());
+    return b == null ? a : '$a – $b'; // en dash
+  }
+
+  Widget _buildCover() {
+    final url = _pickFirst([
+      (speaker.gallery != null && speaker.gallery!.isNotEmpty) ? speaker.gallery!.first : null,
+      speaker.gallery[0],
+
+    ]);
+    if (url == null || url.isEmpty) {
+      return Container(
+        color: AppColor.gray100,
+        child: Icon(Icons.image_rounded, color: AppColor.gray400, size: 28),
+      );
     }
-    return "${m(a.month)} ${a.day}, ${a.year} – ${m(b.month)} ${b.day}, ${b.year}";
+    return Image.network(
+      url,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => Container(
+        color: AppColor.gray100,
+        child: Icon(Icons.image_rounded, color: AppColor.gray400, size: 28),
+      ),
+    );
+  }
+
+  Widget _buildAvatar() {
+    final url = _pickFirst([
+      speaker.profileImage,
+      (speaker.gallery != null && speaker.gallery!.isNotEmpty) ? speaker.gallery!.first : null,
+    ]);
+    if (url == null || url.isEmpty) {
+      return Container(
+        color: AppColor.gray100,
+        child: Icon(Icons.person_rounded, color: AppColor.gray400, size: 18),
+      );
+    }
+    return Image.network(
+      url,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => Container(
+        color: AppColor.gray100,
+        child: Icon(Icons.person_rounded, color: AppColor.gray400, size: 18),
+      ),
+    );
+  }
+
+  String? _pickFirst(List<String?> candidates) {
+    for (final c in candidates) {
+      if (c != null && c.trim().isNotEmpty) return c.trim();
+    }
+    return null;
+  }
+}
+
+/// -------------------------
+/// Small circular icon button
+/// -------------------------
+class _CircleIconButton extends StatelessWidget {
+  final IconData icon;
+  final double size;
+  final double iconSize;
+  final Color bgColor;
+  final Color borderColor;
+  final Color iconColor;
+  final VoidCallback? onTap;
+
+  const _CircleIconButton({
+    required this.icon,
+    required this.size,
+    required this.iconSize,
+    required this.bgColor,
+    required this.borderColor,
+    required this.iconColor,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            color: bgColor,
+            shape: BoxShape.circle,
+            border: Border.all(color: borderColor),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Icon(icon, size: iconSize, color: iconColor),
+        ),
+      ),
+    );
   }
 }

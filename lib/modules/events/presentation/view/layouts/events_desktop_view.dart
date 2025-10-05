@@ -3,34 +3,31 @@
 import 'package:baseqat/modules/events/data/models/fav_extension.dart';
 import 'package:baseqat/modules/events/data/models/gallery_item.dart';
 import 'package:baseqat/modules/events/data/models/month_data.dart';
-import 'package:baseqat/modules/events/presentation/view/event_details_view.dart';
-import 'package:baseqat/modules/events/presentation/view/tabs/events_tab_view.dart';
 import 'package:baseqat/modules/home/data/models/artist_model.dart';
 import 'package:baseqat/modules/home/data/models/artwork_model.dart';
 import 'package:baseqat/modules/home/data/models/speaker_model.dart';
-import 'package:baseqat/modules/home/data/models/events_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/components/custom_widgets/custom_search_view.dart';
-import '../../../../core/responsive/size_ext.dart';
-import '../../../../core/resourses/assets_manager.dart';
-import '../../../../core/resourses/color_manager.dart';
-import '../../../../core/resourses/style_manager.dart';
-import '../../../../core/components/alerts/custom_loading.dart';
-import '../../../../core/components/alerts/custom_error_page.dart';
-import '../../../../core/components/alerts/custom_snackbar.dart';
-import '../../data/datasources/events_remote_data_source.dart';
-import '../../data/repositories/events/events_repository_impl.dart';
-import '../../data/models/category_model.dart';
-import '../manger/events/events_cubit.dart';
-import '../manger/events/events_state.dart';
-import 'tabs/art_works_view.dart';
-import 'tabs/artist_tab.dart';
-import 'tabs/speakers_tab.dart';
-import 'tabs/gallery_tav_view.dart';
-import '../widgets/desktop_navigation_bar.dart';
-import '../widgets/virtual_tour_view.dart';
+import '../../../../../core/components/custom_widgets/custom_search_view.dart';
+import '../../../../../core/responsive/size_ext.dart';
+import '../../../../../core/resourses/assets_manager.dart';
+import '../../../../../core/resourses/color_manager.dart';
+import '../../../../../core/resourses/style_manager.dart';
+import '../../../../../core/components/alerts/custom_loading.dart';
+import '../../../../../core/components/alerts/custom_error_page.dart';
+import '../../../../../core/components/alerts/custom_snackbar.dart';
+import '../../../data/datasources/events_remote_data_source.dart';
+import '../../../data/repositories/events/events_repository_impl.dart';
+import '../../../data/models/category_model.dart';
+import '../../manger/events/events_cubit.dart';
+import '../../manger/events/events_state.dart';
+import '../tabs/art_works_tab.dart';
+import '../tabs/artist_tab.dart';
+import '../tabs/speakers_tab.dart';
+import '../tabs/gallery_tav_tab.dart';
+import 'desktop_navigation_bar.dart';
+import '../tabs/virtual_tour_tab.dart';
 
 class EventsDesktopView extends StatefulWidget {
   const EventsDesktopView({super.key});
@@ -54,10 +51,9 @@ class _EventsDesktopViewState extends State<EventsDesktopView> {
   bool _errorRouteOpen = false;
 
   final List<CategoryModel> _categories = [
-    CategoryModel(title: 'Events', isSelected: true), // 0
-    CategoryModel(title: 'Art Works', isSelected: false), // 1
+    CategoryModel(title: 'Art Works', isSelected: true), // 1
     CategoryModel(title: 'Artist', isSelected: false), // 2
-    CategoryModel(title: 'Speakers', isSelected: false), // 3
+    CategoryModel(title: 'Calender', isSelected: false), // 3
     CategoryModel(title: 'Gallery', isSelected: false), // 4
     CategoryModel(title: 'Virtual Tour', isSelected: false), // 5
   ];
@@ -304,13 +300,7 @@ class _EventsDesktopViewState extends State<EventsDesktopView> {
 
   Widget _buildBody(BuildContext ctx) {
     switch (_selectedIndex) {
-      case 0: // EVENTS (LIVE)
-        return _EventsSliceView(
-          onRetry: () =>
-              ctx.read<EventsCubit>().loadEvents(limit: 10, force: true),
-        );
-
-      case 1:
+      case 0:
         return _ArtworksSliceView(
           userId: _userId ?? '',
           onToggleFavorite: (_userId != null)
@@ -324,7 +314,7 @@ class _EventsDesktopViewState extends State<EventsDesktopView> {
               ctx.read<EventsCubit>().loadArtworks(limit: 10, force: true),
         );
 
-      case 2:
+      case 1:
         return _ArtistsSliceView(
           userId: _userId ?? '',
           onToggleFavorite: (_userId != null)
@@ -338,7 +328,7 @@ class _EventsDesktopViewState extends State<EventsDesktopView> {
               ctx.read<EventsCubit>().loadArtists(limit: 10, force: true),
         );
 
-      case 3:
+      case 2:
         return _SpeakersSliceView(
           userId: _userId ?? '',
           onToggleFavorite: (_userId != null)
@@ -352,7 +342,7 @@ class _EventsDesktopViewState extends State<EventsDesktopView> {
               ctx.read<EventsCubit>().loadSpeakers(limit: 10, force: true),
         );
 
-      case 4:
+      case 3:
         return _GallerySliceView(
           onRetry: () => ctx.read<EventsCubit>().loadGallery(
             limitArtists: 10,
@@ -360,7 +350,7 @@ class _EventsDesktopViewState extends State<EventsDesktopView> {
           ),
         );
 
-      case 5:
+      case 4:
         return const VirtualTourView(
           url: 'https://www.3dvista.com/en/',
         );
@@ -368,51 +358,6 @@ class _EventsDesktopViewState extends State<EventsDesktopView> {
       default:
         return const SizedBox.shrink();
     }
-  }
-}
-
-class _EventsSliceView extends StatelessWidget {
-  final VoidCallback onRetry;
-  const _EventsSliceView({required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    final events = context.select<EventsCubit, List<Event>>(
-          (c) => c.state.events,
-    );
-    final status = context.select<EventsCubit, SliceStatus>(
-          (c) => c.state.eventsStatus,
-    );
-
-    if (status == SliceStatus.error) {
-      return _InlineError(
-        title: 'Couldn\'t load events',
-        onRetry: onRetry,
-        onShowDetails: () => context.showErrorPage(
-          errorType: ErrorType.generic,
-          customMessage: 'Couldn\'t load events',
-          details: 'Tap retry to attempt fetching events again.',
-          onRetry: onRetry,
-          canContactSupport: false,
-          showDetails: true,
-        ),
-      );
-    }
-
-    return EventsTab(
-      events: events,
-      onOpen: (e) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => EventDetailsView(
-              event: e,
-              onBack: () => Navigator.pop(context),
-            ),
-          ),
-        );
-      },
-    );
   }
 }
 

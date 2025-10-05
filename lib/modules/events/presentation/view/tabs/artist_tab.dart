@@ -1,24 +1,22 @@
+// ===================== ArtistTabContent (mobile/tablet like screenshot, with line separator) =====================
 import 'package:baseqat/core/resourses/navigation_manger.dart';
 import 'package:baseqat/modules/artist_details/presentation/view/artist_details_page.dart';
 import 'package:baseqat/modules/events/data/models/fav_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:baseqat/core/responsive/size_utils.dart' hide DeviceType;
+import 'package:baseqat/core/responsive/size_utils.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/modules/home/data/models/artist_model.dart';
 import 'package:baseqat/modules/events/presentation/widgets/artist_widgets/artist_card_widget.dart';
-import 'package:baseqat/core/responsive/responsive.dart';
 
-// Favorites wiring
+// Favorites
 import 'package:baseqat/modules/events/presentation/manger/events/events_cubit.dart';
-
-enum ArtistViewType { list, grid }
 
 class ArtistTabContent extends StatefulWidget {
   final List<Artist> artists;
   final void Function(Artist artist)? onArtistTap;
 
-  /// NEW: provide the signed-in user id for favorites
+  /// user id for favorites
   final String userId;
 
   final void Function(Artist artist)? onFavoriteTap;
@@ -34,9 +32,9 @@ class ArtistTabContent extends StatefulWidget {
   const ArtistTabContent({
     super.key,
     required this.artists,
-    required this.userId, // <-- NEW
+    required this.userId,
     this.onArtistTap,
-    this.onFavoriteTap, // <-- NEW
+    this.onFavoriteTap,
     this.emptyStateTitle,
     this.emptyStateSubtitle,
     this.emptyStateIcon,
@@ -48,85 +46,102 @@ class ArtistTabContent extends StatefulWidget {
 }
 
 class _ArtistTabContentState extends State<ArtistTabContent> {
-  DeviceType get _deviceType => Responsive.deviceTypeOf(context);
-  bool get _isDesktop => _deviceType == DeviceType.desktop;
+  bool get _useGrid {
+    final w = MediaQuery.of(context).size.width;
+    return w >= 768; // tablet & up
+  }
+
+  bool get _isDesktop => MediaQuery.of(context).size.width >= 1200;
 
   @override
   Widget build(BuildContext context) {
     final items = widget.artists;
-    Responsive.init(context);
-    return Column(
-      children: [
-        Expanded(
-          child: items.isEmpty
-              ? _EmptyState(
-                  title: widget.emptyStateTitle ?? 'No artists available',
-                  subtitle:
-                      widget.emptyStateSubtitle ??
-                      'Check back later for new artists.',
-                  icon: widget.emptyStateIcon,
-                )
-              : widget.onRefresh != null
-              ? RefreshIndicator(
-                  onRefresh: widget.onRefresh!,
-                  color: AppColor.primaryColor,
-                  backgroundColor: AppColor.white,
-                  child: _buildContent(items),
-                )
-              : _buildContent(items),
-        ),
-      ],
-    );
+
+    final body = items.isEmpty
+        ? _EmptyState(
+            title: widget.emptyStateTitle ?? 'No artists available',
+            subtitle:
+                widget.emptyStateSubtitle ?? 'Check back later for new artists.',
+            icon: widget.emptyStateIcon,
+          )
+        : (_useGrid ? _buildGrid(items) : _buildList(items));
+
+    if (widget.onRefresh != null) {
+      return RefreshIndicator(
+        onRefresh: widget.onRefresh!,
+        color: AppColor.primaryColor,
+        backgroundColor: AppColor.white,
+        displacement: 24,
+        child: body,
+      );
+    }
+    return body;
   }
 
-  Widget _buildContent(List<Artist> items) {
-    return _isDesktop ? _buildDesktopGrid(items) : _buildMobileList(items);
-  }
-
-  // Default favorite toggle if parent didn't inject one
+  // ----- favorites default handler (UI doesn’t show a heart but keep logic) -----
   void _defaultToggleFav(Artist a) {
     context.read<EventsCubit>().toggleFavorite(
-      userId: widget.userId,
-      kind: EntityKind.artist,
-      entityId: a.id,
-    );
+          userId: widget.userId,
+          kind: EntityKind.artist,
+          entityId: a.id,
+        );
   }
 
-  double _gridChildAspectRatio(BuildContext context) {
-    final w = MediaQuery.of(context).size.width;
-
-    if (Responsive.isDesktop(context)) {
-      if (w >= 1400) {
-        return 0.95;
-      } else if (w >= 1200) {
-        return 0.85;
-      } else if (w >= 1000) {
-        return 0.75;
-      } else {
-        return 0.55;
-      }
-    } else if (Responsive.isTablet(context)) {
-      if (w >= 900) return 0.85;
-      return 0.95;
-    } else {
-      return 0.9;
-    }
-  }
-
-  Widget _buildDesktopGrid(List<Artist> items) {
-    final aspect = _gridChildAspectRatio(context);
+  // ----- Mobile list (with line separator identical to screenshot) -----
+  Widget _buildList(List<Artist> items) {
     final favIds = context.select<EventsCubit, Set<String>>(
       (c) => c.state.favArtistIds,
     );
 
+    return ListView.separated(
+      physics: const BouncingScrollPhysics(),
+      padding: EdgeInsets.symmetric(horizontal: 16.h, vertical: 12.h),
+      itemCount: items.length,
+      itemBuilder: (context, i) {
+        final artist = items[i];
+        final isFav = favIds.contains(artist.id);
+
+        return ArtistCardWidget(
+          artist: artist,
+          userId: widget.userId,
+          isFavorite: isFav,
+          onFavoriteTap: () =>
+              (widget.onFavoriteTap ?? _defaultToggleFav)(artist),
+          onTap: () {
+            (widget.onArtistTap ??
+                    (a) =>
+                        navigateTo(context, ArtistDetailsPage(artistId: a.id)))
+                .call(artist);
+          },
+          viewType: ArtistCardViewType.list,
+        );
+      },
+      // thin gray separator line (full-bleed inside page padding)
+      separatorBuilder: (_, __) => Padding(
+        padding: EdgeInsets.symmetric(vertical: 12.h),
+        child: Container(height: 1, color: AppColor.gray200),
+      ),
+    );
+  }
+
+  // ----- Tablet/Desktop grid (same vertical card; no separators in grid) -----
+  Widget _buildGrid(List<Artist> items) {
+    final favIds = context.select<EventsCubit, Set<String>>(
+      (c) => c.state.favArtistIds,
+    );
+
+    final crossAxisCount = _isDesktop ? 3 : 2;
+    // ratio tuned for big image + title row + multi-line bio
+    final childAspectRatio = _isDesktop ? 0.82 : 0.88;
+
     return GridView.builder(
       physics: const BouncingScrollPhysics(),
-      padding: EdgeInsets.symmetric(horizontal: 24.h, vertical: 16.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.h, vertical: 12.h),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        childAspectRatio: aspect,
-        crossAxisSpacing: 20.h,
-        mainAxisSpacing: 20.h,
+        crossAxisCount: crossAxisCount,
+        childAspectRatio: childAspectRatio,
+        crossAxisSpacing: 16.h,
+        mainAxisSpacing: 16.h,
       ),
       itemCount: items.length,
       itemBuilder: (context, i) {
@@ -136,9 +151,9 @@ class _ArtistTabContentState extends State<ArtistTabContent> {
         return ArtistCardWidget(
           artist: artist,
           userId: widget.userId,
-          isFavorite: isFav, // <-- NEW
+          isFavorite: isFav,
           onFavoriteTap: () =>
-              (widget.onFavoriteTap ?? _defaultToggleFav)(artist), // <-- NEW
+              (widget.onFavoriteTap ?? _defaultToggleFav)(artist),
           onTap: () {
             (widget.onArtistTap ??
                     (a) =>
@@ -146,38 +161,6 @@ class _ArtistTabContentState extends State<ArtistTabContent> {
                 .call(artist);
           },
           viewType: ArtistCardViewType.grid,
-        );
-      },
-    );
-  }
-
-  Widget _buildMobileList(List<Artist> items) {
-    final favIds = context.select<EventsCubit, Set<String>>(
-      (c) => c.state.favArtistIds,
-    );
-
-    return ListView.separated(
-      physics: const BouncingScrollPhysics(),
-      padding: EdgeInsets.symmetric(horizontal: 16.h, vertical: 12.h),
-      itemCount: items.length,
-      separatorBuilder: (_, __) => SizedBox(height: 16.h),
-      itemBuilder: (context, i) {
-        final artist = items[i];
-        final isFav = favIds.contains(artist.id);
-
-        return ArtistCardWidget(
-          artist: artist,
-          userId: widget.userId,
-          isFavorite: isFav, // <-- NEW
-          onFavoriteTap: () =>
-              (widget.onFavoriteTap ?? _defaultToggleFav)(artist), // <-- NEW
-          onTap: () {
-            (widget.onArtistTap ??
-                    (a) =>
-                        navigateTo(context, ArtistDetailsPage(artistId: a.id)))
-                .call(artist);
-          },
-          viewType: ArtistCardViewType.list,
         );
       },
     );
@@ -199,8 +182,7 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            icon ??
-                Icon(Icons.people_rounded, size: 80.h, color: AppColor.gray400),
+            icon ?? Icon(Icons.people_rounded, size: 80.h, color: AppColor.gray400),
             SizedBox(height: 24.h),
             Text(
               title,
