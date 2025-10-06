@@ -15,8 +15,8 @@ class QRGeneratorCubit extends Cubit<QRGeneratorState> {
     final result = await repository.getArtists(limit: 100);
 
     result.fold(
-      (failure) => emit(QRGeneratorError(failure.message)),
-      (artists) {
+          (failure) => emit(QRGeneratorError(failure.message)),
+          (artists) {
         if (artists.isEmpty) {
           emit(const QRGeneratorError('No artists found'));
         } else {
@@ -30,31 +30,31 @@ class QRGeneratorCubit extends Cubit<QRGeneratorState> {
     if (state is! QRGeneratorArtistsLoaded) return;
 
     final currentState = state as QRGeneratorArtistsLoaded;
-    emit(currentState.copyWith(isLoadingArtworks: true));
+
+    // Clear previous artwork selection and show loading state
+    emit(currentState.copyWith(
+      isLoadingArtworks: true,
+      selectedArtist: artistId,
+      selectedArtwork: null, // Reset artwork selection
+      artworks: [], // Clear previous artworks
+    ));
 
     final result = await repository.getArtworks(limit: 100);
 
     result.fold(
-      (failure) => emit(QRGeneratorError(failure.message)),
-      (allArtworks) {
+          (failure) => emit(QRGeneratorError(failure.message)),
+          (allArtworks) {
         // Filter artworks by selected artist
         final filteredArtworks = allArtworks
             .where((artwork) => artwork.artistId == artistId)
             .toList();
 
-        if (filteredArtworks.isEmpty) {
-          emit(currentState.copyWith(
-            artworks: [],
-            isLoadingArtworks: false,
-            selectedArtist: artistId,
-          ));
-        } else {
-          emit(currentState.copyWith(
-            artworks: filteredArtworks,
-            isLoadingArtworks: false,
-            selectedArtist: artistId,
-          ));
-        }
+        emit(currentState.copyWith(
+          artworks: filteredArtworks,
+          isLoadingArtworks: false,
+          selectedArtist: artistId,
+          selectedArtwork: null, // Ensure artwork stays null
+        ));
       },
     );
   }

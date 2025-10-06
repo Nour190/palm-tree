@@ -129,6 +129,7 @@ class _QRGeneratorBody extends StatelessWidget {
                     ),
                     SizedBox(height: 12.sH),
                     _ArtistDropdown(
+                      key: ValueKey(state.selectedArtist),
                       artists: state.artists,
                       selectedArtistId: state.selectedArtist,
                       onChanged: (artistId) {
@@ -171,6 +172,7 @@ class _QRGeneratorBody extends StatelessWidget {
                         )
                       else
                         _ArtworkDropdown(
+                          key: ValueKey('${state.selectedArtist}_${state.artworks.length}'),
                           artworks: state.artworks,
                           selectedArtworkId: state.selectedArtwork,
                           onChanged: (artworkId) {
@@ -186,19 +188,36 @@ class _QRGeneratorBody extends StatelessWidget {
 
                     // QR Code Display
                     if (state.selectedArtwork != null) ...[
-                      Text(
-                        'qr_generator.generated_qr'.tr(),
-                        style: TextStyleHelper.instance.title18BoldInter,
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 24.sH),
-                      Center(
-                        child: _QRCodeDisplay(
-                          artworkId: state.selectedArtwork!,
-                          artwork: state.artworks.firstWhere(
-                                (a) => a.id == state.selectedArtwork,
-                          ),
-                        ),
+                      Builder(
+                        builder: (context) {
+                          // Safely find the artwork, return null if not found
+                          final artwork = state.artworks.cast<dynamic?>().firstWhere(
+                                (a) => a?.id == state.selectedArtwork,
+                            orElse: () => null,
+                          );
+
+                          // If artwork not found in current list, don't show QR
+                          if (artwork == null) {
+                            return const SizedBox.shrink();
+                          }
+
+                          return Column(
+                            children: [
+                              Text(
+                                'qr_generator.generated_qr'.tr(),
+                                style: TextStyleHelper.instance.title18BoldInter,
+                                textAlign: TextAlign.center,
+                              ),
+                              SizedBox(height: 24.sH),
+                              Center(
+                                child: _QRCodeDisplay(
+                                  artworkId: state.selectedArtwork!,
+                                  artwork: artwork,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ],
                   ],
@@ -219,7 +238,8 @@ class _ArtistDropdown extends StatelessWidget {
     required this.artists,
     required this.selectedArtistId,
     required this.onChanged,
-  });
+    Key? key,
+  }) : super(key: key);
 
   final List artists;
   final String? selectedArtistId;
@@ -230,7 +250,7 @@ class _ArtistDropdown extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.sW, vertical: 4.sH),
       decoration: BoxDecoration(
-        border: Border.all(color: AppColor.gray400),
+        border: Border.all(color: AppColor.gray600),
         borderRadius: BorderRadius.circular(12),
       ),
       child: DropdownButtonHideUnderline(
@@ -239,15 +259,15 @@ class _ArtistDropdown extends StatelessWidget {
           value: selectedArtistId,
           hint: Text(
             'qr_generator.choose_artist'.tr(),
-            style: TextStyleHelper.instance.title16RegularInter
-                .copyWith(color: AppColor.gray500),
+            style: TextStyleHelper.instance.title18MediumInter
+
           ),
           items: artists.map((artist) {
             return DropdownMenuItem<String>(
               value: artist.id,
               child: Text(
                 artist.name,
-                style: TextStyleHelper.instance.title16RegularInter,
+                style: TextStyleHelper.instance.title18MediumInter,
               ),
             );
           }).toList(),
@@ -263,7 +283,8 @@ class _ArtworkDropdown extends StatelessWidget {
     required this.artworks,
     required this.selectedArtworkId,
     required this.onChanged,
-  });
+    Key? key,
+  }) : super(key: key);
 
   final List artworks;
   final String? selectedArtworkId;
@@ -271,27 +292,27 @@ class _ArtworkDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool valueExists = artworks.any((a) => a.id == selectedArtworkId);
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.sW, vertical: 4.sH),
       decoration: BoxDecoration(
-        border: Border.all(color: AppColor.gray400),
+        border: Border.all(color: AppColor.gray600),
         borderRadius: BorderRadius.circular(12),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           isExpanded: true,
-          value: selectedArtworkId,
+          value: valueExists ? selectedArtworkId : null,
           hint: Text(
             'qr_generator.choose_artwork'.tr(),
-            style: TextStyleHelper.instance.title16RegularInter
-                .copyWith(color: AppColor.gray500),
+            style: TextStyleHelper.instance.title18MediumInter
           ),
           items: artworks.map((artwork) {
             return DropdownMenuItem<String>(
               value: artwork.id,
               child: Text(
                 artwork.name,
-                style: TextStyleHelper.instance.title16RegularInter,
+                style: TextStyleHelper.instance.title18MediumInter,
               ),
             );
           }).toList(),
@@ -330,8 +351,7 @@ class _QRCodeDisplay extends StatelessWidget {
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       final bytes = byteData!.buffer.asUint8List();
 
-      // Use the conditional-imported `web` API. On web this maps to dart:html
-      // implementation; on mobile it maps to the stub which does nothing.
+
       final url = web.createObjectUrl(bytes);
       web.triggerDownload(url, 'artwork_${artworkId}_qr.png');
       web.revokeObjectUrl(url);

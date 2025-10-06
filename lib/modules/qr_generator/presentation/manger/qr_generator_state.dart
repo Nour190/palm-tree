@@ -34,12 +34,12 @@ class QRGeneratorArtistsLoaded extends QRGeneratorState {
   final bool isLoadingArtworks;
 
   const QRGeneratorArtistsLoaded(
-    this.artists, {
-    this.artworks = const [],
-    this.selectedArtist,
-    this.selectedArtwork,
-    this.isLoadingArtworks = false,
-  });
+      this.artists, {
+        this.artworks = const [],
+        this.selectedArtist,
+        this.selectedArtwork,
+        this.isLoadingArtworks = false,
+      });
 
   QRGeneratorArtistsLoaded copyWith({
     List<Artist>? artists,
@@ -47,22 +47,23 @@ class QRGeneratorArtistsLoaded extends QRGeneratorState {
     String? selectedArtist,
     String? selectedArtwork,
     bool? isLoadingArtworks,
+    bool clearArtwork = false, // Flag to explicitly clear artwork
   }) {
     return QRGeneratorArtistsLoaded(
       artists ?? this.artists,
       artworks: artworks ?? this.artworks,
       selectedArtist: selectedArtist ?? this.selectedArtist,
-      selectedArtwork: selectedArtwork ?? this.selectedArtwork,
+      selectedArtwork: clearArtwork ? null : (selectedArtwork ?? this.selectedArtwork),
       isLoadingArtworks: isLoadingArtworks ?? this.isLoadingArtworks,
     );
   }
 
   @override
   List<Object?> get props => [
-        artists,
-        artworks,
-        selectedArtist,
-        selectedArtwork,
-        isLoadingArtworks,
-      ];
+    artists,
+    artworks,
+    selectedArtist,
+    selectedArtwork,
+    isLoadingArtworks,
+  ];
 }

@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
-import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:share_plus/share_plus.dart';
 
 Future<void> shareQRCode(String qrData, BuildContext context) async {
   try {
@@ -17,42 +17,37 @@ Future<void> shareQRCode(String qrData, BuildContext context) async {
     final byteData = await qrImage.toByteData(format: ui.ImageByteFormat.png);
     final Uint8List pngBytes = byteData!.buffer.asUint8List();
 
-    final blob = html.Blob([pngBytes]);
-    final url = html.Url.createObjectUrlFromBlob(blob);
+    final result = await Share.shareXFiles(
+      [
+        XFile.fromData(
+          pngBytes,
+          mimeType: 'image/png',
+          name: 'qr_code.png',
+        ),
+      ],
+      text: 'Scan this QR code!',
+      subject: 'QR Code',
+    );
 
-    final nav = html.window.navigator;
-    final file = html.File([pngBytes], 'qr_code.png', {'type': 'image/png'});
-    final canShare = jsCanShare({'files': [file]});
-
-    if (canShare) {
-      await nav.share({
-        'title': 'QR Code',
-        'text': 'Scan this QR code!',
-        'files': [file],
-      });
-    } else {
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'qr_code.png')
-        ..click();
+    // Handle the result
+    if (context.mounted) {
+      if (result.status == ShareResultStatus.success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('QR code shared successfully!')),
+        );
+      } else if (result.status == ShareResultStatus.unavailable) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Share not supported. Image will be downloaded.'),
+          ),
+        );
+      }
     }
-
-    html.Url.revokeObjectUrl(url);
   } catch (e) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error sharing QR: $e')),
+        SnackBar(content: Text('Error: $e')),
       );
     }
-  }
-}
-
-bool jsCanShare(Object? data) {
-  try {
-    final nav = html.window.navigator;
-    final func = (nav as dynamic).canShare;
-    if (func is Function) return func(data) == true;
-    return false;
-  } catch (_) {
-    return false;
   }
 }
