@@ -42,11 +42,7 @@ class ReviewAvatarWidget extends StatelessWidget {
           filterQuality: FilterQuality.high,
           loadingBuilder: (context, child, progress) {
             if (progress == null) return child;
-            final total = progress.expectedTotalBytes;
-            final value = total != null && total != 0
-                ? progress.cumulativeBytesLoaded / total
-                : null;
-            return _loading(size, value);
+            return _loading(size);
           },
           errorBuilder: (context, error, stackTrace) =>
               _fallback(size, context),
@@ -77,18 +73,14 @@ class ReviewAvatarWidget extends StatelessWidget {
     );
   }
 
-  Widget _loading(double size, double? progress) {
+  Widget _loading(double size) {
     return Container(
       decoration: BoxDecoration(color: AppColor.gray100),
       child: Center(
-        child: SizedBox(
-          width: size * 0.32,
-          height: size * 0.32,
-          child: CircularProgressIndicator(
-            strokeWidth: 2.4,
-            value: progress,
-            valueColor: AlwaysStoppedAnimation<Color>(AppColor.primaryColor),
-          ),
+        child: Icon(
+          Icons.person_outline,
+          size: size * 0.4,
+          color: AppColor.gray400,
         ),
       ),
     );

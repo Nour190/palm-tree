@@ -48,11 +48,7 @@ class HomeImage extends StatelessWidget {
           filterQuality: filterQuality,
           loadingBuilder: (context, child, progress) {
             if (progress == null) return child;
-            final total = progress.expectedTotalBytes;
-            final value = (total != null && total > 0)
-                ? progress.cumulativeBytesLoaded / total
-                : null;
-            return _wrapWithSizing(_placeholder(progressValue: value));
+            return _wrapWithSizing(_placeholder());
           },
           errorBuilder: (context, error, stackTrace) =>
               _wrapWithSizing(_errorFallback()),
@@ -82,19 +78,15 @@ class HomeImage extends StatelessWidget {
     return SizedBox(width: width, height: height, child: widget);
   }
 
-  Widget _placeholder({double? progressValue}) {
+  Widget _placeholder() {
     if (placeholder != null) return placeholder!;
     return DecoratedBox(
       decoration: const BoxDecoration(color: AppColor.gray100),
       child: Center(
-        child: SizedBox(
-          width: 28.sW,
-          height: 28.sW,
-          child: CircularProgressIndicator(
-            strokeWidth: 2.6,
-            value: progressValue,
-            valueColor: AlwaysStoppedAnimation<Color>(AppColor.primaryColor),
-          ),
+        child: Icon(
+          Icons.image_outlined,
+          color: AppColor.gray400,
+          size: 32.sSp,
         ),
       ),
     );

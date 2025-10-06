@@ -24,21 +24,21 @@ class CustomImageView extends StatelessWidget {
   Widget build(BuildContext context) {
     final Widget img = _isNetwork
         ? Image.network(
-            imagePath,
-            height: height,
-            width: width,
-            fit: fit,
-            errorBuilder: (_, __, ___) => _placeholder(),
-            loadingBuilder: (ctx, child, progress) =>
-                progress == null ? child : _placeholder(loading: true),
-          )
+      imagePath,
+      height: height,
+      width: width,
+      fit: fit,
+      errorBuilder: (_, __, ___) => _placeholder(),
+      loadingBuilder: (ctx, child, progress) =>
+      progress == null ? child : _placeholder(loading: true),
+    )
         : Image.asset(
-            imagePath,
-            height: height,
-            width: width,
-            fit: fit,
-            errorBuilder: (_, __, ___) => _notFound(),
-          );
+      imagePath,
+      height: height,
+      width: width,
+      fit: fit,
+      errorBuilder: (_, __, ___) => _notFound(),
+    );
 
     return radius == null ? img : ClipRRect(borderRadius: radius!, child: img);
   }
@@ -48,9 +48,15 @@ class CustomImageView extends StatelessWidget {
     width: width,
     child: loading
         ? const ColoredBox(
-            color: Color(0xFFF2F2F2),
-            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-          )
+      color: Color(0xFFF2F2F2),
+      child: Center(
+        child: Icon(
+          Icons.image_outlined,
+          color: Color(0xFFBDBDBD),
+          size: 32,
+        ),
+      ),
+    )
         : Image.asset(AppAssetsManager.imgPlaceholder, fit: BoxFit.cover),
   );
 

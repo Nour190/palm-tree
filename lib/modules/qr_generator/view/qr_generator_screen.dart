@@ -259,7 +259,7 @@ class _ArtistDropdown extends StatelessWidget {
           value: selectedArtistId,
           hint: Text(
             'qr_generator.choose_artist'.tr(),
-            style: TextStyleHelper.instance.title18MediumInter
+            style: TextStyleHelper.instance.title16Inter
 
           ),
           items: artists.map((artist) {
@@ -267,7 +267,7 @@ class _ArtistDropdown extends StatelessWidget {
               value: artist.id,
               child: Text(
                 artist.name,
-                style: TextStyleHelper.instance.title18MediumInter,
+                style: TextStyleHelper.instance.title16Inter,
               ),
             );
           }).toList(),
@@ -305,14 +305,14 @@ class _ArtworkDropdown extends StatelessWidget {
           value: valueExists ? selectedArtworkId : null,
           hint: Text(
             'qr_generator.choose_artwork'.tr(),
-            style: TextStyleHelper.instance.title18MediumInter
+            style: TextStyleHelper.instance.title16Inter
           ),
           items: artworks.map((artwork) {
             return DropdownMenuItem<String>(
               value: artwork.id,
               child: Text(
                 artwork.name,
-                style: TextStyleHelper.instance.title18MediumInter,
+                style: TextStyleHelper.instance.title16Inter,
               ),
             );
           }).toList(),

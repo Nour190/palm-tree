@@ -67,8 +67,8 @@ class _AboutInfoState extends State<AboutInfo> {
 
   Widget _buildAboutSection() {
     final aboutImages =
-      widget.info.aboutImages+[AppAssetsManager.imgRectangle21];
-      //AppAssetsManager.imgRectangle21
+        widget.info.aboutImages+[AppAssetsManager.imgRectangle21];
+    //AppAssetsManager.imgRectangle21
 
     final aboutText = widget.info.about ??
         'The King Abdulaziz Center for World Culture (Ithra), meaning "enrichment" in Arabic, was built as part of Saudi Aramco\'s vision to be an ambitious initiative for the public. Ithra is the Kingdom\'s leading cultural and creative destination for talent development and cross-cultural experiences. Since its opening in 2018, each attraction by Ithra serves as a window to global experiences, celebrating human potential and empowering creativity. The pillars include culture, creativity, community, art, and knowledge. With the visionary platforms and key pillars, Ithra continuously offers inspiring workshops, performances, and events.';
@@ -423,10 +423,11 @@ class _AboutInfoState extends State<AboutInfo> {
   Widget _buildLoadingImage() {
     return Container(
       color: AppColor.gray100,
-      child: const Center(
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(AppColor.primaryColor),
+      child: Center(
+        child: Icon(
+          Icons.image_outlined,
+          size: 48.sW,
+          color: AppColor.gray400,
         ),
       ),
     );
