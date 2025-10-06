@@ -1,5 +1,40 @@
 {
-  "app": {
+  "qr": {
+    "qr_code_detected": "QR Code Detected!",
+    "scan_qr_instruction": "Point your camera at a QR code to scan",
+    "qr_scanner": "QR Scanner",
+    "generate_qr": "Generate QR Code",
+    "title": "QR Code",
+    "scan_tab": "Scan",
+    "generate_tab": "Generate",
+    "scan_title": "Scan QR Code",
+    "scan_subtitle": "Point your camera at a QR code",
+    "artwork_id": "Artwork ID: {0}",
+    "share": "Share",
+    "download": "Download",
+    "share_message": "Check out this artwork: {0}\nArtwork ID: {1}",
+    "share_subject": "Artwork: {0}",
+    "share_error": "Failed to share. Please try again."
+  },
+  "qr_generator": {
+    "title": "Generate QR Code",
+    "instructions": "Select an artist and artwork to generate a QR code",
+    "select_artist": "Select Artist",
+    "choose_artist": "Choose an artist",
+    "select_artwork": "Select Artwork",
+    "choose_artwork": "Choose an artwork",
+    "no_artworks": "No artworks available for this artist",
+    "generated_qr": "Generated QR Code",
+    "retry": "Retry"
+  },
+  "scan_qr_code": "Scan QR Code",
+  "align_qr_code_instruction": "Align the QR code within the frame",
+  "qr_scan_tip": "Make sure the lighting is good and the code is clear",
+  "qr_scanned_successfully": "QR code scanned successfully",
+  "scanner_error": "Scanner Error",
+  "camera_permission_denied": "Camera permission denied",
+
+  "app":{
     "title": "Ithra",
     "initialization_failed": "App Initialization Failed"
   },

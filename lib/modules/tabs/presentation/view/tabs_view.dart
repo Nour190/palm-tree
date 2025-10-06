@@ -4,11 +4,16 @@ import 'package:baseqat/modules/home/presentation/view/home_view.dart';
 import 'package:baseqat/modules/maps/presentation/view/map_view.dart';
 import 'package:baseqat/modules/tabs/presentation/manger/tabs_cubit.dart';
 import 'package:baseqat/modules/tabs/presentation/manger/tabs_states.dart';
+import 'package:baseqat/modules/tabs/presentation/view/qr_tabs_screen.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/responsive/responsive.dart';
 import '../../../events/presentation/view/layouts/events_screen_responsive.dart';
+import 'package:baseqat/core/components/qr_scanner/qr_scanner_screen.dart';
+import 'package:baseqat/core/resourses/navigation_manger.dart';
+import 'package:baseqat/modules/artwork_details/presentation/view/tabs/artwork_details_tabs_view.dart';
+import 'package:baseqat/core/resourses/constants_manager.dart';
 
 class TabsViewScreen extends StatelessWidget {
   const TabsViewScreen({super.key});
@@ -27,13 +32,20 @@ class _TabsViewBody extends StatelessWidget {
     return context.read<TabsCubit>().selectedIndex;
   }
 
+  void _handleQRScan(BuildContext context) {
+    navigateTo(
+      context,
+      const QRTabsScreen(initialTab: 0), // Start on scan tab
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-           
+
             // ---------------- Top element in the view ----------------
             BlocBuilder<TabsCubit, TabsState>(
               builder: (context, state) {
@@ -57,23 +69,23 @@ class _TabsViewBody extends StatelessWidget {
                           .changeSelectedIndex,
                       onLoginTap: () {},
                       showScanButton: true,
-                      onScanTap: () {},
+                      onScanTap: () => _handleQRScan(context),
                     )
                         : TopBar(
-                          items:  [
-                            "navigation.home".tr(),
-                            "navigation.programs".tr(),
-                            "navigation.virtual_tour".tr(),
-                           // 'Profile',
-                          ],
-                          selectedIndex: selectedIndex,
-                          onItemTap: context
-                              .read<TabsCubit>()
-                              .changeSelectedIndex,
-                          onLoginTap: () {},
-                          showScanButton: true,
-                          onScanTap: () {},
-                        ),
+                      items:  [
+                        "navigation.home".tr(),
+                        "navigation.programs".tr(),
+                        "navigation.virtual_tour".tr(),
+                        // 'Profile',
+                      ],
+                      selectedIndex: selectedIndex,
+                      onItemTap: context
+                          .read<TabsCubit>()
+                          .changeSelectedIndex,
+                      onLoginTap: () {},
+                      showScanButton: true,
+                      onScanTap: () => _handleQRScan(context),
+                    ),
                     if (devType != DeviceType.desktop)
                       Divider(
                         height: 1,
@@ -110,8 +122,8 @@ Widget _bodyForSelectedIndex(int selectedIndex) {
       return const SizedBox.shrink();
   // case 3: // Language
   //   return const SizedBox.shrink();
-  //   case 3: // Profile (desktop-only item)
-  //     return const ProfileScreen();
+  // case 3: // Profile (desktop-only item)
+  //   return const ProfileScreen();
     default:
       return const HomeView();
   }
