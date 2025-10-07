@@ -83,12 +83,12 @@ class _AboutTabState extends State<AboutTab> {
           ),
         if (hasAbout && (hasMaterials || hasVision)) SizedBox(height: gap),
         if (hasMaterials)
-          _materialsSection(title: 'materials'.tr(), raw: materialsRaw!, styles: s),
+          _materialsSection(title: 'materials'.tr(), raw: materialsRaw, styles: s),
         if (hasMaterials && hasVision) SizedBox(height: gap),
         if (hasVision)
           _textSection(
             title: 'vision'.tr(),
-            body: visionRaw!,
+            body: visionRaw,
             styles: s,
             expanded: _visionExpanded,
             onToggle: () => setState(() => _visionExpanded = !_visionExpanded),
@@ -120,7 +120,7 @@ class _AboutTabState extends State<AboutTab> {
                 if (_hero != null)
                   Expanded(
                     flex: 5,
-                    child: _roundedImage(_hero!, height: heroH),
+                    child: _roundedImage(_hero, height: heroH),
                   ),
               ],
             ),

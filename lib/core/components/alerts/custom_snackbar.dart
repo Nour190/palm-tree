@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 /// Enum for different types of snackbar
 enum SnackBarType { success, error, warning, info }
@@ -33,7 +34,7 @@ class SnackBarInfo {
       case SnackBarType.success:
         return SnackBarInfo(
           type: SnackBarType.success,
-          title: 'Success',
+          title: 'alerts.snackbar.success'.tr(),
           backgroundColor: Color(0xFF10B981),
           textColor: AppColor.white,
           borderColor: Color(0xFF059669),
@@ -43,7 +44,7 @@ class SnackBarInfo {
       case SnackBarType.error:
         return SnackBarInfo(
           type: SnackBarType.error,
-          title: 'Error',
+          title: 'alerts.snackbar.error'.tr(),
           backgroundColor: Color(0xFFEF4444),
           textColor: AppColor.white,
           borderColor: Color(0xFFDC2626),
@@ -53,7 +54,7 @@ class SnackBarInfo {
       case SnackBarType.warning:
         return SnackBarInfo(
           type: SnackBarType.warning,
-          title: 'Warning',
+          title: 'alerts.snackbar.warning'.tr(),
           backgroundColor: Color(0xFFF59E0B),
           textColor: AppColor.white,
           borderColor: Color(0xFFD97706),
@@ -63,7 +64,7 @@ class SnackBarInfo {
       case SnackBarType.info:
         return SnackBarInfo(
           type: SnackBarType.info,
-          title: 'Info',
+          title: 'alerts.snackbar.info'.tr(),
           backgroundColor: Color(0xFF3B82F6),
           textColor: AppColor.white,
           borderColor: Color(0xFF2563EB),
@@ -404,43 +405,43 @@ extension CustomSnackBarHelper on BuildContext {
 
   // Convenience methods
   void showSuccessSnackBar(
-    String message, {
-    String? title,
-    VoidCallback? onTap,
-  }) {
+      String message, {
+        String? title,
+        VoidCallback? onTap,
+      }) {
     showCustomSnackBar(
       type: SnackBarType.success,
       message: message,
-      title: title ?? 'Success',
+      title: title ?? 'alerts.snackbar.success'.tr(),
       onTap: onTap,
     );
   }
 
   void showErrorSnackBar(
-    String message, {
-    String? title,
-    VoidCallback? onTap,
-    VoidCallback? onRetry,
-  }) {
+      String message, {
+        String? title,
+        VoidCallback? onTap,
+        VoidCallback? onRetry,
+      }) {
     showCustomSnackBar(
       type: SnackBarType.error,
       message: message,
-      title: title ?? 'Error',
+      title: title ?? 'alerts.snackbar.error'.tr(),
       onTap: onTap,
-      actionLabel: onRetry != null ? 'Retry' : null,
+      actionLabel: onRetry != null ? 'alerts.snackbar.retry'.tr() : null,
       onActionPressed: onRetry,
     );
   }
 
   void showWarningSnackBar(
-    String message, {
-    String? title,
-    VoidCallback? onTap,
-  }) {
+      String message, {
+        String? title,
+        VoidCallback? onTap,
+      }) {
     showCustomSnackBar(
       type: SnackBarType.warning,
       message: message,
-      title: title ?? 'Warning',
+      title: title ?? 'alerts.snackbar.warning'.tr(),
       onTap: onTap,
     );
   }
@@ -449,7 +450,7 @@ extension CustomSnackBarHelper on BuildContext {
     showCustomSnackBar(
       type: SnackBarType.info,
       message: message,
-      title: title ?? 'Info',
+      title: title ?? 'alerts.snackbar.info'.tr(),
       onTap: onTap,
     );
   }

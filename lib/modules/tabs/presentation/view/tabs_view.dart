@@ -1,7 +1,6 @@
 import 'package:baseqat/core/components/custom_widgets/custom_top_bar.dart';
 import 'package:baseqat/core/components/custom_widgets/desktop_top_bar.dart';
 import 'package:baseqat/modules/home/presentation/view/home_view.dart';
-import 'package:baseqat/modules/maps/presentation/view/map_view.dart';
 import 'package:baseqat/modules/tabs/presentation/manger/tabs_cubit.dart';
 import 'package:baseqat/modules/tabs/presentation/manger/tabs_states.dart';
 import 'package:baseqat/modules/tabs/presentation/view/qr_tabs_screen.dart';
@@ -10,10 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/responsive/responsive.dart';
 import '../../../events/presentation/view/layouts/events_screen_responsive.dart';
-import 'package:baseqat/core/components/qr_scanner/qr_scanner_screen.dart';
 import 'package:baseqat/core/resourses/navigation_manger.dart';
-import 'package:baseqat/modules/artwork_details/presentation/view/tabs/artwork_details_tabs_view.dart';
-import 'package:baseqat/core/resourses/constants_manager.dart';
 
 class TabsViewScreen extends StatelessWidget {
   const TabsViewScreen({super.key});
@@ -35,7 +31,7 @@ class _TabsViewBody extends StatelessWidget {
   void _handleQRScan(BuildContext context) {
     navigateTo(
       context,
-      const QRTabsScreen(initialTab: 0), // Start on scan tab
+      const QRTabsScreen(initialTab: 1),
     );
   }
 
@@ -46,7 +42,6 @@ class _TabsViewBody extends StatelessWidget {
         child: Column(
           children: [
 
-            // ---------------- Top element in the view ----------------
             BlocBuilder<TabsCubit, TabsState>(
               builder: (context, state) {
                 final devType = Responsive.deviceTypeOf(context);
@@ -96,7 +91,6 @@ class _TabsViewBody extends StatelessWidget {
                 );
               },
             ),
-            // ---------------- Body switches by selectedIndex ----------------
             Expanded(
               child: BlocBuilder<TabsCubit, TabsState>(
                 builder: (context, state) {

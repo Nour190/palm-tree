@@ -31,7 +31,6 @@ class ArtworkDesktopNavigationBar extends StatefulWidget {
 
 class _ArtworkDesktopNavigationBarState
     extends State<ArtworkDesktopNavigationBar> {
-  int? _hoveredIndex;
 
   @override
   Widget build(BuildContext context) {
@@ -86,113 +85,6 @@ class _ArtworkDesktopNavigationBarState
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(24.sW),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Top row: Back + Branding
-          Row(
-            children: [
-              // Back (Navigator.pop)
-              Tooltip(
-                message: 'Back',
-                child: InkWell(
-                  onTap: () => Navigator.of(context).maybePop(),
-                  borderRadius: BorderRadius.circular(8.sW),
-                  child: Padding(
-                    padding: EdgeInsets.all(8.sW),
-                    child: Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      size: 18.sW,
-                      color: AppColor.gray700,
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(width: 8.sW),
-              if (widget.showBranding)
-                GestureDetector(
-                  onTap: widget.onLogoTap,
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 36.sW,
-                        height: 36.sH,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              AppColor.primaryColor,
-                              AppColor.primaryColor.withOpacity(0.7),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(8.sW),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColor.primaryColor.withOpacity(0.25),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          Icons.palette,
-                          color: Colors.white,
-                          size: 20.sW,
-                        ),
-                      ),
-                      SizedBox(width: 10.sW),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.title ?? 'Ithra',
-                            style: TextStyleHelper.instance.headline20BoldInter
-                                .copyWith(color: AppColor.gray900),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          if (widget.subtitle != null)
-                            Text(
-                              widget.subtitle!,
-                              style: TextStyleHelper
-                                  .instance
-                                  .caption12RegularInter
-                                  .copyWith(color: AppColor.gray500),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-            ],
-          ),
-          SizedBox(height: 20.sH),
-          // Section label
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 10.sW, vertical: 6.sH),
-            decoration: BoxDecoration(
-              color: AppColor.gray100,
-              borderRadius: BorderRadius.circular(6.sW),
-            ),
-            child: Text(
-              'NAVIGATION',
-              style: TextStyleHelper.instance.caption12RegularInter.copyWith(
-                color: AppColor.gray600,
-                letterSpacing: 1.5,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildNavigationItems() {
     return Expanded(
@@ -200,7 +92,7 @@ class _ArtworkDesktopNavigationBarState
         itemCount: widget.categories.length,
         itemBuilder: (context, index) {
           final category = widget.categories[index];
-          final isSelected = index == widget.selectedIndex;;
+          final isSelected = index == widget.selectedIndex;
 
           return Container(
             margin: EdgeInsets.only(bottom: 4.sH),
@@ -388,68 +280,12 @@ class _ArtworkDesktopNavigationBarState
     );
   }
 
-  // Styling helpers (unchanged logic, no animations)
-  Color _getBackgroundColor(bool isSelected, bool isHovered) {
-    if (isSelected) return AppColor.primaryColor.withOpacity(0.12);
-    if (isHovered) return AppColor.gray100;
-    return Colors.transparent;
-  }
 
-  Border? _getBorder(bool isSelected, bool isHovered) {
-    if (isSelected) {
-      return Border.all(
-        color: AppColor.primaryColor.withOpacity(0.3),
-        width: 1.sW,
-      );
-    } else if (isHovered) {
-      return Border.all(color: AppColor.gray200, width: 1.sW);
-    }
-    return null;
-  }
 
-  List<BoxShadow>? _getBoxShadow(bool isSelected, bool isHovered) {
-    if (isSelected) {
-      return [
-        BoxShadow(
-          color: AppColor.primaryColor.withOpacity(0.18),
-          blurRadius: 8,
-          offset: const Offset(0, 2),
-        ),
-      ];
-    } else if (isHovered) {
-      return [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.05),
-          blurRadius: 4,
-          offset: const Offset(0, 1),
-        ),
-      ];
-    }
-    return null;
-  }
 
-  Color _getIconBackgroundColor(bool isSelected, bool isHovered) {
-    if (isSelected) return AppColor.primaryColor.withOpacity(0.18);
-    if (isHovered) return AppColor.gray200;
-    return Colors.transparent;
-  }
 
-  Color _getIconColor(bool isSelected, bool isHovered) {
-    if (isSelected) return AppColor.primaryColor;
-    if (isHovered) return AppColor.gray700;
-    return AppColor.gray600;
-  }
 
-  Color _getTextColor(bool isSelected, bool isHovered) {
-    if (isSelected) return AppColor.primaryColor;
-    if (isHovered) return AppColor.gray900;
-    return AppColor.gray700;
-  }
 
-  bool _hasNotification(String categoryTitle) {
-    final t = categoryTitle.toLowerCase();
-    return t == 'feedback' || t == 'chat ai';
-  }
 
   IconData _getIconForCategory(String title) {
     switch (title.toLowerCase()) {

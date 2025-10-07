@@ -1,10 +1,7 @@
-// lib/modules/artwork_details/presentation/view/artwork_details_screen.dart
 
-import 'package:baseqat/core/resourses/constants_manager.dart';
 import 'package:baseqat/core/responsive/responsive.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/modules/artwork_details/presentation/view/tabs/chat_route.dart';
-import 'package:baseqat/modules/artwork_details/presentation/view/tabs/chat_tab_view.dart';
 import 'package:baseqat/modules/artwork_details/presentation/view/tabs/location_tab.dart';
 import 'package:baseqat/modules/artwork_details/presentation/widgets/artwork_desktop_navigation_bar.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -12,13 +9,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-// ---- Core / Design
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/core/resourses/style_manager.dart';
-import 'package:baseqat/core/resourses/assets_manager.dart';
 
-// ---- Shared widgets
-import 'package:baseqat/core/components/custom_widgets/custom_search_view.dart';
 
 // ---- Repos & Data Sources
 import 'package:baseqat/modules/artwork_details/data/datasources/artwork_details_remote_data_source.dart';
@@ -38,7 +31,6 @@ import 'package:baseqat/modules/artwork_details/presentation/view/manger/feedbac
 import 'package:baseqat/modules/artwork_details/presentation/view/tabs/about_tab.dart';
 import 'package:baseqat/modules/artwork_details/presentation/view/tabs/gallery_tab.dart';
 import 'package:baseqat/modules/artwork_details/presentation/view/tabs/feedback_tab.dart';
-import 'package:baseqat/modules/artwork_details/presentation/widgets/hero_image.dart';
 
 // ---- Events desktop nav reused for "same style"
 import 'package:baseqat/modules/events/data/models/category_model.dart'
@@ -423,12 +415,9 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
 
 
   Widget _buildTabBody({required int index, Artwork? artwork, Artist? artist}) {
-    final devType = Responsive.deviceTypeOf(context);
     switch (index) {
       case 0: // About
-        final String? hero = (artwork?.gallery.isNotEmpty ?? false)
-            ? artwork!.gallery.first
-            : artist?.profileImage;
+
 
         return SingleChildScrollView(
           child: Column(

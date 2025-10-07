@@ -7,7 +7,6 @@ import 'package:baseqat/core/resourses/style_manager.dart';
 import 'package:baseqat/modules/events/data/datasources/speaker_remote_data_source.dart';
 import 'package:baseqat/modules/events/data/repositories/speaker/speaker_repository_impl.dart';
 import 'package:baseqat/modules/events/presentation/manger/speaker/speaker_cubit.dart';
-import 'package:baseqat/modules/events/presentation/manger/speaker/speaker_state.dart';
 import 'package:baseqat/modules/home/data/models/speaker_model.dart';
 
 import 'package:flutter/material.dart';

@@ -124,7 +124,6 @@ class HomeView extends StatelessWidget {
           final loaded = state as HomeLoaded;
 
           final info = loaded.info;
-          final artists = loaded.artists;
           final artworks = loaded.artworks;
           final reviews = loaded.reviews;
 

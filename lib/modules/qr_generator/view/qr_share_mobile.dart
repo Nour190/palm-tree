@@ -1,10 +1,12 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'dart:io';
+import 'package:baseqat/core/components/alerts/custom_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 Future<void> shareQRCode(String qrData, BuildContext context) async {
   try {
@@ -25,13 +27,11 @@ Future<void> shareQRCode(String qrData, BuildContext context) async {
 
     await Share.shareXFiles(
       [XFile(file.path)],
-      text: 'Scan this QR code!',
+      text: 'qr.share_qr_text'.tr(),
     );
   } catch (e) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error sharing QR: $e')),
-      );
+      context.showErrorSnackBar('qr.share_error'.tr());
     }
   }
 }

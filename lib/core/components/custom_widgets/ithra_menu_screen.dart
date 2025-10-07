@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/core/resourses/style_manager.dart';
 import 'package:baseqat/core/resourses/assets_manager.dart';
 import 'package:baseqat/core/services/locale_service.dart';
-//import 'package:baseqat/modules/auth/logic/auth_gate_cubit/auth_cubit.dart';
-//import 'package:baseqat/modules/auth/logic/auth_gate_cubit/auth_state.dart';
  import 'dart:ui' as ui;
 
 import '../../responsive/responsive.dart';

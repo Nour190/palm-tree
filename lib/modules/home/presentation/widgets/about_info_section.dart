@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:baseqat/core/responsive/responsive.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
-import 'package:baseqat/core/resourses/style_manager.dart';
 import 'package:baseqat/modules/home/data/models/InfoModel.dart';
 import '../../../../core/resourses/assets_manager.dart';
 import 'common/custom_image_view.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart' hide DeviceType;
 
 class AboutInfo extends StatefulWidget {
   final InfoModel info;

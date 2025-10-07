@@ -350,21 +350,6 @@ class _IthraArtistCardState extends State<_IthraArtistCard>
     return (words.first[0] + words.last[0]).toUpperCase();
   }
 
-  String _getArtistSubtitle() {
-    final parts = <String>[];
-    if (widget.artist.country?.isNotEmpty == true) {
-      parts.add(widget.artist.country!);
-    }
-    if (widget.artist.city?.isNotEmpty == true) {
-      parts.add(widget.artist.city!);
-    }
-
-    if (parts.isNotEmpty) {
-      return parts.join(', ');
-    }
-
-    return 'Artist';
-  }
 }
 
 class _LoadingArtistCard extends StatefulWidget {

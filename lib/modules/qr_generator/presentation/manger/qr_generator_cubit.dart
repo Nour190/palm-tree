@@ -1,7 +1,5 @@
 import 'package:bloc/bloc.dart';
 import 'package:baseqat/modules/home/data/repositories/home_repository.dart';
-import 'package:baseqat/modules/home/data/models/artist_model.dart';
-import 'package:baseqat/modules/home/data/models/artwork_model.dart';
 import 'package:baseqat/modules/qr_generator/presentation/manger/qr_generator_state.dart';
 
 class QRGeneratorCubit extends Cubit<QRGeneratorState> {

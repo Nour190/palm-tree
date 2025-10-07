@@ -1,4 +1,3 @@
-import 'package:baseqat/core/resourses/assets_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:baseqat/core/responsive/responsive.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
@@ -340,29 +339,29 @@ class IthraVirtualTourSection extends StatelessWidget {
     );
   }
 
-  Widget _buildDefaultPeopleImage(DeviceType deviceType) {
-    final bool isMobile = deviceType == DeviceType.mobile;
-
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColor.gray200,
-            AppColor.gray400,
-          ],
-        ),
-      ),
-      child: Center(
-        child: Icon(
-          Icons.people_outline,
-          size: isMobile ? 40.sW : 48.sW,
-          color: Colors.white.withOpacity(0.9),
-        ),
-      ),
-    );
-  }
+  // Widget _buildDefaultPeopleImage(DeviceType deviceType) {
+  //   final bool isMobile = deviceType == DeviceType.mobile;
+  //
+  //   return Container(
+  //     decoration: BoxDecoration(
+  //       gradient: LinearGradient(
+  //         begin: Alignment.topLeft,
+  //         end: Alignment.bottomRight,
+  //         colors: [
+  //           AppColor.gray200,
+  //           AppColor.gray400,
+  //         ],
+  //       ),
+  //     ),
+  //     child: Center(
+  //       child: Icon(
+  //         Icons.people_outline,
+  //         size: isMobile ? 40.sW : 48.sW,
+  //         color: Colors.white.withOpacity(0.9),
+  //       ),
+  //     ),
+  //   );
+  // }
 }
 
 class _FavoriteButton extends StatefulWidget {

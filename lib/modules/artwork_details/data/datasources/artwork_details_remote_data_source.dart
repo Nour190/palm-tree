@@ -28,9 +28,7 @@ class ArtworkDetailsRemoteDataSourceImpl
   // Tables / storage
   static const _tableArtworks = 'artworks';
   static const _tableArtists = 'artists';
-  static const _tableFeedback = 'feedback'; // ✅ real feedback table
-  static const _tableChats = 'artwork_chats';
-  static const _bucket = 'artwork-uploads';
+  static const _tableFeedback = 'feedback';
 
   @override
   Future<Artwork> getArtworkById(String id) async {

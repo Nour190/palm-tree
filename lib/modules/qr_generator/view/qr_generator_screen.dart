@@ -59,7 +59,7 @@ class _QRGeneratorBody extends StatelessWidget {
         child: BlocBuilder<QRGeneratorCubit, QRGeneratorState>(
           builder: (context, state) {
             if (state is QRGeneratorLoading) {
-              return const Center(child: CircularProgressIndicator());
+              return  Center(child: CircularProgressIndicator(color:AppColor.primaryColor));
             }
 
             if (state is QRGeneratorError) {
@@ -153,7 +153,7 @@ class _QRGeneratorBody extends StatelessWidget {
                         const Center(
                           child: Padding(
                             padding: EdgeInsets.all(24.0),
-                            child: CircularProgressIndicator(),
+                            child: CircularProgressIndicator(color:AppColor.primaryColor),
                           ),
                         )
                       else if (state.artworks.isEmpty)
@@ -191,7 +191,7 @@ class _QRGeneratorBody extends StatelessWidget {
                       Builder(
                         builder: (context) {
                           // Safely find the artwork, return null if not found
-                          final artwork = state.artworks.cast<dynamic?>().firstWhere(
+                          final artwork = state.artworks.cast<dynamic>().firstWhere(
                                 (a) => a?.id == state.selectedArtwork,
                             orElse: () => null,
                           );

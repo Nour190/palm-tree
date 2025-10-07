@@ -1,120 +1,9 @@
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
-import 'package:baseqat/core/responsive/size_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-/// A helper class for managing text styles in the application
-// class TextStyleHelper {
-//   static TextStyleHelper? _instance;
-//
-//   TextStyleHelper._();
-//
-//   static TextStyleHelper get instance {
-//     _instance ??= TextStyleHelper._();
-//     return _instance!;
-//   }
-//
-//   TextStyle get display48BoldInter => TextStyle(
-//     fontSize: 48.sp,
-//     fontWeight: FontWeight.w700,
-//     fontFamily: 'Inter',
-//     color: AppColor.whiteCustom,
-//   );
-//
-//   TextStyle get display40BoldInter => TextStyle(
-//     fontSize: 40.sp,
-//     fontWeight: FontWeight.w700,
-//     fontFamily: 'Inter',
-//     color: AppColor.whiteCustom,
-//   );
-//
-//   // Headline Styles
-//   // Medium-large text styles for section headers
-//
-//   TextStyle get headline32MediumInter => TextStyle(
-//     fontSize: 32.sp,
-//     fontWeight: FontWeight.w500,
-//     fontFamily: 'Inter',
-//     color: AppColor.whiteCustom,
-//   );
-//   TextStyle get headline32BoldInter => TextStyle(
-//     fontSize: 32.sp,
-//     fontWeight: FontWeight.w700,
-//     fontFamily: 'Inter',
-//     color: AppColor.gray900,
-//   );
-//
-//   TextStyle get headline24BoldInter => TextStyle(
-//     fontSize: 24.sp,
-//     fontWeight: FontWeight.w700,
-//     fontFamily: 'Inter',
-//     color: AppColor.gray900,
-//   );
-//
-//   TextStyle get headline24MediumInter => TextStyle(
-//     fontSize: 24.sp,
-//     fontWeight: FontWeight.w500,
-//     fontFamily: 'Inter',
-//   );
-//
-//   TextStyle get title20RegularRoboto => TextStyle(
-//     fontSize: 20.sp,
-//     fontWeight: FontWeight.w400,
-//     fontFamily: 'Roboto',
-//   );
-//
-//   TextStyle get title16RegularInter => TextStyle(
-//     fontSize: 16.sp,
-//     fontWeight: FontWeight.w400,
-//     fontFamily: 'Inter',
-//     color: AppColor.gray400,
-//   );
-//
-//   TextStyle get title16BoldInter => TextStyle(
-//     fontSize: 16.sp,
-//     fontWeight: FontWeight.w700,
-//     fontFamily: 'Inter',
-//     color: AppColor.gray900,
-//   );
-//
-//   TextStyle get title16LightInter => TextStyle(
-//     fontSize: 16.sp,
-//     fontWeight: FontWeight.w300,
-//     fontFamily: 'Inter',
-//   );
-//
-//   TextStyle get title16Inter =>
-//       TextStyle(fontSize: 16.sp, fontFamily: 'Inter');
-//
-//   TextStyle get title16MediumInter => TextStyle(
-//     fontSize: 16.sp,
-//     fontWeight: FontWeight.w500,
-//     fontFamily: 'Inter',
-//     color: AppColor.gray900,
-//   );
-//
-//   // Body Styles
-//   // Standard text styles for body content
-//
-//   TextStyle get body12LightInter => TextStyle(
-//     fontSize: 12.sp,
-//     fontWeight: FontWeight.w300,
-//     fontFamily: 'Inter',
-//     color: AppColor.gray900,
-//   );
-//   TextStyle get body12BoldInter => TextStyle(
-//     fontSize: 12.sp,
-//     fontWeight: FontWeight.w700,
-//     fontFamily: 'Inter',
-//     color: AppColor.gray900,
-//   );
-//
-//   TextStyle get bodyTextInter => TextStyle(fontFamily: 'Inter');
-// }
 
-
-/// A helper class for managing text styles in the application.
 class TextStyleHelper {
   static TextStyleHelper? _instance;
 
@@ -125,9 +14,7 @@ class TextStyleHelper {
     return _instance!;
   }
 
-  // ------------------------------
-  // Original .sp-based getters (unchanged)
-  // ------------------------------
+
   TextStyle get display56BoldInter =>
       TextStyle(
         fontSize: 56.sSp,

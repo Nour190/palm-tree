@@ -4,6 +4,7 @@ import 'package:flutter/rendering.dart';
 import 'package:lottie/lottie.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 /// Enum for different types of loading states
 enum LoadingType { page, overlay, button, inline, skeleton }
@@ -149,11 +150,11 @@ class _LoadingPageState extends State<LoadingPage>
       // ),
       child: widget.showLottie
           ? Lottie.asset(
-              widget.lottieAsset,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) =>
-                  _buildFallbackSpinner(),
-            )
+        widget.lottieAsset,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) =>
+            _buildFallbackSpinner(),
+      )
           : _buildFallbackSpinner(),
     );
   }
@@ -163,9 +164,10 @@ class _LoadingPageState extends State<LoadingPage>
       child: SizedBox(
         height: 40.sH,
         width: 40.sW,
-        child: CircularProgressIndicator(
-          strokeWidth: 3,
-          valueColor: AlwaysStoppedAnimation<Color>(AppColor.primaryColor),
+        child: Icon(
+          Icons.hourglass_empty,
+          size: 40.sSp,
+          color: AppColor.primaryColor,
         ),
       ),
     );
@@ -200,7 +202,7 @@ class _LoadingPageState extends State<LoadingPage>
     return TextButton(
       onPressed: widget.onCancel,
       child: Text(
-        'Cancel',
+        'alerts.loading.cancel'.tr(),
         style: TextStyleHelper.instance.body16MediumInter.copyWith(
           color: AppColor.gray700,
         ),
@@ -293,20 +295,21 @@ class _LoadingOverlayState extends State<LoadingOverlay>
                         width: 60.sW,
                         child: widget.showLottie
                             ? Lottie.asset(
-                                widget.lottieAsset,
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    CircularProgressIndicator(
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        AppColor.primaryColor,
-                                      ),
-                                    ),
-                              )
-                            : CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  AppColor.primaryColor,
-                                ),
+                          widget.lottieAsset,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Icon(
+                                Icons.hourglass_empty,
+                                size: 40.sSp,
+                                color: AppColor.primaryColor,
                               ),
+                        )
+                            : // Replaced CircularProgressIndicator with icon
+                        Icon(
+                          Icons.hourglass_empty,
+                          size: 40.sSp,
+                          color: AppColor.primaryColor,
+                        ),
                       ),
                       if (widget.message != null) ...[
                         SizedBox(height: 16.sH),
@@ -390,31 +393,31 @@ class _LoadingButtonState extends State<LoadingButton>
                 colors: widget.isLoading
                     ? [AppColor.gray400, AppColor.gray500]
                     : [
-                        widget.backgroundColor ?? AppColor.primaryColor,
-                        (widget.backgroundColor ?? AppColor.primaryColor)
-                            .withOpacity(0.8),
-                      ],
+                  widget.backgroundColor ?? AppColor.primaryColor,
+                  (widget.backgroundColor ?? AppColor.primaryColor)
+                      .withOpacity(0.8),
+                ],
               ),
               borderRadius:
-                  widget.borderRadius ?? BorderRadius.circular(12.sSp),
+              widget.borderRadius ?? BorderRadius.circular(12.sSp),
               boxShadow: widget.isLoading
                   ? []
                   : [
-                      BoxShadow(
-                        color: (widget.backgroundColor ?? AppColor.primaryColor)
-                            .withOpacity(0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
+                BoxShadow(
+                  color: (widget.backgroundColor ?? AppColor.primaryColor)
+                      .withOpacity(0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
             child: ElevatedButton(
               onPressed: widget.isLoading
                   ? null
                   : () {
-                      _controller.forward().then((_) => _controller.reverse());
-                      widget.onPressed?.call();
-                    },
+                _controller.forward().then((_) => _controller.reverse());
+                widget.onPressed?.call();
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.transparent,
                 foregroundColor: widget.textColor ?? AppColor.white,
@@ -422,28 +425,27 @@ class _LoadingButtonState extends State<LoadingButton>
                 shadowColor: Colors.transparent,
                 shape: RoundedRectangleBorder(
                   borderRadius:
-                      widget.borderRadius ?? BorderRadius.circular(12.sSp),
+                  widget.borderRadius ?? BorderRadius.circular(12.sSp),
                 ),
               ),
               child: widget.isLoading
                   ? SizedBox(
-                      height: 20.sH,
-                      width: 20.sW,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          widget.textColor ?? AppColor.white,
-                        ),
-                      ),
-                    )
+                height: 20.sH,
+                width: 20.sW,
+                child: Icon(
+                  Icons.hourglass_empty,
+                  color: widget.textColor ?? AppColor.white,
+                  size: 20.sSp,
+                ),
+              )
                   : Text(
-                      widget.text,
-                      style: TextStyleHelper.instance.body16MediumInter
-                          .copyWith(
-                            color: widget.textColor ?? AppColor.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
+                widget.text,
+                style: TextStyleHelper.instance.body16MediumInter
+                    .copyWith(
+                  color: widget.textColor ?? AppColor.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
         );
@@ -459,25 +461,20 @@ class InlineLoading extends StatelessWidget {
   final Color? color;
 
   const InlineLoading({Key? key, this.message, this.size = 24, this.color})
-    : super(key: key);
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
-          height: size.sH,
-          width: size.sW,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation<Color>(
-              color ?? AppColor.primaryColor,
-            ),
-          ),
+        Icon(
+          Icons.hourglass_empty,
+          size: size,
+          color: color ?? AppColor.primaryColor,
         ),
         if (message != null) ...[
-          SizedBox(width: 8.sW),
+          SizedBox(width: 8),
           Text(
             message!,
             style: TextStyleHelper.instance.body14MediumInter.copyWith(

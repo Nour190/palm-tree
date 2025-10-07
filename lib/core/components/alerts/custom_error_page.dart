@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 /// Enum for different types of errors
 enum ErrorType {
@@ -33,86 +34,73 @@ class ErrorInfo {
   });
 
   static ErrorInfo getErrorInfo(
-    ErrorType type, {
-    String? customMessage,
-    String? details,
-  }) {
+      ErrorType type, {
+        String? customMessage,
+        String? details,
+      }) {
     switch (type) {
       case ErrorType.network:
         return ErrorInfo(
           type: type,
-          title: 'Connection Problem',
+          title: 'alerts.error.connection_problem'.tr(),
           message:
-              customMessage ??
-              'Please check your internet connection and try again.',
+          customMessage ?? 'alerts.error.connection_problem_message'.tr(),
           details: details,
           fallbackIcon: Icons.wifi_off_rounded,
         );
       case ErrorType.server:
         return ErrorInfo(
           type: type,
-          title: 'Server Error',
-          message:
-              customMessage ??
-              'Something went wrong on our end. Please try again later.',
+          title: 'alerts.error.server_error'.tr(),
+          message: customMessage ?? 'alerts.error.server_error_message'.tr(),
           details: details,
           fallbackIcon: Icons.cloud_off_rounded,
         );
       case ErrorType.notFound:
         return ErrorInfo(
           type: type,
-          title: 'Not Found',
-          message:
-              customMessage ??
-              'The content you\'re looking for doesn\'t exist.',
+          title: 'alerts.error.not_found'.tr(),
+          message: customMessage ?? 'alerts.error.not_found_message'.tr(),
           details: details,
           fallbackIcon: Icons.search_off_rounded,
         );
       case ErrorType.timeout:
         return ErrorInfo(
           type: type,
-          title: 'Request Timeout',
-          message:
-              customMessage ??
-              'The request is taking too long. Please try again.',
+          title: 'alerts.error.request_timeout'.tr(),
+          message: customMessage ?? 'alerts.error.request_timeout_message'.tr(),
           details: details,
           fallbackIcon: Icons.access_time_rounded,
         );
       case ErrorType.noInternet:
         return ErrorInfo(
           type: type,
-          title: 'No Internet',
-          message:
-              customMessage ?? 'Please check your connection and try again.',
+          title: 'alerts.error.no_internet'.tr(),
+          message: customMessage ?? 'alerts.error.no_internet_message'.tr(),
           details: details,
           fallbackIcon: Icons.signal_wifi_off_rounded,
         );
       case ErrorType.unauthorized:
         return ErrorInfo(
           type: type,
-          title: 'Access Denied',
-          message:
-              customMessage ??
-              'You don\'t have permission to access this resource.',
+          title: 'alerts.error.access_denied'.tr(),
+          message: customMessage ?? 'alerts.error.access_denied_message'.tr(),
           details: details,
           fallbackIcon: Icons.lock_outline_rounded,
         );
       case ErrorType.warning:
         return ErrorInfo(
           type: type,
-          title: 'Warning',
-          message:
-              customMessage ?? 'Please review the information and try again.',
+          title: 'alerts.error.warning'.tr(),
+          message: customMessage ?? 'alerts.error.warning_message'.tr(),
           details: details,
           fallbackIcon: Icons.warning_rounded,
         );
       default:
         return ErrorInfo(
           type: type,
-          title: 'Oops! Something Went Wrong',
-          message:
-              customMessage ??
-              'An unexpected error occurred. Please try again.',
+          title: 'alerts.error.generic_error'.tr(),
+          message: customMessage ?? 'alerts.error.generic_error_message'.tr(),
           details: details,
           fallbackIcon: Icons.error_outline_rounded,
         );
@@ -346,7 +334,7 @@ class _ErrorPageState extends State<ErrorPage>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Technical Details',
+                  'alerts.error.technical_details'.tr(),
                   style: TextStyleHelper.instance.body14MediumInter.copyWith(
                     color: AppColor.gray700,
                   ),
@@ -370,23 +358,23 @@ class _ErrorPageState extends State<ErrorPage>
           curve: Curves.easeInOut,
           child: _showDetails
               ? Container(
-                  width: double.infinity,
-                  margin: EdgeInsets.only(top: 12.sH),
-                  padding: EdgeInsets.all(16.sSp),
-                  decoration: BoxDecoration(
-                    color: AppColor.gray900.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(12.sSp),
-                    border: Border.all(color: AppColor.gray200),
-                  ),
-                  child: Text(
-                    _errorInfo.details!,
-                    style: TextStyleHelper.instance.body14RegularInter.copyWith(
-                      color: AppColor.gray700,
-                      fontFamily: 'monospace',
-                      height: 1.4,
-                    ),
-                  ),
-                )
+            width: double.infinity,
+            margin: EdgeInsets.only(top: 12.sH),
+            padding: EdgeInsets.all(16.sSp),
+            decoration: BoxDecoration(
+              color: AppColor.gray900.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(12.sSp),
+              border: Border.all(color: AppColor.gray200),
+            ),
+            child: Text(
+              _errorInfo.details!,
+              style: TextStyleHelper.instance.body14RegularInter.copyWith(
+                color: AppColor.gray700,
+                fontFamily: 'monospace',
+                height: 1.4,
+              ),
+            ),
+          )
               : const SizedBox.shrink(),
         ),
       ],
@@ -432,30 +420,29 @@ class _ErrorPageState extends State<ErrorPage>
               ),
               child: _isRetrying
                   ? SizedBox(
-                      height: 24.sH,
-                      width: 24.sW,
-                      child: const CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColor.white,
-                        ),
-                      ),
-                    )
+                height: 24.sH,
+                width: 24.sW,
+                child: Icon(
+                  Icons.hourglass_empty,
+                  color: AppColor.white,
+                  size: 24.sSp,
+                ),
+              )
                   : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.refresh_rounded, size: 24.sSp),
-                        SizedBox(width: 12.sW),
-                        Text(
-                          'Try Again',
-                          style: TextStyleHelper.instance.body16MediumInter
-                              .copyWith(
-                                color: AppColor.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                      ],
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.refresh_rounded, size: 24.sSp),
+                  SizedBox(width: 12.sW),
+                  Text(
+                    'alerts.error.try_again'.tr(),
+                    style: TextStyleHelper.instance.body16MediumInter
+                        .copyWith(
+                      color: AppColor.white,
+                      fontWeight: FontWeight.w600,
                     ),
+                  ),
+                ],
+              ),
             ),
           ),
 
@@ -481,7 +468,7 @@ class _ErrorPageState extends State<ErrorPage>
                   Icon(Icons.headset_mic_rounded, size: 22.sSp),
                   SizedBox(width: 10.sW),
                   Text(
-                    'Contact Support',
+                    'alerts.error.contact_support'.tr(),
                     style: TextStyleHelper.instance.body16MediumInter.copyWith(
                       color: AppColor.gray700,
                       fontWeight: FontWeight.w500,
@@ -554,12 +541,12 @@ extension ErrorPageHelper on BuildContext {
             opacity: animation,
             child: SlideTransition(
               position:
-                  Tween<Offset>(
-                    begin: const Offset(0.0, 0.1),
-                    end: Offset.zero,
-                  ).animate(
-                    CurvedAnimation(parent: animation, curve: Curves.easeOut),
-                  ),
+              Tween<Offset>(
+                begin: const Offset(0.0, 0.1),
+                end: Offset.zero,
+              ).animate(
+                CurvedAnimation(parent: animation, curve: Curves.easeOut),
+              ),
               child: child,
             ),
           );

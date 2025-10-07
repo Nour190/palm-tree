@@ -1,5 +1,11 @@
 {
   "qr": {
+    "share_qr_text": "امسح رمز الاستجابة السريعة هذا!",
+    "share_subject": "رمز الاستجابة السريعة",
+    "share_success": "تمت مشاركة رمز الاستجابة بنجاح!",
+    "share_unavailable": "المشاركة غير مدعومة. سيتم تنزيل الصورة.",
+    "share_error": "فشل المشاركة. يرجى المحاولة مرة أخرى.",
+    "share_error_with_details": "حدث خطأ أثناء مشاركة رمز الاستجابة السريعة",
     "qr_code_detected": "تم اكتشاف رمز الاستجابة السريعة!",
     "scan_qr_instruction": "وجه الكاميرا نحو رمز الاستجابة السريعة للمسح",
     "qr_scanner": "ماسح رمز الاستجابة السريعة",
@@ -12,9 +18,7 @@
     "artwork_id": "معرف العمل الفني: {0}",
     "share": "مشاركة",
     "download": "تحميل",
-    "share_message": "تحقق من هذا العمل الفني: {0}\nمعرف العمل الفني: {1}",
-    "share_subject": "عمل فني: {0}",
-    "share_error": "فشلت المشاركة. يرجى المحاولة مرة أخرى."
+    "share_message": "تحقق من هذا العمل الفني: {0}\nمعرف العمل الفني: {1}"
   },
   "qr_generator": {
     "title": "إنشاء رمز الاستجابة السريعة",
@@ -33,7 +37,6 @@
   "qr_scanned_successfully": "تم مسح رمز الاستجابة السريعة بنجاح",
   "scanner_error": "خطأ في الماسح الضوئي",
   "camera_permission_denied": "تم رفض إذن الكاميرا",
-
   "app": {
     "title": "إثراء",
     "initialization_failed": "فشل في تهيئة التطبيق"
@@ -70,28 +73,22 @@
     "passwords_dont_match": "كلمات المرور غير متطابقة"
   },
   "errors": {
-
     "request_failed": "فشل الطلب",
     "resource_not_found": "المورد غير موجود",
     "you_are_offline": "أنت غير متصل. تحقق من الاتصال.",
     "request_timed_out": "انتهت مهلة الطلب. الرجاء المحاولة مجدداً.",
-
     "artists_timed_out": "انتهت مهلة تحميل المتحدثين.",
     "artworks_timed_out": "انتهت مهلة تحميل الأعمال الفنية.",
     "info_timed_out": "انتهت مهلة تحميل المعلومات.",
     "reviews_timed_out": "انتهت مهلة تحميل التقييمات.",
-
     "artists_failed": "فشل تحميل المتحدثين.",
     "artworks_failed": "فشل تحميل الأعمال الفنية.",
     "info_failed": "فشل تحميل المعلومات.",
     "reviews_failed": "فشل تحميل التقييمات.",
-
     "refreshing_artists": "جاري تحديث المتحدثين…",
     "refreshing_reviews": "جاري تحديث التقييمات…",
     "refreshing_artworks": "جاري تحديث الأعمال الفنية…",
-
     "failed_to_load_all": "فشل تحميل المتحدثين، الأعمال الفنية، التقييمات، والمعلومات.",
-
     "server_failure": "حدث خطأ في الخادم",
     "offline_failure": "لا يوجد اتصال بالإنترنت",
     "unexpected_error": "حدث خطأ غير متوقع",
@@ -135,7 +132,6 @@
     "file_delete_failed": "فشل حذف الملف",
     "permission_denied": "تم رفض الإذن",
     "location_permission_denied": "تم رفض إذن الموقع",
-    "camera_permission_denied": "تم رفض إذن الكاميرا",
     "storage_permission_denied": "تم رفض إذن التخزين",
     "microphone_permission_denied": "تم رفض إذن الميكروفون",
     "notification_permission_denied": "تم رفض إذن الإشعارات",
@@ -151,7 +147,6 @@
     "retry_artworks": "إعادة محاولة تحميل الأعمال الفنية: {error}",
     "retry_info": "إعادة محاولة تحميل المعلومات: {error}",
     "retry_reviews": "إعادة محاولة تحميل التقييمات: {error}",
-
     "artists_load_failed": "فشل تحميل المتحدثين: {error}",
     "artworks_load_failed": "فشل تحميل الأعمال الفنية: {error}",
     "info_load_failed": "فشل تحميل المعلومات: {error}",
@@ -217,9 +212,9 @@
     "unknown_artist": "فنان غير معروف",
     "artist": "فنان",
     "virtual_gallery": "معرض افتراضي",
-    "about":"عن"
+    "about": "عن"
   },
-   "footer": {
+  "footer": {
     "email": "البريد الإلكتروني",
     "phone": "الهاتف",
     "address": "العنوان",
@@ -322,7 +317,6 @@
     "submit_feedback": "إرسال التقييم",
     "thank_you": "شكراً لك على تقييمك!"
   },
-
   "about": "حول",
   "gallery": "المعرض",
   "location": "الموقع",
@@ -377,5 +371,47 @@
   "open_in_browser": "فتح في المتصفح",
   "miles": "ميل",
   "min": "دقيقة",
-  "start_now": "ابدأ الآن"
+  "start_now": "ابدأ الآن",
+  "alerts": {
+    "error": {
+      "connection_problem": "مشكلة في الاتصال",
+      "connection_problem_message": "يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.",
+      "server_error": "خطأ في الخادم",
+      "server_error_message": "حدث خطأ من جانبنا. يرجى المحاولة مرة أخرى لاحقاً.",
+      "not_found": "غير موجود",
+      "not_found_message": "المحتوى الذي تبحث عنه غير موجود.",
+      "request_timeout": "انتهت مهلة الطلب",
+      "request_timeout_message": "الطلب يستغرق وقتاً طويلاً. يرجى المحاولة مرة أخرى.",
+      "no_internet": "لا يوجد إنترنت",
+      "no_internet_message": "يرجى التحقق من اتصالك والمحاولة مرة أخرى.",
+      "access_denied": "تم رفض الوصول",
+      "access_denied_message": "ليس لديك إذن للوصول إلى هذا المورد.",
+      "warning": "تحذير",
+      "warning_message": "يرجى مراجعة المعلومات والمحاولة مرة أخرى.",
+      "generic_error": "عذراً! حدث خطأ ما",
+      "generic_error_message": "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.",
+      "technical_details": "التفاصيل التقنية",
+      "try_again": "حاول مرة أخرى",
+      "contact_support": "اتصل بالدعم"
+    },
+    "loading": {
+      "loading": "جاري التحميل...",
+      "please_wait": "يرجى الانتظار...",
+      "processing": "جاري المعالجة...",
+      "cancel": "إلغاء"
+    },
+    "snackbar": {
+      "success": "نجاح",
+      "error": "خطأ",
+      "warning": "تحذير",
+      "info": "معلومات",
+      "retry": "إعادة المحاولة"
+    },
+    "social": {
+      "facebook": "فيسبوك",
+      "linkedin": "لينكد إن",
+      "twitter": "إكس"
+    }
+
+  }
 }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../../../core/responsive/size_ext.dart';
 import '../../../../../core/resourses/color_manager.dart';
 import '../../../../../core/resourses/style_manager.dart';
-import '../../../../../core/resourses/assets_manager.dart';
 import '../../../data/models/category_model.dart' ;
 
 class DesktopNavigationBar extends StatelessWidget {

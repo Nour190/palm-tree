@@ -30,17 +30,16 @@ class SpeakersSection extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final w = constraints.maxWidth;
         final device = Responsive.deviceTypeOf(context);
         final bool isMobile = device == DeviceType.mobile;
         final bool isTablet = device == DeviceType.tablet;
         final bool isDesktop = device == DeviceType.desktop;
 
-        final horizontalPad = isDesktop
-            ? 32.sW
-            : isTablet
-            ? 24.sW
-            : 16.sW;
+        // final horizontalPad = isDesktop
+        //     ? 32.sW
+        //     : isTablet
+        //     ? 24.sW
+        //     : 16.sW;
         final vSpacing = isDesktop
             ? 24.sH
             : isTablet

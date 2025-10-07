@@ -9,8 +9,8 @@ Failure mapError(Object e, StackTrace st) {
 
   if (e is PostgrestException) {
     final code = e.code ?? '';
-    final msg = (e.message != null && e.message!.isNotEmpty)
-        ? e.message!
+    final msg = ( e.message.isNotEmpty)
+        ? e.message
         : 'errors.request_failed'.tr();
 
     if (code == 'PGRST116' || code == 'PGRST204') {

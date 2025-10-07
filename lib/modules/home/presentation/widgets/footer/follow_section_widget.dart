@@ -30,13 +30,13 @@ class FollowSectionWidget extends StatelessWidget {
           'footer.follow_us'.tr(),
           style: isMobile
               ? styles.title16MediumInter.copyWith(
-                  color: AppColor.gray400,
-                  fontSize: Responsive.responsiveFontSize(context, 14),
-                )
+            color: AppColor.gray400,
+            fontSize: Responsive.responsiveFontSize(context, 14),
+          )
               : styles.headline20MediumInter.copyWith(
-                  color: AppColor.gray400,
-                  fontSize: Responsive.responsiveFontSize(context, 18),
-                ),
+            color: AppColor.gray400,
+            fontSize: Responsive.responsiveFontSize(context, 18),
+          ),
         ),
         SizedBox(height: 8.sH),
         _buildSocialIcons(context),
@@ -45,13 +45,13 @@ class FollowSectionWidget extends StatelessWidget {
           'footer.subscribe_updates'.tr(),
           style: isMobile
               ? styles.title16MediumInter.copyWith(
-                  color: AppColor.gray400,
-                  fontSize: Responsive.responsiveFontSize(context, 14),
-                )
+            color: AppColor.gray400,
+            fontSize: Responsive.responsiveFontSize(context, 14),
+          )
               : styles.headline20MediumInter.copyWith(
-                  color: AppColor.gray400,
-                  fontSize: Responsive.responsiveFontSize(context, 18),
-                ),
+            color: AppColor.gray400,
+            fontSize: Responsive.responsiveFontSize(context, 18),
+          ),
         ),
         SizedBox(height: 8.sH),
         _buildSubscribeForm(context),
@@ -63,10 +63,10 @@ class FollowSectionWidget extends StatelessWidget {
     final isMobile = Responsive.isMobile(context);
     return Wrap(
       spacing: isMobile ? 12.sW : 16.sW,
-      children: const [
-        SocialIconWidget(icon: Icons.facebook, label: 'Facebook'),
-        SocialIconWidget(icon: Icons.business_center, label: 'LinkedIn'),
-        SocialIconWidget(icon: Icons.alternate_email, label: 'X (Twitter)'),
+      children: [
+        SocialIconWidget(icon: Icons.facebook, label: 'social.facebook'.tr()),
+        SocialIconWidget(icon: Icons.business_center, label: 'social.linkedin'.tr()),
+        SocialIconWidget(icon: Icons.alternate_email, label: 'social.twitter'.tr()),
       ],
     );
   }
@@ -90,13 +90,13 @@ class FollowSectionWidget extends StatelessWidget {
             textInputAction: TextInputAction.done,
             style: isMobile
                 ? styles.body14RegularInter.copyWith(
-                    color: AppColor.gray900,
-                    fontSize: Responsive.responsiveFontSize(context, 12),
-                  )
+              color: AppColor.gray900,
+              fontSize: Responsive.responsiveFontSize(context, 12),
+            )
                 : styles.title16RegularInter.copyWith(
-                    color: AppColor.gray900,
-                    fontSize: Responsive.responsiveFontSize(context, 14),
-                  ),
+              color: AppColor.gray900,
+              fontSize: Responsive.responsiveFontSize(context, 14),
+            ),
             decoration: InputDecoration(
               hintText: 'footer.enter_email'.tr(),
               filled: true,
@@ -110,13 +110,13 @@ class FollowSectionWidget extends StatelessWidget {
               ),
               hintStyle: isMobile
                   ? styles.body14RegularInter.copyWith(
-                      color: AppColor.gray400,
-                      fontSize: Responsive.responsiveFontSize(context, 12),
-                    )
+                color: AppColor.gray400,
+                fontSize: Responsive.responsiveFontSize(context, 12),
+              )
                   : styles.title16RegularInter.copyWith(
-                      color: AppColor.gray400,
-                      fontSize: Responsive.responsiveFontSize(context, 14),
-                    ),
+                color: AppColor.gray400,
+                fontSize: Responsive.responsiveFontSize(context, 14),
+              ),
             ),
             onSubmitted: (_) => onSubscribe(),
           ),
@@ -154,11 +154,11 @@ class FollowSectionWidget extends StatelessWidget {
         'footer.subscribe'.tr(),
         style: isMobile
             ? styles.title14MediumInter.copyWith(
-                fontSize: Responsive.responsiveFontSize(context, 12),
-              )
+          fontSize: Responsive.responsiveFontSize(context, 12),
+        )
             : styles.title16MediumInter.copyWith(
-                fontSize: Responsive.responsiveFontSize(context, 14),
-              ),
+          fontSize: Responsive.responsiveFontSize(context, 14),
+        ),
       ),
     );
   }

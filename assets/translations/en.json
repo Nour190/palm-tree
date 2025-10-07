@@ -1,5 +1,11 @@
 {
   "qr": {
+    "share_qr_text": "Scan this QR code!",
+    "share_subject": "QR Code",
+    "share_success": "QR code shared successfully!",
+    "share_unavailable": "Share not supported. Image will be downloaded.",
+    "share_error": "Failed to share. Please try again.",
+    "share_error_with_details": "Error sharing QR",
     "qr_code_detected": "QR Code Detected!",
     "scan_qr_instruction": "Point your camera at a QR code to scan",
     "qr_scanner": "QR Scanner",
@@ -12,9 +18,12 @@
     "artwork_id": "Artwork ID: {0}",
     "share": "Share",
     "download": "Download",
-    "share_message": "Check out this artwork: {0}\nArtwork ID: {1}",
-    "share_subject": "Artwork: {0}",
-    "share_error": "Failed to share. Please try again."
+    "share_message": "Check out this artwork: {0}\nArtwork ID: {1}"
+  },
+  "social": {
+    "facebook": "Facebook",
+    "linkedin": "LinkedIn",
+    "twitter": "X"
   },
   "qr_generator": {
     "title": "Generate QR Code",
@@ -33,8 +42,7 @@
   "qr_scanned_successfully": "QR code scanned successfully",
   "scanner_error": "Scanner Error",
   "camera_permission_denied": "Camera permission denied",
-
-  "app":{
+  "app": {
     "title": "Ithra",
     "initialization_failed": "App Initialization Failed"
   },
@@ -78,7 +86,6 @@
     "curating_subtitle": "Please wait while we fetch the latest highlights.",
     "refreshing_collection": "Refreshing the collection...",
     "textline_banner": "ATE WITH THE  *  YOUR DATE WITH THE  *",
-
     "speakers": "Speakers",
     "see_more": "See More",
     "speakers_headline": "A lineup of 300+ voices from industry leaders",
@@ -100,8 +107,7 @@
     "unknown_artist": "Unknown Artist",
     "artist": "Artist",
     "virtual_gallery": "Virtual Gallery",
-    "about":"About"
-
+    "about": "About"
   },
   "footer": {
     "email": "Email",
@@ -119,36 +125,28 @@
     "retry_artworks": "Retry artworks: {error}",
     "retry_info": "Retry info: {error}",
     "retry_reviews": "Retry reviews: {error}",
-
     "artists_load_failed": "Artists load failed: {error}",
     "artworks_load_failed": "Artworks load failed: {error}",
     "info_load_failed": "Info load failed: {error}",
     "reviews_load_failed": "Reviews load failed: {error}"
   },
   "errors": {
-
-
     "request_failed": "Request failed",
     "resource_not_found": "Resource not found",
     "you_are_offline": "You are offline. Check your connection.",
     "request_timed_out": "Request timed out. Please try again.",
-
     "artists_timed_out": "Artists timed out.",
     "artworks_timed_out": "Artworks timed out.",
     "info_timed_out": "Info timed out.",
     "reviews_timed_out": "Reviews timed out.",
-
     "artists_failed": "Artists failed.",
     "artworks_failed": "Artworks failed.",
     "info_failed": "Info failed.",
     "reviews_failed": "Reviews failed.",
-
     "refreshing_artists": "Refreshing artists…",
     "refreshing_reviews": "Refreshing reviews…",
     "refreshing_artworks": "Refreshing artworks…",
-
     "failed_to_load_all": "Failed to load artists, artworks, reviews, and info.",
-
     "server_failure": "Server error occurred",
     "offline_failure": "No internet connection",
     "unexpected_error": "An unexpected error occurred",
@@ -205,7 +203,6 @@
   },
   "common": {
     "partial_content_loaded": "Partial content loaded",
-
     "loading": "Loading...",
     "refreshing": "Refreshing...",
     "processing": "Processing...",
@@ -381,5 +378,41 @@
   "invalid_link": "Invalid link",
   "miles": "miles",
   "min": "min",
-  "start_now": "Start Now"
+  "start_now": "Start Now",
+  "alerts": {
+    "error": {
+      "connection_problem": "Connection Problem",
+      "connection_problem_message": "Please check your internet connection and try again.",
+      "server_error": "Server Error",
+      "server_error_message": "Something went wrong on our end. Please try again later.",
+      "not_found": "Not Found",
+      "not_found_message": "The content you're looking for doesn't exist.",
+      "request_timeout": "Request Timeout",
+      "request_timeout_message": "The request is taking too long. Please try again.",
+      "no_internet": "No Internet",
+      "no_internet_message": "Please check your connection and try again.",
+      "access_denied": "Access Denied",
+      "access_denied_message": "You don't have permission to access this resource.",
+      "warning": "Warning",
+      "warning_message": "Please review the information and try again.",
+      "generic_error": "Oops! Something Went Wrong",
+      "generic_error_message": "An unexpected error occurred. Please try again.",
+      "technical_details": "Technical Details",
+      "try_again": "Try Again",
+      "contact_support": "Contact Support"
+    },
+    "loading": {
+      "loading": "Loading...",
+      "please_wait": "Please wait...",
+      "processing": "Processing...",
+      "cancel": "Cancel"
+    },
+    "snackbar": {
+      "success": "Success",
+      "error": "Error",
+      "warning": "Warning",
+      "info": "Info",
+      "retry": "Retry"
+    }
+  }
 }

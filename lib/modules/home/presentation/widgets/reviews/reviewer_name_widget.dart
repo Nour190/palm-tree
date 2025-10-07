@@ -1,4 +1,3 @@
-import 'package:baseqat/core/responsive/responsive.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/core/resourses/style_manager.dart';
 import 'package:flutter/material.dart';

@@ -1,4 +1,5 @@
 // lib/modules/artist_details/presentation/view/tabs/feedback_tab.dart
+import 'package:baseqat/core/components/alerts/custom_snackbar.dart';
 import 'package:baseqat/core/responsive/responsive.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:flutter/material.dart';
@@ -44,7 +45,6 @@ class _FeedbackTabState extends State<FeedbackTab>
   late final AnimationController _starController;
   late final List<AnimationController> _chipControllers;
 
-  // Performance optimization - cache responsive values
   late double _cachedStarSize;
   late double _cachedMaxWidth;
   late int _cachedChipColumns;
@@ -396,22 +396,10 @@ class _FeedbackTabState extends State<FeedbackTab>
   }
 
   void _showSnackBar(String message, Color backgroundColor) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: TextStyleHelper.instance.title16RegularInter.copyWith(
-            color: AppColor.white,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        backgroundColor: backgroundColor,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10.sW),
-        ),
-        margin: EdgeInsets.all(12.sW),
-      ),
-    );
+    if (backgroundColor == AppColor.red) {
+      context.showErrorSnackBar(message);
+    } else {
+      context.showSuccessSnackBar(message);
+    }
   }
 }

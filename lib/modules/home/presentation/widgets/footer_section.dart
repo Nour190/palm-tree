@@ -1,9 +1,11 @@
+import 'package:baseqat/core/components/alerts/custom_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:baseqat/core/responsive/responsive.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'footer/contact_section_widget.dart';
 import 'footer/follow_section_widget.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class Footer extends StatefulWidget {
   final String email;
@@ -133,16 +135,11 @@ class _FooterState extends State<Footer> {
     final email = _subscribeController.text.trim();
     final isValid = _isValidEmail(email);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          isValid
-              ? 'Subscribed with $email'
-              : 'Please enter a valid email address',
-        ),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    if (isValid) {
+      context.showSuccessSnackBar(tr('footer.subscribed_success', args: [email]));
+    } else {
+      context.showErrorSnackBar(tr('footer.invalid_email'));
+    }
   }
 
   bool _isValidEmail(String input) {

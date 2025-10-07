@@ -1,5 +1,4 @@
 import 'package:baseqat/core/responsive/responsive.dart';
-import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/core/resourses/style_manager.dart';
 import 'package:flutter/material.dart';
@@ -26,14 +25,14 @@ class QuoteTextWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Quotation accent
-        Padding(
-          padding: EdgeInsets.only(top: 2.sH, right: 8.sW),
-          child: Icon(
-            Icons.format_quote,
-            size: 20.sSp,
-            color: AppColor.gray200,
-          ),
-        ),
+        // Padding(
+        //   padding: EdgeInsets.only(top: 2.sH, right: 8.sW),
+        //   child: Icon(
+        //     Icons.format_quote,
+        //     size: 20.sSp,
+        //     color: AppColor.gray200,
+        //   ),
+        // ),
         Expanded(
           child: Text(
             text,

@@ -1,23 +1,20 @@
 import 'dart:async';
 import 'package:baseqat/modules/home/data/models/review_model.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/core/responsive/responsive.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
+import '../../../../core/resourses/style_manager.dart';
 import 'reviews/review_card_widget.dart';
 import 'reviews/animated_carousel_item_widget.dart';
-import 'reviews/header_row_widget.dart';
 import 'reviews/bottom_bar_widget.dart';
 
 class Reviews extends StatefulWidget {
   final List<ReviewModel> reviewsData;
   final bool isLoading;
-  const Reviews({
-    super.key,
-    required this.reviewsData,
-    this.isLoading = false,
-  });
+  const Reviews({super.key, required this.reviewsData, this.isLoading = false});
 
   @override
   State<Reviews> createState() => _ReviewsState();
@@ -106,8 +103,14 @@ class _ReviewsState extends State<Reviews> {
           horizontal: horizontal,
           vertical: vertical,
         ),
-        child: HeaderRowWidget(isDesktop: isDesktop),
-      );
+        child:Text(
+          'home.reviews'.tr(),
+          textAlign: TextAlign.left,
+          style: TextStyleHelper.instance.headline20BoldInter.copyWith(
+            color: AppColor.whiteCustom,
+            height: 1.15,
+          ),
+     ),);
     }
 
     return FocusableActionDetector(
@@ -143,7 +146,14 @@ class _ReviewsState extends State<Reviews> {
           children: [
             Padding(
               padding: EdgeInsets.only(bottom: _getSectionSpacing(context)),
-              child: HeaderRowWidget(isDesktop: isDesktop),
+              child: Text(
+                'home.reviews'.tr(),
+                textAlign: TextAlign.left,
+                style: TextStyleHelper.instance.headline20BoldInter.copyWith(
+                  color: AppColor.whiteCustom,
+                  height: 1.15,
+                ),
+              ),
             ),
             if (widget.isLoading)
               Padding(
@@ -234,7 +244,6 @@ class _ReviewsState extends State<Reviews> {
       Responsive.isDesktop(context) ? 420.sH : 360.sH;
 }
 
-/// Intents for keyboard navigation
 class _NextPageIntent extends Intent {
   const _NextPageIntent();
 }

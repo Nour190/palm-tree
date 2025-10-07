@@ -1,7 +1,6 @@
 // speakers_header.dart
 import 'package:flutter/material.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
-import 'package:baseqat/core/responsive/size_ext.dart';
 import '../../../../../core/resourses/style_manager.dart';
 
 class SpeakersHeader extends StatelessWidget {
