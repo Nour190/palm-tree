@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppColor {
   // Core Colors
-  static const Color background = Color(0xFFCACACA);
+  // static const Color background = Color(0xFFCACACA);
   static const Color primaryColor = Colors.black;
   //static const Color primaryColor = Color(0xFFC28A30);
   static const Color gray = Color(0xFF6C6C6C);
@@ -36,18 +36,19 @@ class AppColor {
 
   // Custom Swatch for primary
   static const MaterialColor primarySwatch =
-      MaterialColor(0xFFC28A30, <int, Color>{
-        50: Color(0xFFE1C598),
-        100: Color(0xFFDAB983),
-        200: Color(0xFFD4AD6E),
-        300: Color(0xFFCEA159),
-        400: Color(0xFFC89645),
-        500: Color(0xFFC28A30),
-        600: Color(0xFFAF7C2B),
-        700: Color(0xFF9B6E26),
-        800: Color(0xFF886122),
-        900: Color(0xFF74531D),
-      });
+  MaterialColor(0xFF000000, <int, Color>{
+    50: Color(0xFFF2F2F2),
+    100: Color(0xFFD9D9D9),
+    200: Color(0xFFBFBFBF),
+    300: Color(0xFFA6A6A6),
+    400: Color(0xFF8C8C8C),
+    500: Color(0xFF000000), // Primary black
+    600: Color(0xFF0D0D0D),
+    700: Color(0xFF1A1A1A),
+    800: Color(0xFF262626),
+    900: Color(0xFF333333),
+  });
+
 
   // Grays & Utility
   static const Color gray900 = Color(0xFF12130F);

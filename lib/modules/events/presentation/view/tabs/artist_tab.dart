@@ -1,6 +1,5 @@
 // ===================== ArtistTabContent (mobile/tablet like screenshot, with line separator) =====================
 import 'package:baseqat/core/resourses/navigation_manger.dart';
-import 'package:baseqat/modules/artist_details/presentation/view/artist_details_page.dart';
 import 'package:baseqat/modules/events/data/models/fav_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,6 +10,8 @@ import 'package:baseqat/modules/events/presentation/widgets/artist_widgets/artis
 
 // Favorites
 import 'package:baseqat/modules/events/presentation/manger/events/events_cubit.dart';
+
+import '../../../../artist_details/presentation/view/artist_details_page.dart';
 
 class ArtistTabContent extends StatefulWidget {
   final List<Artist> artists;

@@ -18,7 +18,9 @@ import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart'; // for InAppWebView
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+
+import 'core/utils/deep_link_handler.dart'; // for InAppWebView
 void main() async {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -157,7 +159,7 @@ class MyApp extends StatelessWidget {
                   // wrap the app with DevicePreview.appBuilder so preview tools work
                   return DevicePreview.appBuilder(context, app);
                 },
-                home: TabsViewScreen(),
+                home: const DeepLinkAwareHome(),
               );
             },
           ),
@@ -322,3 +324,31 @@ class MyApp extends StatelessWidget {
 //     );
 //   }
 // }
+class DeepLinkAwareHome extends StatefulWidget {
+  const DeepLinkAwareHome({super.key});
+
+  @override
+  State<DeepLinkAwareHome> createState() => _DeepLinkAwareHomeState();
+}
+
+class _DeepLinkAwareHomeState extends State<DeepLinkAwareHome> {
+  @override
+  void initState() {
+    super.initState();
+    // Initialize deep link handler after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      DeepLinkHandler.initialize(context);
+    });
+  }
+
+  @override
+  void dispose() {
+    DeepLinkHandler.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TabsViewScreen();
+  }
+}

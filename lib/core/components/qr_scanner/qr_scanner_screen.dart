@@ -132,6 +132,10 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
             (segments[0] == 'artwork' || segments[0] == 'artwork_details')) {
           return segments[1];
         }
+        // Support single segment: /artwork-id-123
+        if (segments.length == 1 && segments[0].isNotEmpty) {
+          return segments[0];
+        }
         // Try query parameter: ?artworkId=xxx or ?id=xxx
         if (uri.queryParameters.containsKey('artworkId')) {
           return uri.queryParameters['artworkId']!;
@@ -163,13 +167,33 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     _controller?.toggleTorch();
   }
 
-  void _restartScanning() {
+  Future<void> _restartScanning() async {
     setState(() {
-      _isScanning = true;
+      _isScanning = false;
       _isProcessing = false;
       _errorMessage = null;
+      _hasPermission = false;
     });
-    _controller?.start();
+
+    // Dispose old controller
+    await _controller?.dispose();
+    _controller = null;
+
+    // Reinitialize scanner
+    await _initializeScanner();
+
+    // Start scanning if permission granted
+    if (_hasPermission && _controller != null) {
+      setState(() {
+        _isScanning = true;
+      });
+      await _controller?.start();
+    }
+  }
+
+  void _goBack() {
+    _controller?.dispose();
+    Navigator.of(context).pop();
   }
 
   @override
@@ -225,9 +249,8 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Close button
             IconButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: _goBack,
               icon: Container(
                 padding: EdgeInsets.all(8.sW),
                 decoration: BoxDecoration(
@@ -488,30 +511,32 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 32.sH),
-              ElevatedButton.icon(
-                onPressed: _restartScanning,
-                icon: Icon(Icons.refresh, size: 20.sW),
-                label: Text('try_again'.tr()),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColor.primaryColor,
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 32.sW,
-                    vertical: 16.sH,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                ),
-              ),
-              SizedBox(height: 16.sH),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(
-                  'go_back'.tr(),
-                  style: TextStyle(color: Colors.white70),
-                ),
-              ),
+              // ElevatedButton.icon(
+              //   onPressed: () async {
+              //     await _restartScanning();
+              //   },
+              //   icon: Icon(Icons.refresh, size: 20.sW),
+              //   label: Text('try_again'.tr()),
+              //   style: ElevatedButton.styleFrom(
+              //     backgroundColor: AppColor.primaryColor,
+              //     foregroundColor: Colors.white,
+              //     padding: EdgeInsets.symmetric(
+              //       horizontal: 32.sW,
+              //       vertical: 16.sH,
+              //     ),
+              //     shape: RoundedRectangleBorder(
+              //       borderRadius: BorderRadius.circular(25),
+              //     ),
+              //   ),
+              // ),
+              // SizedBox(height: 16.sH),
+              // TextButton(
+              //   onPressed: _goBack,
+              //   child: Text(
+              //     'go_back'.tr(),
+              //     style: TextStyle(color: Colors.white70),
+              //   ),
+              // ),
             ],
           ),
         ),
