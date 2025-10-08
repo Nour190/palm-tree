@@ -7,8 +7,7 @@ import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/core/resourses/style_manager.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-/// QR Scanner Screen that works on mobile, tablet, and web
-/// Scans QR codes and returns the artwork ID
+
 class QRScannerScreen extends StatefulWidget {
   const QRScannerScreen({
     super.key,
@@ -39,7 +38,6 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   }
 
   Future<void> _initializeScanner() async {
-    // Request camera permission
     if (!kIsWeb) {
       final status = await Permission.camera.request();
       if (status.isDenied || status.isPermanentlyDenied) {
@@ -55,7 +53,6 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       _hasPermission = true;
     });
 
-    // Initialize mobile scanner controller
     _controller = MobileScannerController(
       detectionSpeed: DetectionSpeed.noDuplicates,
       facing: CameraFacing.back,
@@ -85,17 +82,11 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       _isScanning = false;
     });
 
-    // Extract artwork ID from QR code
-    // Supports formats:
-    // 1. Direct ID: "artwork-id-123"
-    // 2. URL: "https://yourapp.com/artwork/artwork-id-123"
-    // 3. JSON: {"artworkId": "artwork-id-123"}
+
     String artworkId = _extractArtworkId(code);
 
-    // Vibrate on successful scan (if available)
     _controller?.stop();
 
-    // Show success feedback
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -113,7 +104,6 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       ),
     );
 
-    // Delay to show feedback, then callback
     Future.delayed(const Duration(milliseconds: 900), () {
       if (mounted) {
         widget.onCodeScanned(artworkId);
@@ -122,21 +112,17 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   }
 
   String _extractArtworkId(String code) {
-    // Try to parse as URL
     if (code.startsWith('http://') || code.startsWith('https://')) {
       final uri = Uri.tryParse(code);
       if (uri != null) {
-        // Extract from path: /artwork/{id} or /artwork_details/{id}
         final segments = uri.pathSegments;
         if (segments.length >= 2 &&
             (segments[0] == 'artwork' || segments[0] == 'artwork_details')) {
           return segments[1];
         }
-        // Support single segment: /artwork-id-123
         if (segments.length == 1 && segments[0].isNotEmpty) {
           return segments[0];
         }
-        // Try query parameter: ?artworkId=xxx or ?id=xxx
         if (uri.queryParameters.containsKey('artworkId')) {
           return uri.queryParameters['artworkId']!;
         }
@@ -146,10 +132,8 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       }
     }
 
-    // Try to parse as JSON
     if (code.startsWith('{') && code.endsWith('}')) {
       try {
-        // Simple JSON parsing for {"artworkId": "xxx"}
         final match = RegExp(r'"artworkId"\s*:\s*"([^"]+)"').firstMatch(code);
         if (match != null) {
           return match.group(1)!;
@@ -175,14 +159,11 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       _hasPermission = false;
     });
 
-    // Dispose old controller
     await _controller?.dispose();
     _controller = null;
 
-    // Reinitialize scanner
     await _initializeScanner();
 
-    // Start scanning if permission granted
     if (_hasPermission && _controller != null) {
       setState(() {
         _isScanning = true;
@@ -215,10 +196,8 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
             else if (_errorMessage != null)
               _buildErrorView(_errorMessage!),
 
-            // Overlay with scanning frame
             if (_isScanning) _buildScanningOverlay(),
 
-            // Top bar with close and flash buttons
             _buildTopBar(),
 
             // Bottom instructions
@@ -511,32 +490,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 32.sH),
-              // ElevatedButton.icon(
-              //   onPressed: () async {
-              //     await _restartScanning();
-              //   },
-              //   icon: Icon(Icons.refresh, size: 20.sW),
-              //   label: Text('try_again'.tr()),
-              //   style: ElevatedButton.styleFrom(
-              //     backgroundColor: AppColor.primaryColor,
-              //     foregroundColor: Colors.white,
-              //     padding: EdgeInsets.symmetric(
-              //       horizontal: 32.sW,
-              //       vertical: 16.sH,
-              //     ),
-              //     shape: RoundedRectangleBorder(
-              //       borderRadius: BorderRadius.circular(25),
-              //     ),
-              //   ),
-              // ),
-              // SizedBox(height: 16.sH),
-              // TextButton(
-              //   onPressed: _goBack,
-              //   child: Text(
-              //     'go_back'.tr(),
-              //     style: TextStyle(color: Colors.white70),
-              //   ),
-              // ),
+
             ],
           ),
         ),
@@ -545,7 +499,6 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   }
 }
 
-/// Custom painter for scanner overlay with darkened edges
 class _ScannerOverlayPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
