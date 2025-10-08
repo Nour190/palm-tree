@@ -11,4 +11,4 @@ publish = "build/web"
 from = "/*"
 to = "/index.html"
 status = 200
-force = true
+# DO NOT set force = true here
