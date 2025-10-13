@@ -223,7 +223,7 @@
     "subscribe_updates": "اشترك للحصول على التحديثات",
     "enter_email": "أدخل بريدك الإلكتروني",
     "subscribe": "اشترك",
-    "subscribed_success": "تم الاشتراك بنجاح بـ {email}",
+    "subscribed_success": "تم الاشتراك بنجاح  ",
     "invalid_email": "يرجى إدخال عنوان بريد إلكتروني صالح"
   },
   "navigation": {
@@ -414,6 +414,73 @@
       "linkedin": "لينكد إن",
       "twitter": "إكس"
     }
-
+  },
+  "programs": {
+    "header": {
+      "title": "البرامج",
+      "search_placeholder": "ابحث في البرامج والفنانين والأعمال الفنية..."
+    },
+    "tabs": {
+      "artworks": "أعمال فنية",
+      "artists": "فنانون",
+      "schedule": "الجدول",
+      "gallery": "المعرض",
+      "virtual_tour": "جولة افتراضية"
+    },
+    "errors": {
+      "artworks": "تعذر تحميل الأعمال الفنية",
+      "artists": "تعذر تحميل الفنانين",
+      "schedule": "تعذر تحميل الجدول",
+      "gallery": "تعذر تحميل المعرض",
+      "retry_hint": "اضغط إعادة المحاولة للحصول على أحدث البيانات."
+    },
+    "empty": {
+      "artists_title": "لا يوجد فنانون متاحون",
+      "artists_subtitle": "عد لاحقًا لاكتشاف فنانين جدد.",
+      "artworks_title": "لا توجد أعمال فنية متاحة",
+      "artworks_subtitle": "عد لاحقًا لاستكشاف أعمال فنية جديدة.",
+      "artworks_semantics": "قائمة الأعمال الفنية فارغة",
+      "gallery_title": "لا توجد صور بعد",
+      "gallery_subtitle": "ستظهر صور المعرض هنا."
+    },
+    "actions": {
+      "retry": "إعادة المحاولة",
+      "details": "التفاصيل",
+      "add_to_favourites": "إضافة إلى المفضلة",
+      "remove_from_favourites": "إزالة من المفضلة",
+      "mark_favourite": "إضافة للمفضلة",
+      "remove_favourite": "إزالة من المفضلة",
+      "open_directions": "فتح الاتجاهات"
+    },
+    "schedule": {
+      "header": "جدول الفعالية",
+      "cta_title": "نتطلع لرؤيتك\nغدًا",
+      "cta_subtitle": "لا تفوّت الجلسات المشوّقة حول رعاية النخيل والتمور.",
+      "tabs": {
+        "speakers": "المتحدثون",
+        "workshops": "ورش العمل"
+      },
+      "day_empty": "لا توجد جلسات مجدولة لهذا اليوم.",
+      "list_empty": "لا توجد جلسات في هذا اليوم."
+    },
+    "virtual_tour": {
+      "loading": "جارٍ تحميل الجولة الافتراضية...",
+      "unavailable_title": "الجولة الافتراضية غير متاحة",
+      "http_error": "HTTP {}: تعذّر تحميل الجولة."
+    },
+    "speakers": {
+      "live_now": "مباشر الآن",
+      "upcoming": "قادمة",
+      "location_label": "الموقع",
+      "location_pending": "سيتم الإعلان عن تفاصيل الموقع قريبًا.",
+      "location_unavailable": "الموقع غير متاح",
+      "directions_error": "تعذّر فتح الاتجاهات."
+    },
+    "artist_card": {
+      "semantics": "بطاقة الفنان: {}"
+    },
+    "artwork_card": {
+      "unknown_artist": "فنان غير معروف"
+    }
   }
 }

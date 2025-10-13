@@ -35,7 +35,7 @@ import 'package:baseqat/modules/artwork_details/presentation/view/tabs/gallery_t
 import 'package:baseqat/modules/artwork_details/presentation/view/tabs/feedback_tab.dart';
 
 // ---- Events desktop nav reused for "same style"
-import 'package:baseqat/modules/events/data/models/category_model.dart'
+import 'package:baseqat/modules/programs/data/models/category_model.dart'
 as events;
 
 // ---- Models
@@ -349,20 +349,20 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
                   width: double.infinity,
                   padding: EdgeInsets.symmetric(horizontal: 16.sW, vertical: 8.sH),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.1),
+                    color: Colors.black.withOpacity(0.1),
                     border: Border(
-                      bottom: BorderSide(color: Colors.orange.withOpacity(0.3), width: 1),
+                      bottom: BorderSide(color: Colors.black.withOpacity(0.3), width: 1),
                     ),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.cloud_off, size: 16.sW, color: Colors.orange),
+                      Icon(Icons.cloud_off, size: 16.sW, color: Colors.black),
                       SizedBox(width: 8.sW),
                       Expanded(
                         child: Text(
                           'offline_mode'.tr(),
                           style: TextStyleHelper.instance.body14RegularInter.copyWith(
-                            color: Colors.orange[800],
+                            color: Colors.black,
                           ),
                         ),
                       ),
@@ -432,13 +432,13 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
             builder: (context, artistState) {
               final Artist? artist = artistState.artist;
               return Container(
-                height: 200.sH,
+                height:Responsive.isTablet(context)?400.sH: 200.sH,
                 margin: EdgeInsets.symmetric(horizontal: 16.sW, vertical: 8.sH),
                 child: Stack(
                   alignment: Alignment.bottomLeft,
                   children: [
                     Container(
-                      height: 200.sH,
+                      height: Responsive.isTablet(context)?400.sH: 200.sH,
                       decoration: BoxDecoration(
                         color: AppColor.backgroundGray,
                         borderRadius: BorderRadius.circular(24),
@@ -453,44 +453,44 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
                       ),
                     ),
 
-                    Positioned(
-                      left: 16.sW,
-                      bottom: 16.sH,
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() => _isFavorite = !_isFavorite);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(_isFavorite ? 'added_to_favorites'.tr() : 'removed_from_favorites'.tr()),
-                              duration: const Duration(milliseconds: 900),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        },
-                        child: Container(
-                          height: 40.sH,
-                          width: 40.sW,
-                          decoration: BoxDecoration(
-                            color: Colors.transparent,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: AppColor.white, width: 1.sW),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 8,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          alignment: Alignment.center,
-                          child: Icon(
-                            _isFavorite ? Icons.favorite : Icons.favorite_border,
-                            size: 20.sH,
-                            color: AppColor.white,
-                          ),
-                        ),
-                      ),
-                    ),
+                    // Positioned(
+                    //   left: 16.sW,
+                    //   bottom: 16.sH,
+                    //   child: GestureDetector(
+                    //     onTap: () {
+                    //       setState(() => _isFavorite = !_isFavorite);
+                    //       ScaffoldMessenger.of(context).showSnackBar(
+                    //         SnackBar(
+                    //           content: Text(_isFavorite ? 'added_to_favorites'.tr() : 'removed_from_favorites'.tr()),
+                    //           duration: const Duration(milliseconds: 900),
+                    //           behavior: SnackBarBehavior.floating,
+                    //         ),
+                    //       );
+                    //     },
+                    //     child: Container(
+                    //       height: 40.sH,
+                    //       width: 40.sW,
+                    //       decoration: BoxDecoration(
+                    //         color: Colors.transparent,
+                    //         shape: BoxShape.circle,
+                    //         border: Border.all(color: AppColor.white, width: 1.sW),
+                    //         boxShadow: [
+                    //           BoxShadow(
+                    //             color: Colors.black.withOpacity(0.1),
+                    //             blurRadius: 8,
+                    //             offset: Offset(0, 2),
+                    //           ),
+                    //         ],
+                    //       ),
+                    //       alignment: Alignment.center,
+                    //       child: Icon(
+                    //         _isFavorite ? Icons.favorite : Icons.favorite_border,
+                    //         size: 20.sH,
+                    //         color: AppColor.white,
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
                   ],
                 ),
               );
@@ -518,7 +518,7 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('ai_requires_internet'.tr()),
-                        backgroundColor: Colors.orange,
+                        backgroundColor: Colors.black,
                       ),
                     );
                     return;

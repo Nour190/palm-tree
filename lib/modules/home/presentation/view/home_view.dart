@@ -415,6 +415,7 @@ class HomeView extends StatelessWidget {
                         child: Container(
                           color: AppColor.gray900,
                           width: double.infinity,
+                          padding:EdgeInsets.symmetric(horizontal: 25.sW),
                           child: Image.asset(
                             AppAssetsManager.footerBackground,
                             alignment: Alignment.bottomCenter,

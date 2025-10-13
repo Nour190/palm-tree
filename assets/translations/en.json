@@ -416,5 +416,73 @@
       "info": "Info",
       "retry": "Retry"
     }
+  },
+  "programs": {
+    "header": {
+      "title": "Programs",
+      "search_placeholder": "Search programs, artists, artworks..."
+    },
+    "tabs": {
+      "artworks": "Art Works",
+      "artists": "Artists",
+      "schedule": "Schedule",
+      "gallery": "Gallery",
+      "virtual_tour": "Virtual Tour"
+    },
+    "errors": {
+      "artworks": "Unable to load artworks",
+      "artists": "Unable to load artists",
+      "schedule": "Unable to load schedule",
+      "gallery": "Unable to load gallery",
+      "retry_hint": "Tap retry to attempt fetching the latest data."
+    },
+    "empty": {
+      "artists_title": "No artists available",
+      "artists_subtitle": "Check back later for new artists.",
+      "artworks_title": "No artworks available",
+      "artworks_subtitle": "Check back later for new artworks.",
+      "artworks_semantics": "Empty artwork list",
+      "gallery_title": "No images yet",
+      "gallery_subtitle": "Your gallery will appear here"
+    },
+    "actions": {
+      "retry": "Retry",
+      "details": "Details",
+      "add_to_favourites": "Add to favourites",
+      "remove_from_favourites": "Remove from favourites",
+      "mark_favourite": "Favourite",
+      "remove_favourite": "Remove favourite",
+      "open_directions": "Open Directions"
+    },
+    "schedule": {
+      "header": "Festival Schedule",
+      "cta_title": "We look forward\nto seeing you\ntomorrow",
+      "cta_subtitle": "Don't miss the exciting sessions on dates and palm cultivation.",
+      "tabs": {
+        "speakers": "Speakers",
+        "workshops": "Workshops"
+      },
+      "day_empty": "No sessions scheduled for this day.",
+      "list_empty": "No sessions for this day."
+    },
+    "virtual_tour": {
+      "loading": "Loading virtual tour...",
+      "unavailable_title": "Virtual Tour Unavailable",
+      "http_error": "HTTP {}: unable to load the tour."
+    },
+    "speakers": {
+      "live_now": "Live now",
+      "upcoming": "Upcoming",
+      "location_label": "Location",
+      "location_pending": "Location details will be announced soon.",
+      "location_unavailable": "Location not available",
+      "directions_error": "Unable to open directions."
+    },
+    "artist_card": {
+      "semantics": "Artist card: {}"
+    },
+    "artwork_card": {
+      "unknown_artist": "Unknown artist"
+    }
   }
 }

@@ -6,11 +6,7 @@ import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/core/responsive/size_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 
-/// AboutTab — redesigned
-/// • Black-primary header, no duplicated titles.
-/// • Single responsive hero image (uses first of galleryImages if present).
-/// • Clean sections: About, Materials (bulleted + deduped), Vision (optional quote style).
-/// • Read more/less for long text. Mobile / Tablet / Web responsive layout.
+
 class AboutTab extends StatefulWidget {
   const AboutTab({
     super.key,
@@ -95,7 +91,7 @@ class _AboutTabState extends State<AboutTab> {
             isQuote: false,
           ),
         SizedBox(height: gap),
-        _liveListeningSection(s),
+      //  _liveListeningSection(s),
         if (widget.galleryImages.isNotEmpty) ...[
           SizedBox(height: gap),
           _galleryImagesSection(),
@@ -286,60 +282,60 @@ class _AboutTabState extends State<AboutTab> {
     );
   }
 
-  Widget _liveListeningSection(TextStyleHelper styles) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'live_listening'.tr(),
-          style: styles.headline20BoldInter.copyWith(
-            color: Colors.black,
-            fontWeight: FontWeight.w700,
-            fontSize: 18,
-          ),
-        ),
-        SizedBox(height: 12.h),
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 20.h, vertical: 16.h),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(30.h),
-            border: Border.all(color: AppColor.gray200, width: 1.5),
-          ),
-          child: Row(
-            children: [
-              GestureDetector(
-                onTap: () {
-                  setState(() => _isPlaying = !_isPlaying);
-                  // TODO: Implement actual audio playback
-                },
-                child: Container(
-                  width: 40.h,
-                  height: 40.h,
-                  decoration: BoxDecoration(
-                    color: Colors.black,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    _isPlaying ? Icons.pause : Icons.play_arrow,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-              ),
-              SizedBox(width: 16.h),
-              Expanded(
-                child: CustomPaint(
-                  size: Size(double.infinity, 40.h),
-                  painter: _WaveformPainter(isPlaying: _isPlaying),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+  // Widget _liveListeningSection(TextStyleHelper styles) {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       Text(
+  //         'live_listening'.tr(),
+  //         style: styles.headline20BoldInter.copyWith(
+  //           color: Colors.black,
+  //           fontWeight: FontWeight.w700,
+  //           fontSize: 18,
+  //         ),
+  //       ),
+  //       SizedBox(height: 12.h),
+  //       // Container(
+  //       //   padding: EdgeInsets.symmetric(horizontal: 20.h, vertical: 16.h),
+  //       //   decoration: BoxDecoration(
+  //       //     color: Colors.white,
+  //       //     borderRadius: BorderRadius.circular(30.h),
+  //       //     border: Border.all(color: AppColor.gray200, width: 1.5),
+  //       //   ),
+  //       //   child: Row(
+  //       //     children: [
+  //       //       GestureDetector(
+  //       //         onTap: () {
+  //       //           setState(() => _isPlaying = !_isPlaying);
+  //       //           // TODO: Implement actual audio playback
+  //       //         },
+  //       //         child: Container(
+  //       //           width: 40.h,
+  //       //           height: 40.h,
+  //       //           decoration: BoxDecoration(
+  //       //             color: Colors.black,
+  //       //             shape: BoxShape.circle,
+  //       //           ),
+  //       //           child: Icon(
+  //       //             _isPlaying ? Icons.pause : Icons.play_arrow,
+  //       //             color: Colors.white,
+  //       //             size: 24,
+  //       //           ),
+  //       //         ),
+  //       //       ),
+  //       //       SizedBox(width: 16.h),
+  //       //       Expanded(
+  //       //         child: CustomPaint(
+  //       //           size: Size(double.infinity, 40.h),
+  //       //           painter: _WaveformPainter(isPlaying: _isPlaying),
+  //       //         ),
+  //       //       ),
+  //       //     ],
+  //       //   ),
+  //       // ),
+  //     ],
+  //   );
+  // }
 
   Widget _galleryImagesSection() {
     final imagesToShow = widget.galleryImages.take(4).toList();

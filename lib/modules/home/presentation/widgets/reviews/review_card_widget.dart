@@ -1,6 +1,7 @@
 import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/modules/home/data/models/review_model.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/responsive/responsive.dart';
 import 'review_avatar_widget.dart';
@@ -87,6 +88,7 @@ class _MobileTabletLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final text = _localizedReviewText(context);
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -102,19 +104,29 @@ class _MobileTabletLayout extends StatelessWidget {
         SizedBox(height: Responsive.isTablet(context)? 0.sH:16.sH),
         Padding(
           padding: Responsive.isTablet(context)? EdgeInsets.symmetric(vertical: 30.sW):EdgeInsets.all(0),
-          child: QuoteTextWidget(text: review.textEn, maxLines: 5),
+          child:QuoteTextWidget(text: text, maxLines: 5),
         ),
       ],
     );
   }
+  String _localizedReviewText(BuildContext context) {
+    final languageCode = context.locale.languageCode;
+    final ar = review.textAr.trim();
+    final en = review.textEn.trim();
+    if (languageCode == 'ar' && ar.isNotEmpty) {
+      return ar;
+    }
+    return en.isNotEmpty ? en : ar;
+  }
 }
 
 class _DesktopLayout extends StatelessWidget {
-  const _DesktopLayout({required this.review});
+   _DesktopLayout({required this.review});
   final ReviewModel review;
 
   @override
   Widget build(BuildContext context) {
+    final text = _localizedReviewText(context);
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -128,8 +140,17 @@ class _DesktopLayout extends StatelessWidget {
         SizedBox(height: 10.sH),
         RatingStarsWidget(rating: review.rating),
         SizedBox(height: 16.sH),
-        QuoteTextWidget(text: review.textEn, maxLines: 5),
+        QuoteTextWidget(text: text, maxLines: 5),
       ],
     );
+  }
+  String _localizedReviewText(BuildContext context) {
+    final languageCode = context.locale.languageCode;
+    final ar = review.textAr.trim();
+    final en = review.textEn.trim();
+    if (languageCode == 'ar' && ar.isNotEmpty) {
+      return ar;
+    }
+    return en.isNotEmpty ? en : ar;
   }
 }

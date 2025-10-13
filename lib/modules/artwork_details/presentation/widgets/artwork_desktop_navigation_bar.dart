@@ -1,4 +1,4 @@
-import 'package:baseqat/modules/events/data/models/category_model.dart';
+import 'package:baseqat/modules/programs/data/models/category_model.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/responsive/size_ext.dart';
 import '../../../../core/resourses/color_manager.dart';

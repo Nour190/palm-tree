@@ -58,44 +58,51 @@ class Artist {
   });
 
   // ---------------- Localized helpers ----------------
-  String localizedName({required bool isRTL}) {
+  String localizedName({required String languageCode}) {
     final ar = (nameAr ?? '').trim();
-    return (isRTL && ar.isNotEmpty) ? ar : name;
+    final en = name.trim();
+    if (languageCode == 'ar' && ar.isNotEmpty) return ar;
+    return en.isNotEmpty ? en : ar;
   }
 
-  String? localizedAbout({required bool isRTL}) {
+  String? localizedAbout({required String languageCode}) {
     final ar = (aboutAr ?? '').trim();
     final en = (about ?? '').trim();
-    if (isRTL && ar.isNotEmpty) return ar;
-    return en.isNotEmpty ? en : null;
+    if (languageCode == 'ar' && ar.isNotEmpty) return ar;
+    if (en.isNotEmpty) return en;
+    return ar.isNotEmpty ? ar : null;
   }
 
-  String? localizedCountry({required bool isRTL}) {
+  String? localizedCountry({required String languageCode}) {
     final ar = (countryAr ?? '').trim();
     final en = (country ?? '').trim();
-    if (isRTL && ar.isNotEmpty) return ar;
-    return en.isNotEmpty ? en : null;
+    if (languageCode == 'ar' && ar.isNotEmpty) return ar;
+    if (en.isNotEmpty) return en;
+    return ar.isNotEmpty ? ar : null;
   }
 
-  String? localizedCity({required bool isRTL}) {
+  String? localizedCity({required String languageCode}) {
     final ar = (cityAr ?? '').trim();
     final en = (city ?? '').trim();
-    if (isRTL && ar.isNotEmpty) return ar;
-    return en.isNotEmpty ? en : null;
+    if (languageCode == 'ar' && ar.isNotEmpty) return ar;
+    if (en.isNotEmpty) return en;
+    return ar.isNotEmpty ? ar : null;
   }
 
-  String? localizedAddress({required bool isRTL}) {
+  String? localizedAddress({required String languageCode}) {
     final ar = (addressAr ?? '').trim();
     final en = (address ?? '').trim();
-    if (isRTL && ar.isNotEmpty) return ar;
-    return en.isNotEmpty ? en : null;
+    if (languageCode == 'ar' && ar.isNotEmpty) return ar;
+    if (en.isNotEmpty) return en;
+    return ar.isNotEmpty ? ar : null;
   }
 
-  String? localizedPlatform({required bool isRTL}) {
+  String? localizedPlatform({required String languageCode}) {
     final ar = (platformAr ?? '').trim();
     final en = (platform ?? '').trim();
-    if (isRTL && ar.isNotEmpty) return ar;
-    return en.isNotEmpty ? en : null;
+    if (languageCode == 'ar' && ar.isNotEmpty) return ar;
+    if (en.isNotEmpty) return en;
+    return ar.isNotEmpty ? ar : null;
   }
 
   // ---------------- Mapping ----------------
@@ -118,7 +125,10 @@ class Artist {
     List<String> _stringList(dynamic v) {
       if (v == null) return const <String>[];
       if (v is List) {
-        return v.where((e) => e != null).map((e) => e.toString()).toList(growable: false);
+        return v
+            .where((e) => e != null)
+            .map((e) => e.toString())
+            .toList(growable: false);
       }
       return const <String>[];
     }

@@ -32,6 +32,8 @@ class IthraArtistsSection extends StatelessWidget {
     final bool isMobile = deviceType == DeviceType.mobile;
     final bool isTablet = deviceType == DeviceType.tablet;
     final bool isDesktop = deviceType == DeviceType.desktop;
+    final locale = context.locale;
+    final String languageCode = locale.languageCode;
 
     // Bilingual switch (no layout changes)
     final bool isRTL = LocaleService.isRTL(context.locale);
@@ -73,7 +75,7 @@ class IthraArtistsSection extends StatelessWidget {
           else if (artists.isEmpty)
             _buildEmptyState(context, deviceType)
           else
-            _buildArtistsGrid(context, deviceType, isRTL),
+            _buildArtistsGrid(context, deviceType, languageCode),
         ],
       ),
     );
@@ -82,7 +84,7 @@ class IthraArtistsSection extends StatelessWidget {
   Widget _buildArtistsGrid(
     BuildContext context,
     DeviceType deviceType,
-    bool isRTL,
+      String languageCode,
   ) {
     final bool isMobile = deviceType == DeviceType.mobile;
     final bool isTablet = deviceType == DeviceType.tablet;
@@ -102,7 +104,7 @@ class IthraArtistsSection extends StatelessWidget {
             index: index,
             onTap: onArtistTap,
             deviceType: deviceType,
-            isRTL: isRTL, // only data switch; UI unchanged
+            languageCode: languageCode,
           );
         },
       ),

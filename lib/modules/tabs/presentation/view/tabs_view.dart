@@ -7,11 +7,12 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/responsive/responsive.dart';
-import '../../../events/presentation/view/layouts/events_screen_responsive.dart';
 import 'package:baseqat/core/components/qr_scanner/qr_scanner_screen.dart';
 import 'package:baseqat/core/resourses/navigation_manger.dart';
 import 'package:baseqat/modules/artwork_details/presentation/view/tabs/artwork_details_tabs_view.dart';
 import 'package:baseqat/core/resourses/constants_manager.dart';
+
+import '../../../programs/presentation/view/tabs/programs_mobile_tablet_main_tab_view.dart';
 
 class TabsViewScreen extends StatelessWidget {
   const TabsViewScreen({super.key});
@@ -54,71 +55,69 @@ class _TabsViewBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
+      body: Column(
+        children: [
 
-            // ---------------- Top element in the view ----------------
-            BlocBuilder<TabsCubit, TabsState>(
-              builder: (context, state) {
-                final devType = Responsive.deviceTypeOf(context);
-                final selectedIndex = _selectedIndexFrom(context, state);
+          // ---------------- Top element in the view ----------------
+          BlocBuilder<TabsCubit, TabsState>(
+            builder: (context, state) {
+              final devType = Responsive.deviceTypeOf(context);
+              final selectedIndex = _selectedIndexFrom(context, state);
 
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    devType == DeviceType.desktop
-                        ? DesktopTopBar(
-                      items: [
-                        "navigation.home".tr(),
-                        "navigation.programs".tr(),
-                        "navigation.virtual_tour".tr(),
-                        //'Profile',
-                      ],
-                      selectedIndex: selectedIndex,
-                      onItemTap: context
-                          .read<TabsCubit>()
-                          .changeSelectedIndex,
-                      onLoginTap: () {},
-                      showScanButton: true,
-                      onScanTap: () => _handleQRScan(context),
-                    )
-                        : TopBar(
-                      items:  [
-                        "navigation.home".tr(),
-                        "navigation.programs".tr(),
-                        "navigation.virtual_tour".tr(),
-                        // 'Profile',
-                      ],
-                      selectedIndex: selectedIndex,
-                      onItemTap: context
-                          .read<TabsCubit>()
-                          .changeSelectedIndex,
-                      onLoginTap: () {},
-                      showScanButton: true,
-                      onScanTap: () => _handleQRScan(context),
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  devType == DeviceType.desktop
+                      ? DesktopTopBar(
+                    items: [
+                      "navigation.home".tr(),
+                      "navigation.programs".tr(),
+                      "navigation.virtual_tour".tr(),
+                      //'Profile',
+                    ],
+                    selectedIndex: selectedIndex,
+                    onItemTap: context
+                        .read<TabsCubit>()
+                        .changeSelectedIndex,
+                    onLoginTap: () {},
+                    showScanButton: true,
+                    onScanTap: () => _handleQRScan(context),
+                  )
+                      : TopBar(
+                    items:  [
+                      "navigation.home".tr(),
+                      "navigation.programs".tr(),
+                      "navigation.virtual_tour".tr(),
+                      // 'Profile',
+                    ],
+                    selectedIndex: selectedIndex,
+                    onItemTap: context
+                        .read<TabsCubit>()
+                        .changeSelectedIndex,
+                    onLoginTap: () {},
+                    showScanButton: true,
+                    onScanTap: () => _handleQRScan(context),
+                  ),
+                  if (devType != DeviceType.desktop)
+                    Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: Theme.of(context).dividerColor.withOpacity(0.2),
                     ),
-                    if (devType != DeviceType.desktop)
-                      Divider(
-                        height: 1,
-                        thickness: 1,
-                        color: Theme.of(context).dividerColor.withOpacity(0.2),
-                      ),
-                  ],
-                );
+                ],
+              );
+            },
+          ),
+          // ---------------- Body switches by selectedIndex ----------------
+          Expanded(
+            child: BlocBuilder<TabsCubit, TabsState>(
+              builder: (context, state) {
+                final selectedIndex = _selectedIndexFrom(context, state);
+                return _bodyForSelectedIndex(selectedIndex);
               },
             ),
-            // ---------------- Body switches by selectedIndex ----------------
-            Expanded(
-              child: BlocBuilder<TabsCubit, TabsState>(
-                builder: (context, state) {
-                  final selectedIndex = _selectedIndexFrom(context, state);
-                  return _bodyForSelectedIndex(selectedIndex);
-                },
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -129,7 +128,7 @@ Widget _bodyForSelectedIndex(int selectedIndex) {
     case 0: // Home
       return const HomeView();
     case 1: // Events
-      return  EventsScreenResponsive();
+      return  EventsMobileTabletView();
     case 2: // Maps
       return const SizedBox.shrink();
   // case 3: // Language

@@ -11,7 +11,7 @@ class IthraArtistCard extends StatefulWidget {
   final int index;
   final void Function(int index)? onTap;
   final DeviceType deviceType;
-  final bool isRTL;
+  final String languageCode;
 
   const IthraArtistCard({
     super.key,
@@ -19,7 +19,7 @@ class IthraArtistCard extends StatefulWidget {
     required this.index,
     this.onTap,
     required this.deviceType,
-    required this.isRTL,
+    required this.languageCode,
   });
 
   @override
@@ -55,7 +55,7 @@ class _IthraArtistCardState extends State<IthraArtistCard>
     final double cardWidth = isMobile ? 90.sW : isTablet ? 100.sW : 120.sW;
 
     // Localized display name (no layout changes)
-    final displayName = widget.artist.localizedName(isRTL: widget.isRTL);
+    final displayName = widget.artist.localizedName(languageCode: widget.languageCode);
 
     return GestureDetector(
       onTapDown: (_) => _controller.forward(),
@@ -140,7 +140,7 @@ class _IthraArtistCardState extends State<IthraArtistCard>
   }
 
   Widget _buildFallbackAvatar() {
-    final displayName = widget.artist.localizedName(isRTL: widget.isRTL);
+    final displayName = widget.artist.localizedName(languageCode: widget.languageCode);
 
     return Container(
       decoration: BoxDecoration(

@@ -46,32 +46,43 @@ class Artwork {
   });
 
   // ---------------- Localized helpers ----------------
-  String localizedName({required bool isRTL}) {
+  String localizedName({required String languageCode}) {
     final ar = (nameAr ?? '').trim();
-    if (isRTL && ar.isNotEmpty) return ar;
-    return name;
+    final en = name.trim();
+    if (languageCode == 'ar' && ar.isNotEmpty) return ar;
+    return en.isNotEmpty ? en : ar;
   }
 
-  String? localizedDescription({required bool isRTL}) {
+  String? localizedDescription({required String languageCode}) {
     final ar = (descriptionAr ?? '').trim();
-    return (isRTL && ar.isNotEmpty) ? ar : description;
+    if (languageCode == 'ar' && ar.isNotEmpty) return ar;
+    final en = (description ?? '').trim();
+    if (en.isNotEmpty) return en;
+    return ar.isNotEmpty ? ar : null;
   }
 
-  String? localizedMaterials({required bool isRTL}) {
+  String? localizedMaterials({required String languageCode}) {
     final ar = (materialsAr ?? '').trim();
-    return (isRTL && ar.isNotEmpty) ? ar : materials;
+    if (languageCode == 'ar' && ar.isNotEmpty) return ar;
+    final en = (materials ?? '').trim();
+    if (en.isNotEmpty) return en;
+    return ar.isNotEmpty ? ar : null;
   }
 
-  String? localizedVision({required bool isRTL}) {
+  String? localizedVision({required String languageCode}) {
     final ar = (visionAr ?? '').trim();
-    return (isRTL && ar.isNotEmpty) ? ar : vision;
+    if (languageCode == 'ar' && ar.isNotEmpty) return ar;
+    final en = (vision ?? '').trim();
+    if (en.isNotEmpty) return en;
+    return ar.isNotEmpty ? ar : null;
   }
 
-  String? localizedArtistName({required bool isRTL}) {
+  String? localizedArtistName({required String languageCode}) {
     final ar = (artistNameAr ?? '').trim();
     final en = (artistName ?? '').trim();
-    if (isRTL && ar.isNotEmpty) return ar;
-    return en.isNotEmpty ? en : null;
+    if (languageCode == 'ar' && ar.isNotEmpty) return ar;
+    if (en.isNotEmpty) return en;
+    return ar.isNotEmpty ? ar : null;
   }
 
   // ---------------- Mapping ----------------
@@ -87,7 +98,10 @@ class Artwork {
     List<String> _stringList(dynamic v) {
       if (v == null) return const <String>[];
       if (v is List) {
-        return v.where((e) => e != null).map((e) => e.toString()).toList(growable: false);
+        return v
+            .where((e) => e != null)
+            .map((e) => e.toString())
+            .toList(growable: false);
       }
       return const <String>[];
     }
