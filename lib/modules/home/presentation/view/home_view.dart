@@ -1,3 +1,4 @@
+import 'package:baseqat/core/responsive/size_utils.dart' hide DeviceType;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:baseqat/core/resourses/assets_manager.dart';
 import 'package:baseqat/core/resourses/constants_manager.dart';
@@ -9,12 +10,13 @@ import 'package:baseqat/core/components/alerts/custom_snackbar.dart';
 import 'package:baseqat/core/network/remote/supabase_failure.dart';
 import 'package:baseqat/modules/artwork_details/presentation/view/tabs/artwork_details_tabs_view.dart';
 import 'package:baseqat/modules/home/data/datasources/home_remote_data_source.dart';
+import 'package:baseqat/modules/home/data/datasources/home_local_data_source.dart';
 import 'package:baseqat/modules/home/data/repositories/home_repository_impl.dart';
 import 'package:baseqat/modules/home/presentation/manger/home_cubit.dart';
 import 'package:baseqat/modules/home/presentation/manger/home_state.dart';
 import 'package:baseqat/modules/home/presentation/widgets/about_info_section.dart';
 import 'package:baseqat/modules/home/presentation/widgets/common/section_error_banner.dart';
-import 'package:baseqat/modules/home/presentation/widgets/footer_section.dart';
+import 'package:baseqat/modules/home/presentation/widgets/footer/footer_section.dart';
 import 'package:baseqat/modules/home/presentation/widgets/speakers_section.dart';
 import 'package:baseqat/modules/home/presentation/widgets/textline_banner.dart';
 import 'package:baseqat/modules/tabs/presentation/manger/tabs_cubit.dart';
@@ -22,10 +24,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/components/alerts/custom_loading.dart';
+import '../../../../core/resourses/color_manager.dart';
 import '../../../artist_details/presentation/view/artist_details_page.dart';
 import '../widgets/common/ithra_welcome_section.dart';
-import '../widgets/ithra_artists_section.dart';
-import '../widgets/ithra_artworks_section.dart';
+import '../widgets/artists/ithra_artists_section.dart';
+import '../widgets/artworks/ithra_artworks_section.dart';
 import '../widgets/ithra_gallery_section.dart';
 import '../widgets/reviews_section.dart';
 import '../widgets/ithra_virtual_tour_section.dart';
@@ -45,6 +48,7 @@ class HomeView extends StatelessWidget {
   Widget build(BuildContext context) {
     final repo = HomeRepositoryImpl(
       HomeRemoteDataSourceImpl(Supabase.instance.client),
+      local: HomeLocalDataSourceImpl(),
     );
 
     return BlocProvider(
@@ -58,7 +62,6 @@ class HomeView extends StatelessWidget {
                     curr.reviewsError != null ||
                     curr.infoError != null)),
         listener: (context, state) {
-          // Surface errors with the redesigned alert components
           if (state is HomeError) {
             context.showErrorSnackBar(
               state.failure.message,
@@ -97,7 +100,6 @@ class HomeView extends StatelessWidget {
           }
         },
         builder: (context, state) {
-          // Initial or first hard load - show immersive loading page
           if (state is HomeInitial || state is HomeLoading) {
             final loadingMessage = state is HomeLoading ? state.message : null;
             return LoadingPage(
@@ -107,7 +109,6 @@ class HomeView extends StatelessWidget {
             );
           }
 
-          // Fatal top-level error with no data at all
           if (state is HomeError) {
             final failure = state.failure;
             return ErrorPage(
@@ -120,12 +121,9 @@ class HomeView extends StatelessWidget {
             );
           }
 
-          // Loaded or refreshing with last-good-data
           final loaded = state as HomeLoaded;
 
           final info = loaded.info;
-          final artworks = loaded.artworks;
-          final reviews = loaded.reviews;
 
           final deviceType = Responsive.deviceTypeOf(context);
           final bool isTablet = deviceType == DeviceType.tablet;
@@ -151,6 +149,10 @@ class HomeView extends StatelessWidget {
                         IthraWelcomeSection(
                           title: info.mainTitle,
                           subtitle: info.subTitle,
+                          titleAr: info.mainTitleAr,
+                          highlightsLabel: 'Highlights',
+                          highlightsLabelAr: 'المختارات',
+                          subtitleAr: info.subTitleAr,
                           images: info.images,
                         ),
                         if (loaded.infoError != null)
@@ -166,7 +168,6 @@ class HomeView extends StatelessWidget {
                             ),
                           ),
                       ] else ...[
-                        // If no info yet but we're refreshing, show lightweight placeholder
                         if (loaded.isRefreshing)
                           Padding(
                             padding: const EdgeInsets.all(16),
@@ -214,17 +215,18 @@ class HomeView extends StatelessWidget {
                               IthraArtistsSection(
                                 artists: List.from(artistsSel),
                                 isLoading: isRefreshingSel,
-                                onSeeMore: () => context
-                                    .read<TabsCubit>()
-                                    .changeSelectedIndex(1),
+                                onSeeMore: () {
+                                  context.read<TabsCubit>().changeSelectedIndex(1);
+                                  context.read<TabsCubit>().changeSelectedSubIndex(1);
+                                },
                                 onArtistTap: (index) {
-                                  navigateTo(
-                                    context,
-                                    ArtistDetailsPage(
-                                      artistId:
-                                      (artistsSel[index] as dynamic).id,
-                                    ),
-                                  );
+                                  // navigateTo(
+                                  //   context,
+                                  //   // ArtistDetailsPage(
+                                  //   //   artistId:
+                                  //   //   (artistsSel[index] as dynamic).id,
+                                  //   // ),
+                                  // );
                                 },
                               ),
                             ],
@@ -272,9 +274,10 @@ class HomeView extends StatelessWidget {
                               IthraArtworksSection(
                                 artworks: List.from(artworksSel),
                                 isLoading: isRefreshingSel,
-                                onSeeMore: () => context
-                                    .read<TabsCubit>()
-                                    .changeSelectedIndex(1),
+                                onSeeMore: () {
+                                  context.read<TabsCubit>().changeSelectedIndex(1);
+                                  context.read<TabsCubit>().changeSelectedSubIndex(0);
+                                },
                                 onArtworkTap: (index) {
                                   navigateTo(
                                     context,
@@ -313,16 +316,22 @@ class HomeView extends StatelessWidget {
                         padding:
                         EdgeInsets.symmetric(horizontal: isDesktop ? 12.sW : 8.0.sW),
                         child: SpeakersSection(
-                          onSeeMore: () => context.read<TabsCubit>().changeSelectedIndex(1),
-                          onJoinNow: () => context.read<TabsCubit>().changeSelectedIndex(1),
+                          onSeeMore: () {
+                            context.read<TabsCubit>().changeSelectedIndex(1);
+                            context.read<TabsCubit>().changeSelectedSubIndex(2);
+                          },
+                          onJoinNow: () {
+                            context.read<TabsCubit>().changeSelectedIndex(1);
+                            context.read<TabsCubit>().changeSelectedSubIndex(2);
+                          },
                         ),
                       ),
 
-                      IthraVirtualTourSection(
-                        onTryNow: () => context.read<TabsCubit>().changeSelectedIndex(1),
-                        virtualTourImage: AppAssetsManager.imgImage,
-                        peopleImage: AppAssetsManager.imgUsers,
-                      ),
+                      // IthraVirtualTourSection(
+                      //   onTryNow: () => context.read<TabsCubit>().changeSelectedIndex(1),
+                      //   virtualTourImage: AppAssetsManager.imgImage,
+                      //   peopleImage: AppAssetsManager.imgUsers,
+                      // ),
 
                       BlocSelector<HomeCubit, HomeState, List<String>>(
                         selector: (state) {
@@ -335,7 +344,10 @@ class HomeView extends StatelessWidget {
                           if (imagesSel.isEmpty) return const SizedBox.shrink();
                           return IthraGallerySection(
                             imageUrls: imagesSel,
-                            onSeeMore: () => context.read<TabsCubit>().changeSelectedIndex(1),
+                            onSeeMore: () {
+                              context.read<TabsCubit>().changeSelectedIndex(1);
+                              context.read<TabsCubit>().changeSelectedSubIndex(3);
+                            },
                             onImageTap: (index) {
                               // Handle image tap - could open lightbox
                             },
@@ -377,7 +389,6 @@ class HomeView extends StatelessWidget {
                                   ),
                                 ),
                               Reviews(
-
                                 isLoading: isRefreshingSel, reviewsData:List.from(reviewsSel),
 
                               ),
@@ -399,6 +410,24 @@ class HomeView extends StatelessWidget {
 
                       // Footer
                       Footer(),
+                      Transform.translate(
+                        offset: const Offset(0, -1), // remove 1px seam
+                        child: Container(
+                          color: AppColor.gray900,
+                          width: double.infinity,
+                          child: Image.asset(
+                            AppAssetsManager.footerBackground,
+                            alignment: Alignment.bottomCenter,
+                            fit: BoxFit.cover,
+                            // width: double.infinity,
+                            // height: deviceType == DeviceType.mobile
+                            //     ? 180.sH
+                            //     : deviceType == DeviceType.tablet
+                            //     ? 260.sH
+                            //     : 340.sH,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),

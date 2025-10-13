@@ -22,6 +22,7 @@ import '../../../../../core/resourses/style_manager.dart';
 import '../../../../../core/components/alerts/custom_loading.dart';
 import '../../../../../core/components/alerts/custom_error_page.dart';
 
+import '../../../../tabs/presentation/manger/tabs_cubit.dart';
 import '../../../data/datasources/events_remote_data_source.dart';
 import '../../../data/repositories/events/events_repository_impl.dart';
 
@@ -31,13 +32,12 @@ import '../tabs/virtual_tour_tab.dart';
 
 class EventsMobileTabletView extends StatefulWidget {
   const EventsMobileTabletView({super.key});
-
   @override
   State<EventsMobileTabletView> createState() => _EventsMobileTabletViewState();
 }
 
 class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
-  int _selectedIndex = 0;
+  int _selectedIndex =0;
   final TextEditingController searchController = TextEditingController();
 
   // repo + user id (stable)
@@ -60,6 +60,13 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
       CategoryModel(title: 'Gallery', isSelected: false),
       CategoryModel(title: 'Virtual Tour', isSelected: false),
     ];
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final tabsCubit = context.read<TabsCubit>();
+      if (tabsCubit.selectedSubIndex != _selectedIndex) {
+        _onCategoryTap(context, tabsCubit.selectedSubIndex);
+      }
+    });
   }
 
   void _onCategoryTap(BuildContext ctx, int index) {
@@ -116,55 +123,55 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.h),
                         child: Row(
-                          children: [
-                            // Search input (keeps the mobile visual style)
-                            Expanded(
-                              child: Container(
-                                height: 60.sH,
-                                decoration: BoxDecoration(
-                                  color: AppColor.gray50,
-                                  borderRadius: BorderRadius.circular(20.r),
-                                  border: Border.all(
-                                    color: AppColor.gray200,
-                                    width: 1,
+                            children: [
+                              // Search input (keeps the mobile visual style)
+                              Expanded(
+                                child: Container(
+                                  height: 60.sH,
+                                  decoration: BoxDecoration(
+                                    color: AppColor.gray50,
+                                    borderRadius: BorderRadius.circular(20.r),
+                                    border: Border.all(
+                                      color: AppColor.gray200,
+                                      width: 1,
+                                    ),
                                   ),
-                                ),
-                                child: TextField(
-                                  controller: searchController,
-                                  onChanged: (query) => ctx
-                                      .read<EventsCubit>()
-                                      .setSearchQuery(query),
-                                  decoration: InputDecoration(
-                                    hintText:
-                                    'Search events, artists, artworks...',
-                                    hintStyle: TextStyle(
-                                      color: AppColor.gray500,
-                                      fontSize: 14.sSp,
-                                    ),
-                                    prefixIcon: Padding(
-                                      padding: EdgeInsets.all(12.h),
-                                      child: Image.asset(
-                                        AppAssetsManager.imgSearch,
-                                        width: 15.sW,
-                                        height: 15.sH,
+                                  child: TextField(
+                                    controller: searchController,
+                                    onChanged: (query) => ctx
+                                        .read<EventsCubit>()
+                                        .setSearchQuery(query),
+                                    decoration: InputDecoration(
+                                      hintText:
+                                      'Search events, artists, artworks...',
+                                      hintStyle: TextStyle(
                                         color: AppColor.gray500,
+                                        fontSize: 14.sSp,
                                       ),
-                                    ),
-                                    border: InputBorder.none,
-                                    contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 16.sW,
-                                      vertical: 28.sH,
+                                      prefixIcon: Padding(
+                                        padding: EdgeInsets.all(12.h),
+                                        child: Image.asset(
+                                          AppAssetsManager.imgSearch,
+                                          width: 15.sW,
+                                          height: 15.sH,
+                                          color: AppColor.gray500,
+                                        ),
+                                      ),
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 16.sW,
+                                        vertical: 28.sH,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                            SizedBox(width: 12.sW),
-                             Text(
-                            'Programs',
-                            style: TextStyleHelper.instance.headline24BoldInter,
-                            maxLines: 1,
-                          ),
+                              SizedBox(width: 12.sW),
+                              Text(
+                                'Programs',
+                                style: TextStyleHelper.instance.headline24BoldInter,
+                                maxLines: 1,
+                              ),
                             ]
                         ),
                       ),
@@ -177,8 +184,8 @@ class _EventsMobileTabletViewState extends State<EventsMobileTabletView> {
                       onTap: (i) => _onCategoryTap(ctx, i),
                       enableScrollIndicators: false,
                       animationDuration: const Duration(milliseconds: 250),
-                     // runHeight: 60.sH,
-                     // minChipWidth: 130,
+                      // runHeight: 60.sH,
+                      // minChipWidth: 130,
 
                     ),
 

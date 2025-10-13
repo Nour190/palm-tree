@@ -77,28 +77,14 @@ class SpeakersSection extends StatelessWidget {
               children: [
                 Text(
                   'home.speakers'.tr(),
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: isDesktop
-                        ? 24.sSp
-                        : isTablet
-                        ? 22.sSp
-                        : 20.sSp,
-                    fontWeight: FontWeight.w700,
-                    color: AppColor.black,
-                  ),
+                  style:TextStyleHelper.instance.headline24BoldInter
                 ),
                 if (onSeeMore != null)
                   GestureDetector(
                     onTap: onSeeMore,
                     child: Text(
                       'home.see_more'.tr(),
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: isDesktop ? 14.sSp : 13.sSp,
-                        fontWeight: FontWeight.w500,
-                        color: AppColor.gray600,
-                      ),
+                      style:TextStyleHelper.instance.title16RegularInter
                     ),
                   ),
               ],
@@ -117,6 +103,7 @@ class SpeakersSection extends StatelessWidget {
                   headline: 'home.speakers_headline'.tr(),
                   body: 'home.speakers_body'.tr(),
                   desktop: false,
+                  //onJoinNow: onJoinNow,
                 ),
               ),
               Padding(
@@ -148,6 +135,7 @@ class SpeakersSection extends StatelessWidget {
                         headline: 'home.speakers_headline'.tr(),
                         body: 'home.speakers_body'.tr(),
                         desktop: true,
+                       // onJoinNow: onJoinNow,
                       ),
                     ),
                     SizedBox(width: gap),
@@ -171,22 +159,22 @@ class SpeakersSection extends StatelessWidget {
 
             SizedBox(height: vSpacing),
 
-            Row(
-              children: [
-                _Avatar(
-                  imagePath: _avatarPath,
-                  size: _avatarSize(isMobile, isTablet, isDesktop),
-                ),
-                SizedBox(width: 8.sW),
-                Expanded(
-                  child: _CtaPill(
-                    leftEmblemPath: _leftEmblem,
-                    badgeAssetPaths: badges,
-                    onJoinNow: onJoinNow,
-                  ),
-                ),
-              ],
-            ),
+            // Row(
+            //   children: [
+            //     _Avatar(
+            //       imagePath: _avatarPath,
+            //       size: _avatarSize(isMobile, isTablet, isDesktop),
+            //     ),
+            //     SizedBox(width: 8.sW),
+            //     Expanded(
+            //       child: _CtaPill(
+            //         leftEmblemPath: _leftEmblem,
+            //         badgeAssetPaths: badges,
+            //         onJoinNow: onJoinNow,
+            //       ),
+            //     ),
+            //   ],
+            // ),
           ],
         );
       },
@@ -209,6 +197,7 @@ class _HeroTextCard extends StatelessWidget {
     required this.headline,
     required this.body,
     required this.desktop,
+    //required this.onJoinNow,
   });
 
   final double cardRadius;
@@ -218,6 +207,7 @@ class _HeroTextCard extends StatelessWidget {
   final String headline;
   final String body;
   final bool desktop;
+  //final VoidCallback? onJoinNow;
 
   @override
   Widget build(BuildContext context) {
@@ -233,13 +223,32 @@ class _HeroTextCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Emblem
-          Padding(
-            padding: EdgeInsets.only(top: devType == DeviceType.desktop ? 40.sH : 1.sH, left: devType == DeviceType.desktop ? 10.sW : 0),
-            child: CustomImageView(
-              imagePath: emblemPath,
-              height: emblemSize,
-              width: emblemSize,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Padding(
+                padding: EdgeInsets.only(top: devType == DeviceType.desktop ? 40.sH : 1.sH, left: devType == DeviceType.desktop ? 10.sW : 0),
+                child: CustomImageView(
+                  imagePath: emblemPath,
+                  height: emblemSize,
+                  width: emblemSize,
+                ),
+              ),
+
+              // CustomButton(
+              //   height:50.sH,
+              //   width: 100.sW,
+              //   text: 'home.join_now'.tr(),
+              //   backgroundColor: AppColor.whiteCustom,
+              //   textColor: AppColor.gray900,
+              //   fontSize: 24.sSp,
+              //   fontWeight: FontWeight.w700,
+              //   borderRadius: 10.sH,
+              //   padding: EdgeInsets.symmetric(horizontal: 20.sW),
+              //   onPressed: onJoinNow ?? () {},
+              // ),
+
+            ],
           ),
           SizedBox(height: devType == DeviceType.desktop ? 28.sH : 20.sH),
 

@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:baseqat/modules/artwork_details/data/models/conversation_models.dart';
 import 'package:baseqat/modules/artwork_details/data/repositories/chat_repository.dart';
 import 'package:baseqat/modules/artwork_details/presentation/view/manger/chat/chat_states.dart';
+import 'package:baseqat/core/network/connectivity_service.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:translator/translator.dart';
 
@@ -10,19 +12,20 @@ class ChatCubit extends Cubit<ChatState> {
   final ChatRepository _repo;
   final int _pageSize;
   final GoogleTranslator _translator;
+  final ConnectivityService _connectivityService = ConnectivityService();
 
   Timer? _streamTranslateDebouncer;
 
   ChatCubit(this._repo, {int pageSize = 50, GoogleTranslator? translator})
-    : _pageSize = pageSize,
-      _translator = translator ?? GoogleTranslator(),
-      super(const ChatState());
+      : _pageSize = pageSize,
+        _translator = translator ?? GoogleTranslator(),
+        super(const ChatState());
 
   // ============================
   // Init / Load
   // ============================
   Future<void> init({
-    required String userId,
+    required String sessionId, // Changed from userId to sessionId
     required String artworkId,
     String? sessionLabel,
     Map<String, dynamic>? metadata,
@@ -34,11 +37,32 @@ class ChatCubit extends Cubit<ChatState> {
     List<String>? artworkGallery,
     String? artworkDescription,
   }) async {
+    print('═══════════════════════════════════════════════════════════');
+    print('[ChatCubit] init() START');
+    print('[ChatCubit] sessionId: $sessionId');
+    print('[ChatCubit] artworkId: $artworkId');
+    print('[ChatCubit] artworkName: $artworkName');
+    print('═══════════════════════════════════════════════════════════');
+
+    final hasConnection = await _connectivityService.hasConnection();
+    print('[ChatCubit] Has connection: $hasConnection');
+
+    if (!hasConnection) {
+      print('[ChatCubit] No internet connection - aborting init');
+      emit(state.copyWith(
+        status: ChatStatus.error,
+        error: 'Chat requires an internet connection',
+      ));
+      return;
+    }
+
     emit(state.copyWith(status: ChatStatus.loading, clearError: true));
 
     try {
+      print('[ChatCubit] Calling _repo.initConversation()...');
+
       final conv = await _repo.initConversation(
-        userId: userId,
+        sessionId: sessionId, // Using sessionId instead of userId
         artworkId: artworkId,
         sessionLabel: sessionLabel,
         metadata: metadata,
@@ -48,13 +72,22 @@ class ChatCubit extends Cubit<ChatState> {
         artworkDescription: artworkDescription,
       );
 
+      print('[ChatCubit] Conversation returned: ${conv.id}');
+      print('[ChatCubit] Conversation user_id: ${conv.sessionId}');
+      print('[ChatCubit] Conversation artwork_id: ${conv.artworkId}');
+
       final limit = initialLimit ?? _pageSize;
+
+      print('[ChatCubit] Fetching message history (limit: $limit)...');
+
       final msgs = await _repo.getHistory(
         conversationId: conv.id,
         limit: limit,
       );
 
       msgs.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
+      print('[ChatCubit] Fetched ${msgs.length} messages');
 
       emit(
         state.copyWith(
@@ -66,14 +99,21 @@ class ChatCubit extends Cubit<ChatState> {
           clearError: true,
         ),
       );
-    } catch (e) {
+
+      print('[ChatCubit] init() COMPLETE. Status: ready, conversation ID: ${conv.id}');
+      print('═══════════════════════════════════════════════════════════');
+    } catch (e, stackTrace) {
+      print('═══════════════════════════════════════════════════════════');
+      print('[ChatCubit] init() ERROR: $e');
+      print('[ChatCubit] Stack trace: $stackTrace');
+      print('═══════════════════════════════════════════════════════════');
       emit(state.copyWith(status: ChatStatus.error, error: e.toString()));
     }
   }
 
-  /// Convenience: list all conversations for this user (optionally by artwork).
+  /// Convenience: list all conversations for this session (optionally by artwork).
   Future<List<ConversationRecord>> listUserConversations({
-    required String userId,
+    required String sessionId, // Changed from userId to sessionId
     String? artworkId,
     int limit = 20,
     int offset = 0,
@@ -81,7 +121,7 @@ class ChatCubit extends Cubit<ChatState> {
   }) async {
     try {
       return await _repo.listConversations(
-        userId: userId,
+        sessionId: sessionId, // Using sessionId instead of userId
         artworkId: artworkId,
         limit: limit,
         offset: offset,
@@ -195,7 +235,19 @@ class ChatCubit extends Cubit<ChatState> {
     Map<String, dynamic>? extras,
   }) async {
     final conv = state.conversation;
-    if (conv == null) return;
+    if (conv == null) {
+      debugPrint('[ChatCubit] sendUserMessage() error: No active conversation');
+      return;
+    }
+
+    debugPrint('[ChatCubit] sendUserMessage() called. Content: $content, isVoice: $isVoice');
+
+    final hasConnection = await _connectivityService.hasConnection();
+    if (!hasConnection) {
+      debugPrint('[ChatCubit] sendUserMessage() error: No internet connection');
+      emit(state.copyWith(error: 'Chat requires an internet connection'));
+      return;
+    }
 
     emit(state.copyWith(isSending: true, clearError: true));
     try {
@@ -205,6 +257,8 @@ class ChatCubit extends Cubit<ChatState> {
         translationText = null;
         translationLang = null;
       }
+
+      debugPrint('[ChatCubit] Sending message to repository...');
 
       final created = await _repo.sendUserMessage(
         content: content,
@@ -218,11 +272,16 @@ class ChatCubit extends Cubit<ChatState> {
         extras: extras,
       );
 
+      debugPrint('[ChatCubit] Message sent successfully. ID: ${created.id}');
+
       final next = [...state.messages, created]
         ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
       emit(state.copyWith(isSending: false, messages: next));
+
+      debugPrint('[ChatCubit] State updated. Total messages: ${next.length}');
     } catch (e) {
+      debugPrint('[ChatCubit] sendUserMessage() error: $e');
       emit(state.copyWith(isSending: false, error: e.toString()));
     }
   }
@@ -237,7 +296,12 @@ class ChatCubit extends Cubit<ChatState> {
     Map<String, dynamic>? extras,
   }) async {
     final conv = state.conversation;
-    if (conv == null) return;
+    if (conv == null) {
+      debugPrint('[ChatCubit] saveModelMessage() error: No active conversation');
+      return;
+    }
+
+    debugPrint('[ChatCubit] saveModelMessage() called. Content length: ${content.length}');
 
     try {
       final created = await _repo.saveModelMessage(
@@ -250,11 +314,16 @@ class ChatCubit extends Cubit<ChatState> {
         extras: extras,
       );
 
+      debugPrint('[ChatCubit] Model message saved successfully. ID: ${created.id}');
+
       final next = [...state.messages, created]
         ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
       emit(state.copyWith(messages: next, clearError: true));
+
+      debugPrint('[ChatCubit] State updated. Total messages: ${next.length}');
     } catch (e) {
+      debugPrint('[ChatCubit] saveModelMessage() error: $e');
       emit(state.copyWith(error: e.toString()));
     }
   }
@@ -291,7 +360,7 @@ class ChatCubit extends Cubit<ChatState> {
       _streamTranslateDebouncer?.cancel();
       _streamTranslateDebouncer = Timer(
         const Duration(milliseconds: 350),
-        () async {
+            () async {
           final to = currentTargetLang;
           try {
             final res = await _translator.translate(newText, to: to);
@@ -464,6 +533,19 @@ class ChatCubit extends Cubit<ChatState> {
   void consumeError() {
     if (state.error != null) {
       emit(state.copyWith(clearError: true));
+    }
+  }
+
+  Future<void> clearConversationCache(String conversationId) async {
+    try {
+      debugPrint('[ChatCubit] Clearing conversation cache for: $conversationId');
+      // This would call a method in the repository to clear local cache
+      // For now, just clear the messages from state
+      emit(state.copyWith(messages: []));
+      debugPrint('[ChatCubit] Conversation cache cleared');
+    } catch (e) {
+      debugPrint('[ChatCubit] Error clearing conversation cache: $e');
+      emit(state.copyWith(error: e.toString()));
     }
   }
 }

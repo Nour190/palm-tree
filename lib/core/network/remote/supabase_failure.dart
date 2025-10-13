@@ -31,3 +31,9 @@ class NotFoundFailure extends Failure {
 class UnknownFailure extends Failure {
   UnknownFailure(super.message, {super.cause, super.stackTrace});
 }
+
+class CacheFailure extends Failure {
+  CacheFailure([String? msg])
+      : super(msg ?? 'errors.cache_failure'.tr());
+}
+

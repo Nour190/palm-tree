@@ -2,6 +2,7 @@ import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/modules/home/data/models/review_model.dart';
 import 'package:flutter/material.dart';
+import '../../../../../core/responsive/responsive.dart';
 import 'review_avatar_widget.dart';
 import 'reviewer_name_widget.dart';
 import 'rating_stars_widget.dart';
@@ -42,29 +43,29 @@ class _ReviewCardWidgetState extends State<ReviewCardWidget> {
           horizontal: desktop ? 12.sW : 8.sW,
           vertical: desktop ? 8.sH : 4.sH,
         ),
-        decoration: BoxDecoration(
-          color: _cardBgColor(context),
-          borderRadius: radius,
-          border: Border.all(
-            color: AppColor.gray700.withOpacity(0.6),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColor.black.withOpacity(_hovered ? 0.25 : 0.18),
-              blurRadius: _hovered ? 28.sH : 18.sH,
-              offset: Offset(0, _hovered ? 16.sH : 10.sH),
-            ),
-          ],
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColor.gray700.withOpacity(0.85),
-              AppColor.gray900.withOpacity(0.85),
-            ],
-          ),
-        ),
+        // decoration: BoxDecoration(
+        //   color: _cardBgColor(context),
+        //   borderRadius: radius,
+        //   border: Border.all(
+        //     color: AppColor.gray700.withOpacity(0.6),
+        //     width: 1,
+        //   ),
+        //   boxShadow: [
+        //     BoxShadow(
+        //       color: AppColor.black.withOpacity(_hovered ? 0.25 : 0.18),
+        //       blurRadius: _hovered ? 28.sH : 18.sH,
+        //       offset: Offset(0, _hovered ? 16.sH : 10.sH),
+        //     ),
+        //   ],
+        //   gradient: LinearGradient(
+        //     begin: Alignment.topLeft,
+        //     end: Alignment.bottomRight,
+        //     colors: [
+        //       AppColor.gray700.withOpacity(0.85),
+        //       AppColor.gray900.withOpacity(0.85),
+        //     ],
+        //   ),
+        // ),
         child: Padding(
           padding: cardPadding,
           child: desktop
@@ -98,8 +99,11 @@ class _MobileTabletLayout extends StatelessWidget {
         ReviewerNameWidget(name: review.name),
         SizedBox(height: 10.sH),
         RatingStarsWidget(rating: review.rating),
-        SizedBox(height: 16.sH),
-        QuoteTextWidget(text: review.textEn, maxLines: 5),
+        SizedBox(height: Responsive.isTablet(context)? 0.sH:16.sH),
+        Padding(
+          padding: Responsive.isTablet(context)? EdgeInsets.symmetric(vertical: 30.sW):EdgeInsets.all(0),
+          child: QuoteTextWidget(text: review.textEn, maxLines: 5),
+        ),
       ],
     );
   }

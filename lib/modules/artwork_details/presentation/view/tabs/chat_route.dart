@@ -45,7 +45,7 @@ class ChatRoute extends StatelessWidget {
     return BlocProvider<ChatCubit>(
       create: (_) => ChatCubit(repo, translator: GoogleTranslator()),
       child: AIChatView(
-        userId: userId,
+        sessionId: userId,
         artworkId: artworkId,
         userName: userName,
         artwork: artwork,

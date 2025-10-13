@@ -7,9 +7,11 @@ class TabsCubit extends Cubit<TabsState> {
   int selectedIndex = 0;
   int selectedSubIndex = 0;
 
-  void changeSelectedIndex(int i) {
+  void changeSelectedIndex(int i ) {
     selectedIndex = i;
-    selectedSubIndex = 0; // reset child
+    selectedSubIndex = 0;
+
+    // reset child
     emit(SelectedIndexChanged(selectedIndex));
   }
 

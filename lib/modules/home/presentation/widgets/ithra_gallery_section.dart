@@ -7,6 +7,8 @@ import 'package:baseqat/modules/home/presentation/widgets/common/home_image.dart
 import 'package:baseqat/core/components/custom_widgets/custom_image_view.dart';
 import 'package:easy_localization/easy_localization.dart';
 
+import '../../../../core/resourses/style_manager.dart';
+
 class IthraGallerySection extends StatelessWidget {
   final List<String> imageUrls;
   final VoidCallback? onSeeMore;
@@ -27,10 +29,10 @@ class IthraGallerySection extends StatelessWidget {
     final bool isDesktop = deviceType == DeviceType.desktop;
 
     final double horizontalPadding = isDesktop
-        ? 48.sW
+        ? 16.sW
         : isTablet
-        ? 32.sW
-        : 18.sW;
+        ? 12.sW
+        : 8.sW;
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -45,28 +47,14 @@ class IthraGallerySection extends StatelessWidget {
             children: [
               Text(
                 'home.gallery'.tr(),
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: isDesktop
-                      ? 32.sSp
-                      : isTablet
-                      ? 28.sSp
-                      : 24.sSp,
-                  fontWeight: FontWeight.w700,
-                  color: AppColor.black,
-                ),
+                style:TextStyleHelper.instance.headline24BoldInter
               ),
               if (onSeeMore != null)
                 GestureDetector(
                   onTap: onSeeMore,
                   child: Text(
                     'home.see_more'.tr(),
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: isDesktop ? 16.sSp : 14.sSp,
-                      fontWeight: FontWeight.w500,
-                      color: AppColor.gray600,
-                    ),
+                    style: TextStyleHelper.instance.title16RegularInter
                   ),
                 ),
             ],

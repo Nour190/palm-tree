@@ -106,7 +106,7 @@ class _ReviewsState extends State<Reviews> {
         child:Text(
           'home.reviews'.tr(),
           textAlign: TextAlign.left,
-          style: TextStyleHelper.instance.headline20BoldInter.copyWith(
+          style: TextStyleHelper.instance.headline28BoldInter.copyWith(
             color: AppColor.whiteCustom,
             height: 1.15,
           ),
@@ -149,7 +149,7 @@ class _ReviewsState extends State<Reviews> {
               child: Text(
                 'home.reviews'.tr(),
                 textAlign: TextAlign.left,
-                style: TextStyleHelper.instance.headline20BoldInter.copyWith(
+                style: TextStyleHelper.instance.headline28BoldInter.copyWith(
                   color: AppColor.whiteCustom,
                   height: 1.15,
                 ),

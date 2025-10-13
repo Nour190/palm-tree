@@ -129,7 +129,7 @@ Widget _bodyForSelectedIndex(int selectedIndex) {
     case 0: // Home
       return const HomeView();
     case 1: // Events
-      return const EventsScreenResponsive();
+      return  EventsScreenResponsive();
     case 2: // Maps
       return const SizedBox.shrink();
   // case 3: // Language
@@ -140,3 +140,4 @@ Widget _bodyForSelectedIndex(int selectedIndex) {
       return const HomeView();
   }
 }
+

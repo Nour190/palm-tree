@@ -28,6 +28,7 @@ import '../tabs/speakers_tab.dart';
 import '../tabs/gallery_tav_tab.dart';
 import 'desktop_navigation_bar.dart';
 import '../tabs/virtual_tour_tab.dart';
+import 'package:baseqat/modules/tabs/presentation/manger/tabs_cubit.dart'; // Import TabsCubit
 
 class EventsDesktopView extends StatefulWidget {
   const EventsDesktopView({super.key});
@@ -64,6 +65,13 @@ class _EventsDesktopViewState extends State<EventsDesktopView> {
     _client = Supabase.instance.client;
     _repo = EventsRepositoryImpl(EventsRemoteDataSourceImpl(_client));
     _userId = "d0030cf6-3830-47e8-9ca4-a2d00d51427a";
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final tabsCubit = context.read<TabsCubit>();
+      if (tabsCubit.selectedSubIndex != _selectedIndex) {
+        _onCategoryTap(context, tabsCubit.selectedSubIndex);
+      }
+    });
   }
 
   void _onCategoryTap(BuildContext ctx, int index) {

@@ -1,4 +1,3 @@
-
 import 'package:baseqat/core/responsive/responsive.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/modules/artwork_details/presentation/view/tabs/chat_route.dart';
@@ -12,9 +11,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/core/resourses/style_manager.dart';
 
+import 'package:baseqat/core/network/connectivity_service.dart';
+import 'package:baseqat/core/session/session_manager.dart';
 
 // ---- Repos & Data Sources
 import 'package:baseqat/modules/artwork_details/data/datasources/artwork_details_remote_data_source.dart';
+import 'package:baseqat/modules/artwork_details/data/datasources/artwork_details_local_data_source.dart';
 import 'package:baseqat/modules/artwork_details/data/repositories/artwork_repository.dart';
 
 // ---- Cubits & States
@@ -76,10 +78,21 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
   String? _distanceError;
   bool _isRefreshingDistance = false;
 
+  bool _isOnline = true;
+
+  late ArtworkDetailsRepositoryImpl _repository;
+
   @override
   void initState() {
     super.initState();
     _selectedIndex = widget.initialTabIndex;
+
+    final client = Supabase.instance.client;
+    _repository = ArtworkDetailsRepositoryImpl(
+      remote: ArtworkDetailsRemoteDataSourceImpl(client),
+      local: ArtworkDetailsLocalDataSourceImpl(),
+      connectivity: ConnectivityService(),
+    );
 
     // Initialize loading animation
     _loadingController = AnimationController(
@@ -98,13 +111,48 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
       events.CategoryModel(title: 'chat_ai', isSelected: _selectedIndex == 3),
       events.CategoryModel(title: 'feedback', isSelected: _selectedIndex == 4),
     ];
+
+    _checkConnectivity();
+    _listenToConnectivity();
   }
 
-  @override
-  void dispose() {
-    _searchCtrl.dispose();
-    _loadingController.dispose();
-    super.dispose();
+  Future<void> _checkConnectivity() async {
+    final hasConnection = await ConnectivityService().hasConnection();
+    if (mounted) {
+      setState(() {
+        _isOnline = hasConnection;
+      });
+    }
+  }
+
+  void _listenToConnectivity() {
+    ConnectivityService().onConnectivityChanged.listen((_) async {
+      debugPrint('[ArtworkDetailsScreen] ========== CONNECTIVITY CHANGED ==========');
+
+      final hasConnection = await ConnectivityService().hasConnection();
+      debugPrint('[ArtworkDetailsScreen] New connection status: $hasConnection');
+
+      if (mounted) {
+        setState(() {
+          _isOnline = hasConnection;
+        });
+
+        if (hasConnection) {
+          debugPrint('[ArtworkDetailsScreen] Connection restored - triggering feedback sync');
+
+          try {
+            debugPrint('[ArtworkDetailsScreen] Calling syncPendingFeedback on stored repository...');
+            await _repository.syncPendingFeedback();
+            debugPrint('[ArtworkDetailsScreen] syncPendingFeedback completed successfully');
+          } catch (e, stackTrace) {
+            debugPrint('[ArtworkDetailsScreen] Error during syncPendingFeedback: $e');
+            debugPrint('[ArtworkDetailsScreen] Stack trace: $stackTrace');
+          }
+        } else {
+          debugPrint('[ArtworkDetailsScreen] Connection lost - offline mode');
+        }
+      }
+    });
   }
 
   void _onCategoryTap(int index) {
@@ -167,22 +215,17 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     final devType = Responsive.deviceTypeOf(context);
-    final client = Supabase.instance.client;
-    final repo = ArtworkDetailsRepositoryImpl(
-      remote: ArtworkDetailsRemoteDataSourceImpl(client),
-    );
 
     return MultiBlocProvider(
       providers: [
         BlocProvider<ArtworkCubit>(
-          create: (_) => ArtworkCubit(repo)..getArtworkById(widget.artworkId),
+          create: (_) => ArtworkCubit(_repository)..getArtworkById(widget.artworkId),
         ),
-        BlocProvider<ArtistCubit>(create: (_) => ArtistCubit(repo)),
-        BlocProvider<FeedbackCubit>(create: (_) => FeedbackCubit(repo)),
+        BlocProvider<ArtistCubit>(create: (_) => ArtistCubit(_repository)),
+        BlocProvider<FeedbackCubit>(create: (_) => FeedbackCubit(_repository)),
       ],
       child: Scaffold(
         backgroundColor: AppColor.white,
@@ -295,13 +338,59 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
             artState.status == ArtworkStatus.loading) {
           return _EnhancedLoadingView(animation: _loadingAnimation);
         }
-        if (artState.status == ArtworkStatus.error &&
-            (artState.error ?? '').isNotEmpty) {
-          return _EnhancedErrorView(
-            message: artState.error!,
-            onRetry: () =>
-                context.read<ArtworkCubit>().getArtworkById(widget.artworkId),
-          );
+
+        if (artState.status == ArtworkStatus.error) {
+          // If we're offline and have cached data, show it instead of error
+          if (!_isOnline && artState.artwork != null) {
+            // Show offline indicator banner but continue to display content
+            return Column(
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(horizontal: 16.sW, vertical: 8.sH),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.1),
+                    border: Border(
+                      bottom: BorderSide(color: Colors.orange.withOpacity(0.3), width: 1),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.cloud_off, size: 16.sW, color: Colors.orange),
+                      SizedBox(width: 8.sW),
+                      Expanded(
+                        child: Text(
+                          'offline_mode'.tr(),
+                          style: TextStyleHelper.instance.body14RegularInter.copyWith(
+                            color: Colors.orange[800],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: BlocBuilder<ArtistCubit, ArtistState>(
+                    builder: (context, artistState) {
+                      final Artist? artist = artistState.artist;
+                      return _buildTabBody(
+                        index: _selectedIndex,
+                        artwork: artState.artwork,
+                        artist: artist,
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          } else if ((artState.error ?? '').isNotEmpty) {
+            // Show error only if we don't have cached data
+            return _EnhancedErrorView(
+              message: artState.error!,
+              onRetry: () =>
+                  context.read<ArtworkCubit>().getArtworkById(widget.artworkId),
+            );
+          }
         }
 
         final Artwork? artwork = artState.artwork;
@@ -340,107 +429,102 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
         final Artwork? artwork = artState.artwork;
 
         return BlocBuilder<ArtistCubit, ArtistState>(
-          builder: (context, artistState) {
-            final Artist? artist = artistState.artist;
-            return Container(
-              height: 200.sH,
-              margin: EdgeInsets.symmetric(horizontal: 16.sW, vertical: 8.sH),
-              child: Stack(
-                alignment: Alignment.bottomLeft,
-                children: [
-                  Container(
-                    height: 200.sH,
-                    decoration: BoxDecoration(
-                      color: AppColor.backgroundGray,
-                      borderRadius: BorderRadius.circular(24),
-                      image: artwork?.gallery.isNotEmpty ?? false
-                          ? DecorationImage(
-                        image: NetworkImage(
-                          _selectedIndex == 1? artist!.profileImage!.isNotEmpty ? artist.profileImage! :artwork!.gallery.first  :artwork!.gallery.first,
-                        ),
-                        fit: BoxFit.fill,
-                      )
-                          : null,
-                    ),
-                  ),
-
-                  Positioned(
-                    left: 16.sW,
-                    bottom: 16.sH,
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() => _isFavorite = !_isFavorite);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(_isFavorite ? 'added_to_favorites'.tr() : 'removed_from_favorites'.tr()),
-                            duration: const Duration(milliseconds: 900),
-                            behavior: SnackBarBehavior.floating,
+            builder: (context, artistState) {
+              final Artist? artist = artistState.artist;
+              return Container(
+                height: 200.sH,
+                margin: EdgeInsets.symmetric(horizontal: 16.sW, vertical: 8.sH),
+                child: Stack(
+                  alignment: Alignment.bottomLeft,
+                  children: [
+                    Container(
+                      height: 200.sH,
+                      decoration: BoxDecoration(
+                        color: AppColor.backgroundGray,
+                        borderRadius: BorderRadius.circular(24),
+                        image: artwork?.gallery.isNotEmpty ?? false
+                            ? DecorationImage(
+                          image: NetworkImage(
+                            _selectedIndex == 1? artist!.profileImage!.isNotEmpty ? artist.profileImage! :artwork!.gallery.first  :artwork!.gallery.first,
                           ),
-                        );
-                      },
-                      child: Container(
-                        height: 40.sH,
-                        width: 40.sW,
-                        decoration: BoxDecoration(
-                          color: Colors.transparent,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppColor.white, width: 1.sW),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 8,
-                              offset: Offset(0, 2),
+                          fit: BoxFit.fill,
+                        )
+                            : null,
+                      ),
+                    ),
+
+                    Positioned(
+                      left: 16.sW,
+                      bottom: 16.sH,
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() => _isFavorite = !_isFavorite);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(_isFavorite ? 'added_to_favorites'.tr() : 'removed_from_favorites'.tr()),
+                              duration: const Duration(milliseconds: 900),
+                              behavior: SnackBarBehavior.floating,
                             ),
-                          ],
-                        ),
-                        alignment: Alignment.center,
-                        child: Icon(
-                          _isFavorite ? Icons.favorite : Icons.favorite_border,
-                          size: 20.sH,
-                          color: AppColor.white,
+                          );
+                        },
+                        child: Container(
+                          height: 40.sH,
+                          width: 40.sW,
+                          decoration: BoxDecoration(
+                            color: Colors.transparent,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: AppColor.white, width: 1.sW),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 8,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          alignment: Alignment.center,
+                          child: Icon(
+                            _isFavorite ? Icons.favorite : Icons.favorite_border,
+                            size: 20.sH,
+                            color: AppColor.white,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            );
-          }
+                  ],
+                ),
+              );
+            }
         );
       },
     );
   }
 
-
-
-
   Widget _buildTabBody({required int index, Artwork? artwork, Artist? artist}) {
     switch (index) {
       case 0: // About
-
-
         return SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // if (hero != null && hero.isNotEmpty) ...[
-              //   HeroImage(height: _isMobile ? 200 : 320, path: hero),
-              //   SizedBox(height: 16.sH),
-              // ],
-              // Text(
-              //   artwork?.name ?? artist?.name ?? 'Artwork',
-              //   style: devType == DeviceType.mobile
-              //       ? TextStyleHelper.instance.headline20BoldInter
-              //       : TextStyleHelper.instance.headline24BoldInter,
-              // ),
-              // SizedBox(height: 8.sH),
               AboutTab(
                 title: artwork?.name ?? '—',
                 about: artwork?.description ?? '—',
                 materials: artwork?.materials ?? '—',
                 vision: artwork?.vision ?? '—',
                 galleryImages: artwork?.gallery ?? const [],
-                onAskAi: () => _onCategoryTap(3),
+                onAskAi: () {
+                  if (!_isOnline) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('ai_requires_internet'.tr()),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                    return;
+                  }
+                  _onCategoryTap(3);
+                },
               ),
             ],
           ),
@@ -478,7 +562,6 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
             if (cityCountry.isNotEmpty) parts.add(cityCountry);
             return parts.isEmpty ? 'live_map_navigation'.tr() : parts.join(' • ');
           })(),
-          // These two are just initial labels; the widget will compute live values
           distanceLabel: 'distance'.tr(),
           destinationLabel: 'destination'.tr(),
           addressLine: artist?.address,
@@ -492,7 +575,6 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
           })(),
           aboutDescription: artwork?.description ?? artist?.about,
           onStartNavigation: () {
-            // Optional: analytics / toast
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('starting_navigation'.tr())),
             );
@@ -500,13 +582,31 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
         );
 
       case 3: // Chat AI
+        if (!_isOnline) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.cloud_off, size: 64, color: AppColor.gray400),
+                SizedBox(height: 16.sH),
+                Text(
+                  'ai_requires_internet'.tr(),
+                  style: TextStyleHelper.instance.title16MediumInter,
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          );
+        }
+
+        final sessionId = SessionManager().currentSessionId ?? 'anonymous';
+
         return ChatRoute(
-          userId: "61d7cae6-ebeb-44b9-b541-549ae73d3ead",
-          //AppConstants.userIdValue??
+          userId: sessionId,
           artworkId: artwork!.id.toString(),
           userName: 'User',
-          artwork: artwork, // or null
-          artist: artist, // or null
+          artwork: artwork,
+          artist: artist,
           metadata: {'source': 'landing'},
           modelName: 'gemini-1.5-flash',
         );
@@ -527,7 +627,9 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
                         size: 20.sW,
                       ),
                       SizedBox(width: 8.sW),
-                      Text('thanks_feedback'.tr()),
+                      Text(_isOnline
+                          ? 'thanks_feedback'.tr()
+                          : 'feedback_saved_offline'.tr()),
                     ],
                   ),
                   backgroundColor: Colors.green,
@@ -569,8 +671,10 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
                 }
                 if (isSubmitting) return;
 
+                final sessionId = SessionManager().currentSessionId ?? 'anonymous';
+
                 context.read<FeedbackCubit>().submitFeedback(
-                  userId: widget.userId,
+                  userId: sessionId,
                   artworkId: id,
                   rating: rating,
                   message: message,
@@ -702,7 +806,6 @@ class _MobileTabBar extends StatelessWidget {
     );
   }
 }
-
 
 // ------------------ Enhanced Loading View ------------------
 class _EnhancedLoadingView extends StatelessWidget {

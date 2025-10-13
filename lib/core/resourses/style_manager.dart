@@ -103,7 +103,7 @@ class TextStyleHelper {
         fontSize: 16.sSp,
         fontWeight: FontWeight.w400,
         fontFamily: 'Inter',
-        color: AppColor.gray400,
+        color: AppColor.black,
       );
   TextStyle get title16BlackRegularInter =>
       TextStyle(

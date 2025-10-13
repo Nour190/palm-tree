@@ -1,8 +1,8 @@
-// lib/modules/artwork_details/presentation/view/manger/feedback/feedback_cubit.dart
 
 import 'package:baseqat/modules/artwork_details/data/repositories/artwork_repository.dart';
 import 'package:baseqat/modules/artwork_details/presentation/view/manger/feedback/feedback_states.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/foundation.dart';
 
 class FeedbackCubit extends Cubit<FeedbackState> {
   final ArtworkDetailsRepository repo;
@@ -10,14 +10,22 @@ class FeedbackCubit extends Cubit<FeedbackState> {
   FeedbackCubit(this.repo) : super(const FeedbackState());
 
   Future<void> submitFeedback({
-    required String userId,
+    required String userId, // This is now sessionId
     required String artworkId,
     required int rating,
     required String message,
     List<String> tags = const [],
   }) async {
+    debugPrint('[FeedbackCubit] ========== SUBMIT FEEDBACK ==========');
+    debugPrint('[FeedbackCubit] User/Session ID: $userId');
+    debugPrint('[FeedbackCubit] Artwork ID: $artworkId');
+    debugPrint('[FeedbackCubit] Rating: $rating');
+    debugPrint('[FeedbackCubit] Message: $message');
+    debugPrint('[FeedbackCubit] Tags: $tags');
+
     // lightweight client-side validation (fail fast)
     if (rating < 1 || rating > 5) {
+      debugPrint('[FeedbackCubit] Validation failed: Invalid rating');
       emit(
         state.copyWith(
           status: FeedbackStatus.error,
@@ -27,6 +35,7 @@ class FeedbackCubit extends Cubit<FeedbackState> {
       return;
     }
     if (message.trim().isEmpty) {
+      debugPrint('[FeedbackCubit] Validation failed: Empty message');
       emit(
         state.copyWith(
           status: FeedbackStatus.error,
@@ -36,10 +45,11 @@ class FeedbackCubit extends Cubit<FeedbackState> {
       return;
     }
 
+    debugPrint('[FeedbackCubit] Validation passed, submitting to repository...');
     emit(state.copyWith(status: FeedbackStatus.submitting, clearError: true));
 
     final either = await repo.submitFeedback(
-      userId: userId,
+      sessionId: userId, // This is actually sessionId now
       artworkId: artworkId,
       rating: rating,
       message: message.trim(),
@@ -47,14 +57,20 @@ class FeedbackCubit extends Cubit<FeedbackState> {
     );
 
     either.fold(
-      (f) =>
-          emit(state.copyWith(status: FeedbackStatus.error, error: f.message)),
-      (_) => emit(
-        state.copyWith(status: FeedbackStatus.success, clearError: true),
-      ),
+          (f) {
+        debugPrint('[FeedbackCubit] Submission failed: ${f.message}');
+        emit(state.copyWith(status: FeedbackStatus.error, error: f.message));
+      },
+          (_) {
+        debugPrint('[FeedbackCubit] Submission successful');
+        emit(state.copyWith(status: FeedbackStatus.success, clearError: true));
+      },
     );
   }
 
   /// Optional helper if you want to clear state after showing a toast/snackbar.
-  void reset() => emit(const FeedbackState());
+  void reset() {
+    debugPrint('[FeedbackCubit] Resetting state');
+    emit(const FeedbackState());
+  }
 }

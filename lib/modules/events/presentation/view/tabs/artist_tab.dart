@@ -109,10 +109,10 @@ class _ArtistTabContentState extends State<ArtistTabContent> {
           onFavoriteTap: () =>
               (widget.onFavoriteTap ?? _defaultToggleFav)(artist),
           onTap: () {
-            (widget.onArtistTap ??
-                    (a) =>
-                        navigateTo(context, ArtistDetailsPage(artistId: a.id)))
-                .call(artist);
+            // (widget.onArtistTap ??
+            //         (a) =>
+            //             navigateTo(context, ArtistDetailsPage(artistId: a.id)))
+            //     .call(artist);
           },
           viewType: ArtistCardViewType.list,
         );
@@ -156,10 +156,10 @@ class _ArtistTabContentState extends State<ArtistTabContent> {
           onFavoriteTap: () =>
               (widget.onFavoriteTap ?? _defaultToggleFav)(artist),
           onTap: () {
-            (widget.onArtistTap ??
-                    (a) =>
-                        navigateTo(context, ArtistDetailsPage(artistId: a.id)))
-                .call(artist);
+            // (widget.onArtistTap ??
+            //         (a) =>
+            //             navigateTo(context, ArtistDetailsPage(artistId: a.id)))
+            //     .call(artist);
           },
           viewType: ArtistCardViewType.grid,
         );

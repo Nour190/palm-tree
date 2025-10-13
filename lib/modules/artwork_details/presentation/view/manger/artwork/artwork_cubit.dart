@@ -14,13 +14,25 @@ class ArtworkCubit extends Cubit<ArtworkState> {
     final either = await repo.getArtworkById(id);
 
     either.fold(
-      (f) =>
-          emit(state.copyWith(status: ArtworkStatus.error, error: f.message)),
-      (art) => emit(
+          (f) {
+        if (f == 'OFFLINE_NO_CACHE') {
+          emit(state.copyWith(
+            status: ArtworkStatus.offline,
+            error: f.message,
+          ));
+        } else {
+          emit(state.copyWith(
+            status: ArtworkStatus.error,
+            error: f.message,
+          ));
+        }
+      },
+          (art) => emit(
         state.copyWith(
           status: ArtworkStatus.loaded,
           artwork: art,
           clearError: true,
+          isFromCache: false,
         ),
       ),
     );

@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -87,7 +86,7 @@ class AIChatView extends StatefulWidget {
     this.modelName = 'gemini-1.5-flash',
 
     // Persona data
-    required this.userId,
+    required this.sessionId, // Changed from userId to sessionId
     required this.artworkId,
     this.userName,
     this.artwork,
@@ -106,7 +105,7 @@ class AIChatView extends StatefulWidget {
   final String modelName;
 
   // Conversation identity
-  final String userId;
+  final String sessionId; // Changed from userId to sessionId
   final String artworkId;
 
   // Persona
@@ -191,22 +190,40 @@ class _AIChatViewState extends State<AIChatView> {
 
     // Initialize conversation via Cubit after first frame (BlocProvider must be available)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final cubit = context.read<ChatCubit>();
-      cubit.init(
-        userId: widget.userId,
-        artworkId: widget.artworkId,
-        sessionLabel: widget.sessionLabel,
-        metadata: widget.metadata,
-        singleActive: false,
-        artworkName: widget.artworkName,
-        artworkGallery: widget.artworkGallery,
-        artworkDescription: widget.artworkDescription,
-      );
+      print('═══════════════════════════════════════════════════════════');
+      print('[ChatView] addPostFrameCallback EXECUTING');
+      print('[ChatView] sessionId: ${widget.sessionId}');
+      print('[ChatView] artworkId: ${widget.artworkId}');
+      print('═══════════════════════════════════════════════════════════');
 
-      // Initialize TTS with Cubit default locale
-      _initTts();
-      // Keep TTS locale in sync with Cubit
-      _applyTtsLocale(cubit.state.ttsLocale);
+      try {
+        final cubit = context.read<ChatCubit>();
+        print('[ChatView] ChatCubit obtained from context');
+        print('[ChatView] Calling cubit.init()...');
+
+        cubit.init(
+          sessionId: widget.sessionId,
+          artworkId: widget.artworkId,
+          sessionLabel: widget.sessionLabel,
+          metadata: widget.metadata,
+          singleActive: false,
+          artworkName: widget.artworkName,
+          artworkGallery: widget.artworkGallery,
+          artworkDescription: widget.artworkDescription,
+        );
+
+        print('[ChatView] cubit.init() called successfully');
+
+        // Initialize TTS with Cubit default locale
+        _initTts();
+        // Keep TTS locale in sync with Cubit
+        _applyTtsLocale(cubit.state.ttsLocale);
+      } catch (e, stackTrace) {
+        print('═══════════════════════════════════════════════════════════');
+        print('[ChatView] ERROR in addPostFrameCallback: $e');
+        print('[ChatView] Stack trace: $stackTrace');
+        print('═══════════════════════════════════════════════════════════');
+      }
     });
   }
 
@@ -214,10 +231,10 @@ class _AIChatViewState extends State<AIChatView> {
   // Persona Instruction
   // -----------------------------
   String _artworkPersonaInstruction(
-    Artwork a, {
-    String? userName,
-    Artist? artist,
-  }) {
+      Artwork a, {
+        String? userName,
+        Artist? artist,
+      }) {
     final facts = <String>[];
 
     // Artwork basics
@@ -329,11 +346,11 @@ ${facts.join('\n')}
       if (_ttsVoice != null) {
         await _tts.setVoice({
           'name':
-              (_ttsVoice!['name'] ??
-                      _ttsVoice!['voice'] ??
-                      _ttsVoice!['voiceId'] ??
-                      '')
-                  .toString(),
+          (_ttsVoice!['name'] ??
+              _ttsVoice!['voice'] ??
+              _ttsVoice!['voiceId'] ??
+              '')
+              .toString(),
           'locale': (_ttsVoice!['locale'] ?? localeCode).toString(),
         });
       } else {
@@ -367,7 +384,7 @@ ${facts.join('\n')}
 
   String _labelForLocale(String code) {
     final m = _ttsChoices.firstWhere(
-      (e) => e['code'] == code,
+          (e) => e['code'] == code,
       orElse: () => const {'code': 'en-US', 'label': 'EN'},
     );
     return m['label']!;
@@ -385,11 +402,14 @@ ${facts.join('\n')}
 
     // Persist (user message)
     final cubit = context.read<ChatCubit>();
+
     await cubit.sendUserMessage(
       content: raw,
       isVoice: false,
       languageCode: null,
     );
+
+    _scrollToEnd();
 
     // Nudge Gemini
     _history.add(
@@ -397,7 +417,7 @@ ${facts.join('\n')}
         parts: [
           Part.text(
             'Answer in the same language as this message. '
-            'If unclear, reply briefly in Arabic and English.',
+                'If unclear, reply briefly in Arabic and English.',
           ),
           Part.text(raw),
         ],
@@ -439,7 +459,7 @@ ${facts.join('\n')}
       );
 
       _recStreamSub = stream.listen(
-        (chunk) => _pcmBuilder.add(chunk),
+            (chunk) => _pcmBuilder.add(chunk),
         onError: (e) => _showSnack('Record error: $e'),
       );
 
@@ -475,7 +495,13 @@ ${facts.join('\n')}
           ? Duration.zero
           : DateTime.now().difference(_recordStart!);
 
-      // Show ephemeral local voice bubble with player (not persisted)
+      final cubit = context.read<ChatCubit>();
+      await cubit.sendUserMessage(
+        content: '🎙️ Voice note ${_formatDuration(dur)}',
+        isVoice: true,
+        voiceDuration: dur,
+      );
+
       final local = ChatEntry(
         id: 'local-voice-${DateTime.now().microsecondsSinceEpoch}',
         text: '🎙️ Voice note ${_formatDuration(dur)}',
@@ -488,14 +514,8 @@ ${facts.join('\n')}
       setState(() {
         _ephemeralLocal.add(local);
       });
-      _scrollToEnd();
 
-      // Persist **text placeholder** only (no audio) for history
-      await context.read<ChatCubit>().sendUserMessage(
-        content: local.text, // store text only
-        isVoice: true,
-        voiceDuration: dur,
-      );
+      _scrollToEnd();
 
       // Send audio to Gemini for **answer without transcript**
       final inline = InlineData.fromUint8List(wav); // audio/wav
@@ -504,8 +524,8 @@ ${facts.join('\n')}
           parts: [
             Part.text(
               'The visitor sent an audio question. Do NOT produce a transcript or translation. '
-              'Answer the content only in the detected language. '
-              'If language is uncertain or the visitor indicates confusion, respond briefly in Arabic and English.',
+                  'Answer the content only in the detected language. '
+                  'If language is uncertain or the visitor indicates confusion, respond briefly in Arabic and English.',
             ),
             Part.inline(inline),
           ],
@@ -515,6 +535,7 @@ ${facts.join('\n')}
 
       await _streamModelReply();
     } catch (e) {
+      debugPrint('[ChatView] Error stopping/sending voice: $e');
       _showSnack('Stop/send error: $e');
     } finally {
       _recordStart = null;
@@ -529,10 +550,10 @@ ${facts.join('\n')}
   }
 
   Uint8List _pcm16ToWav(
-    Uint8List pcm, {
-    required int sampleRate,
-    required int channels,
-  }) {
+      Uint8List pcm, {
+        required int sampleRate,
+        required int channels,
+      }) {
     const bitsPerSample = 16;
     final totalAudioLen = pcm.length;
     final totalDataLen = totalAudioLen + 36;
@@ -585,44 +606,48 @@ ${facts.join('\n')}
     try {
       _streamSub = Gemini.instance
           .streamChat(
-            _history,
-            modelName: widget.modelName,
-            generationConfig: GenerationConfig(
-              maxOutputTokens: 2048,
-              temperature: 0.4,
-            ),
-          )
+        _history,
+        modelName: widget.modelName,
+        generationConfig: GenerationConfig(
+          maxOutputTokens: 2048,
+          temperature: 0.4,
+        ),
+      )
           .listen(
             (c) {
-              final chunk = c.output;
-              if (chunk == null) return;
-              cubit.appendModelChunk(chunk);
-              _scrollToEnd();
-            },
-            onError: (e) {
-              _showSnack('Gemini error: $e');
-              setState(() => _isSending = false);
-              // Clear streaming state
-              cubit.endModelStream(); // will save empty -> no-op
-            },
-            onDone: () async {
-              setState(() => _isSending = false);
+          final chunk = c.output;
+          if (chunk == null) return;
+          cubit.appendModelChunk(chunk);
+          _scrollToEnd();
+        },
+        onError: (e) {
+          debugPrint('[ChatView] Gemini error: $e');
+          _showSnack('Gemini error: $e');
+          setState(() => _isSending = false);
+          // Clear streaming state
+          cubit.endModelStream(); // will save empty -> no-op
+        },
+        onDone: () async {
+          setState(() => _isSending = false);
 
-              // Persist the final model message (with translation flag off by default)
-              await cubit.endModelStream();
+          // Persist the final model message (with translation flag off by default)
+          await cubit.endModelStream();
 
-              // Also keep Gemini conversation history for next turns
-              final finalText = cubit.state.messages.isNotEmpty
-                  ? cubit.state.messages.last.content
-                  : '';
-              if (finalText.trim().isNotEmpty) {
-                _history.add(
-                  Content(parts: [Part.text(finalText)], role: 'model'),
-                );
-              }
-            },
-          );
+          // Also keep Gemini conversation history for next turns
+          final finalText = cubit.state.messages.isNotEmpty
+              ? cubit.state.messages.last.content
+              : '';
+          if (finalText.trim().isNotEmpty) {
+            _history.add(
+              Content(parts: [Part.text(finalText)], role: 'model'),
+            );
+          }
+
+          _scrollToEnd();
+        },
+      );
     } catch (e) {
+      debugPrint('[ChatView] Gemini stream error: $e');
       _showSnack('Gemini stream error: $e');
       setState(() => _isSending = false);
     }
@@ -669,7 +694,6 @@ ${facts.join('\n')}
       builder: (context, state) {
         final cubit = context.read<ChatCubit>();
 
-        // Build render list: persisted messages + ephemeral voice bubbles + streaming bubble
         final render = <_RenderItem>[];
 
         // Add persisted messages first (ASC by created_at in state)
@@ -677,7 +701,15 @@ ${facts.join('\n')}
           render.add(_RenderItem.persisted(m));
         }
 
-        // Add ephemeral local voice notes (recently recorded; not persisted)
+        _ephemeralLocal.removeWhere((e) {
+          return state.messages.any((m) =>
+          m.isVoice == true &&
+              m.content == e.text &&
+              m.createdAt.difference(e.time).abs().inSeconds < 5
+          );
+        });
+
+        // Add remaining ephemeral local voice notes
         for (final e in _ephemeralLocal) {
           render.add(_RenderItem.local(e));
         }
@@ -716,13 +748,13 @@ ${facts.join('\n')}
                     size: 18.sSp,
                   ),
                 ),
-                 SizedBox(width: 10.sW),
+                SizedBox(width: 10.sW),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       widget.artwork?.name ?? widget.botName,
-                      style:TextStyleHelper.instance.body14MediumInter,
+                      style: TextStyleHelper.instance.body14MediumInter,
                     ),
                     Row(
                       children: [
@@ -734,7 +766,7 @@ ${facts.join('\n')}
                             shape: BoxShape.circle,
                           ),
                         ),
-                         SizedBox(width: 6.sW),
+                        SizedBox(width: 6.sW),
                         Text(
                           _isSending ? 'Typing…' : 'Online',
                           style: TextStyleHelper.instance.body12MediumInter.copyWith(
@@ -742,7 +774,7 @@ ${facts.join('\n')}
                           ),
                         ),
                         if ((widget.userName ?? '').isNotEmpty) ...[
-                           SizedBox(width: 10.sW),
+                          SizedBox(width: 10.sW),
                           Text(
                             'Visitor: ${widget.userName}',
                             style: TextStyleHelper.instance.body12MediumInter.copyWith(
@@ -759,66 +791,107 @@ ${facts.join('\n')}
             ),
 
             actions: [
-              // TTS/Translation Language selector (five languages)
               PopupMenuButton<String>(
-                tooltip: 'TTS/Translation language',
-                onSelected: (code) async {
-                  // Update cubit (for speak + translation toggles)
-                  cubit.setTtsLocale(code);
-                  // Align TTS engine
-                  await _applyTtsLocale(code);
-                  if (mounted) setState(() {});
+                tooltip: 'Chat options',
+                icon: Icon(Icons.more_vert_rounded, size: 24.sSp),
+                onSelected: (value) async {
+                  switch (value) {
+                    case 'copy_transcript':
+                      await _copyTranscript(state);
+                      break;
+                    case 'clear_conversation':
+                      await _confirmClearConversation(cubit);
+                      break;
+                    case 'clear_view':
+                      await _confirmClear();
+                      break;
+                    case 'en-US':
+                    case 'ar-SA':
+                    case 'fr-FR':
+                    case 'es-ES':
+                    case 'zh-CN':
+                      cubit.setTtsLocale(value);
+                      await _applyTtsLocale(value);
+                      if (mounted) setState(() {});
+                      break;
+                  }
                 },
-                itemBuilder: (ctx) => _ttsChoices
-                    .map(
-                      (m) => PopupMenuItem<String>(
-                        value: m['code']!,
-                        child: Row(
-                          children: [
-                            const Icon(Icons.translate_rounded, size: 18),
-                            const SizedBox(width: 8),
-                            Text('${m['label']}  •  ${m['code']}'),
+                itemBuilder: (ctx) => [
+                  // TTS/Translation language section
+                  PopupMenuItem<String>(
+                    enabled: false,
+                    child: Text(
+                      'TTS/Translation Language',
+                      style: t.body12MediumInter.copyWith(
+                        color: AppColor.gray400,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  ..._ttsChoices.map(
+                        (m) => PopupMenuItem<String>(
+                      value: m['code']!,
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.translate_rounded,
+                            size: 18,
+                            color: state.ttsLocale == m['code']
+                                ? AppColor.gray900
+                                : AppColor.gray400,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            '${m['label']}  •  ${m['code']}',
+                            style: TextStyle(
+                              fontWeight: state.ttsLocale == m['code']
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                          if (state.ttsLocale == m['code']) ...[
+                            const Spacer(),
+                            Icon(Icons.check, size: 18, color: AppColor.gray900),
                           ],
-                        ),
+                        ],
                       ),
-                    )
-                    .toList(),
-                child: Container(
-                  margin:  EdgeInsets.symmetric(
-                    vertical: 8.sH,
-                    horizontal: 6.sW,
+                    ),
                   ),
-                  padding:  EdgeInsets.symmetric(
-                    horizontal: 10.sW,
-                    vertical: 6.sH,
+                  const PopupMenuDivider(),
+                  // Actions section
+                  PopupMenuItem<String>(
+                    value: 'copy_transcript',
+                    child: Row(
+                      children: [
+                        Icon(Icons.content_copy_rounded, size: 18, color: AppColor.gray900),
+                        const SizedBox(width: 12),
+                        const Text('Copy transcript'),
+                      ],
+                    ),
                   ),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: AppColor.gray400, width: 1),
-                    borderRadius: BorderRadius.circular(10.sR),
+                  PopupMenuItem<String>(
+                    value: 'clear_conversation',
+                    child: Row(
+                      children: [
+                        Icon(Icons.delete_outline_rounded, size: 18, color: AppColor.gray900),
+                        const SizedBox(width: 12),
+                        const Text('Clear conversation data'),
+                      ],
+                    ),
                   ),
-                  child: Row(
-                    children: [
-                       Icon(Icons.translate_rounded, size: 18.sSp),
-                       SizedBox(width: 6.sW),
-                      Text(
-                        _labelForLocale(state.ttsLocale),
-                        style: t.body14MediumInter,
-                      ),
-                    ],
+                  PopupMenuItem<String>(
+                    value: 'clear_view',
+                    child: Row(
+                      children: [
+                        Icon(Icons.clear_all_rounded, size: 18, color: AppColor.gray900),
+                        const SizedBox(width: 12),
+                        const Text('Clear chat view'),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ),
-              IconButton(
-                tooltip: 'Copy transcript',
-                icon: const Icon(Icons.content_copy_rounded),
-                onPressed: () => _copyTranscript(state),
-              ),
-              IconButton(
-                tooltip: 'Clear chat',
-                icon: const Icon(Icons.clear_all_rounded),
-                onPressed: _confirmClear,
-              ),
-              // SizedBox(width: 4.sW),
+              SizedBox(width: 8.sW),
             ],
           ),
           body: SafeArea(
@@ -826,6 +899,29 @@ ${facts.join('\n')}
               children: [
                 if (state.status == ChatStatus.loading)
                   const LinearProgressIndicator(minHeight: 2),
+                if (state.error != null && state.conversation == null)
+                  Container(
+                    padding: EdgeInsets.all(12.sSp),
+                    color: Colors.red.shade100,
+                    child: Row(
+                      children: [
+                        Icon(Icons.error_outline, color: Colors.red.shade900),
+                        SizedBox(width: 8.sW),
+                        Expanded(
+                          child: Text(
+                            'Error: ${state.error}',
+                            style: t.body14MediumInter.copyWith(
+                              color: Colors.red.shade900,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => cubit.consumeError(),
+                        ),
+                      ],
+                    ),
+                  ),
                 Expanded(
                   child: ListView.builder(
                     controller: _scrollCtrl,
@@ -872,6 +968,7 @@ ${facts.join('\n')}
                           onToggleTranslate: canTranslate
                               ? () => cubit.toggleMessageTranslation(m.id)
                               : null,
+                          onCopy: () => _copyMessage(text),
                         );
                       } else {
                         // Local ephemeral (voice or streaming)
@@ -894,6 +991,7 @@ ${facts.join('\n')}
                           onToggleTranslate: null,
                           voiceWav: m.voiceWav,
                           voiceDuration: m.voiceDuration,
+                          onCopy: () => _copyMessage(text),
                         );
                       }
                     },
@@ -979,12 +1077,12 @@ ${facts.join('\n')}
                               ),
                               boxShadow: _isRecording
                                   ? [
-                                      BoxShadow(
-                                        color: Colors.red.withOpacity(.25),
-                                        blurRadius: 18,
-                                        spreadRadius: 1,
-                                      ),
-                                    ]
+                                BoxShadow(
+                                  color: Colors.red.withOpacity(.25),
+                                  blurRadius: 18,
+                                  spreadRadius: 1,
+                                ),
+                              ]
                                   : null,
                             ),
                             child: Icon(
@@ -1050,13 +1148,53 @@ ${facts.join('\n')}
     _showSnack('Transcript copied to clipboard');
   }
 
+  void _copyMessage(String text) {
+    Clipboard.setData(ClipboardData(text: text));
+    _showSnack('Message copied to clipboard');
+  }
+
+  Future<void> _confirmClearConversation(ChatCubit cubit) async {
+    final yes = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('Clear conversation data?'),
+        content: const Text(
+          'This will clear all cached conversation data from local storage. The conversation will remain in the database.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(c, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(c, true),
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
+    );
+    if (yes != true) return;
+
+    try {
+      final convId = cubit.state.conversation?.id;
+      if (convId != null) {
+        // Clear local cache
+        await cubit.clearConversationCache(convId);
+        _showSnack('Conversation data cleared from local storage');
+      }
+    } catch (e) {
+      debugPrint('[ChatView] Error clearing conversation data: $e');
+      _showSnack('Error clearing conversation data: $e');
+    }
+  }
+
   Future<void> _confirmClear() async {
     final yes = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Clear conversation?'),
+        title: const Text('Clear chat view?'),
         content: const Text(
-          'This removes all messages in this chat (local view).',
+          'This removes all messages in this chat (local view only).',
         ),
         actions: [
           TextButton(
@@ -1077,6 +1215,8 @@ ${facts.join('\n')}
       _history.clear();
       _ephemeralLocal.clear();
     });
+
+    debugPrint('[ChatView] Chat view cleared');
   }
 
   void _scrollToEnd() {
@@ -1123,6 +1263,7 @@ class _Bubble extends StatelessWidget {
     this.onToggleTranslate,
     this.voiceWav,
     this.voiceDuration,
+    this.onCopy,
   });
 
   final bool fromUser;
@@ -1143,6 +1284,8 @@ class _Bubble extends StatelessWidget {
   final Uint8List? voiceWav;
   final Duration? voiceDuration;
 
+  final VoidCallback? onCopy;
+
   @override
   Widget build(BuildContext context) {
     final t = TextStyleHelper.instance;
@@ -1152,15 +1295,15 @@ class _Bubble extends StatelessWidget {
 
     final radius = fromUser
         ? const BorderRadius.only(
-            topLeft: Radius.circular(18),
-            topRight: Radius.circular(18),
-            bottomLeft: Radius.circular(18),
-          )
+      topLeft: Radius.circular(18),
+      topRight: Radius.circular(18),
+      bottomLeft: Radius.circular(18),
+    )
         : const BorderRadius.only(
-            topLeft: Radius.circular(18),
-            topRight: Radius.circular(18),
-            bottomRight: Radius.circular(18),
-          );
+      topLeft: Radius.circular(18),
+      topRight: Radius.circular(18),
+      bottomRight: Radius.circular(18),
+    );
 
     final timeStr = TimeOfDay.fromDateTime(time).format(context);
 
@@ -1274,12 +1417,12 @@ class _Bubble extends StatelessWidget {
                         ),
                       ),
 
-                    // Actions
                     Padding(
                       padding: EdgeInsets.only(top: 6.sSp),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          // Speak button (always visible)
                           IconButton(
                             iconSize: 18,
                             padding: EdgeInsets.zero,
@@ -1289,48 +1432,62 @@ class _Bubble extends StatelessWidget {
                             icon: Icon(Icons.volume_up_rounded, color: fg),
                             tooltip: 'Speak (with translation)',
                           ),
-                          const SizedBox(width: 10),
-                          if (onToggleTranslate != null)
-                            IconButton(
-                              iconSize: 18,
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                              visualDensity: VisualDensity.compact,
-                              onPressed: isTranslating
-                                  ? null
-                                  : onToggleTranslate,
-                              icon: isTranslating
-                                  ? SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(fg),
-                                      ),
-                                    )
-                                  : Icon(
-                                      translationOn
-                                          ? Icons.g_translate_rounded
-                                          : Icons.translate_rounded,
-                                      color: fg,
-                                    ),
-                              tooltip: translateLabel ?? 'Show translation',
-                            ),
-                          const SizedBox(width: 10),
-                          IconButton(
+                          const SizedBox(width: 4),
+                          PopupMenuButton<String>(
+                            icon: Icon(Icons.more_vert_rounded, color: fg, size: 18),
                             iconSize: 18,
                             padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            visualDensity: VisualDensity.compact,
-                            onPressed: () {
-                              Clipboard.setData(ClipboardData(text: text));
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Copied')),
-                              );
+                            tooltip: 'More options',
+                            onSelected: (value) {
+                              switch (value) {
+                                case 'copy':
+                                  onCopy?.call();
+                                  break;
+                                case 'translate':
+                                  onToggleTranslate?.call();
+                                  break;
+                              }
                             },
-                            icon: Icon(Icons.copy_rounded, color: fg),
-                            tooltip: 'Copy',
+                            itemBuilder: (context) => [
+                              PopupMenuItem<String>(
+                                value: 'copy',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.copy_rounded, size: 18, color: fg),
+                                    const SizedBox(width: 8),
+                                    const Text('Copy message'),
+                                  ],
+                                ),
+                              ),
+                              if (canTranslate)
+                                PopupMenuItem<String>(
+                                  value: 'translate',
+                                  enabled: !isTranslating,
+                                  child: Row(
+                                    children: [
+                                      if (isTranslating)
+                                        SizedBox(
+                                          width: 18,
+                                          height: 18,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor: AlwaysStoppedAnimation<Color>(fg),
+                                          ),
+                                        )
+                                      else
+                                        Icon(
+                                          translationOn
+                                              ? Icons.g_translate_rounded
+                                              : Icons.translate_rounded,
+                                          size: 18,
+                                          color: fg,
+                                        ),
+                                      const SizedBox(width: 8),
+                                      Text(translateLabel ?? 'Show translation'),
+                                    ],
+                                  ),
+                                ),
+                            ],
                           ),
                         ],
                       ),
@@ -1426,12 +1583,12 @@ class _VoicePlayerState extends State<_VoicePlayer> {
             onPressed: !_ready
                 ? null
                 : () async {
-                    if (isPlaying) {
-                      await _player.pause();
-                    } else {
-                      await _player.resume();
-                    }
-                  },
+              if (isPlaying) {
+                await _player.pause();
+              } else {
+                await _player.resume();
+              }
+            },
             icon: Icon(
               isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
               color: widget.tint,
@@ -1449,8 +1606,8 @@ class _VoicePlayerState extends State<_VoicePlayer> {
               child: Slider(
                 value: canSeek
                     ? _position.inMilliseconds
-                          .clamp(0, _duration.inMilliseconds)
-                          .toDouble()
+                    .clamp(0, _duration.inMilliseconds)
+                    .toDouble()
                     : 0,
                 min: 0,
                 max: canSeek ? _duration.inMilliseconds.toDouble() : 1,

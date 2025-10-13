@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:baseqat/core/responsive/size_utils.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class GalleryTab extends StatefulWidget {
   const GalleryTab({
@@ -295,43 +296,31 @@ class _FadeInNetworkImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.network(
-      url,
+    return CachedNetworkImage(
+      imageUrl: url,
       fit: fit,
       filterQuality: FilterQuality.low,
-      frameBuilder: (context, child, frame, wasSync) {
-        return AnimatedOpacity(
-          opacity: wasSync || frame != null ? 1 : 0,
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOut,
-          child: child,
-        );
-      },
-      loadingBuilder: (context, child, event) {
-        if (event == null) return child;
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            const ColoredBox(color: AppColor.backgroundGray),
-            Center(
-              child: SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.black,
-                  value: event.expectedTotalBytes != null
-                      ? event.cumulativeBytesLoaded / event.expectedTotalBytes!
-                      : null,
-                ),
+      fadeInDuration: const Duration(milliseconds: 250),
+      fadeInCurve: Curves.easeOut,
+      placeholder: (context, url) => Stack(
+        fit: StackFit.expand,
+        children: [
+          const ColoredBox(color: AppColor.backgroundGray),
+          Center(
+            child: SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.black,
               ),
             ),
-          ],
-        );
-      },
-      errorBuilder: (_, __, ___) => const ColoredBox(
+          ),
+        ],
+      ),
+      errorWidget: (context, url, error) => const ColoredBox(
         color: AppColor.backgroundGray,
-        child: Center(child: Icon(Icons.broken_image, color: AppColor.gray700)),
+        child: Center(child: Icon(Icons.broken_image_outlined, color: AppColor.gray700)),
       ),
     );
   }

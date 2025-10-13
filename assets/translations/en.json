@@ -199,7 +199,8 @@
     "supabase_query_error": "Query error",
     "supabase_storage_error": "Storage error",
     "realtime_subscription_error": "Realtime subscription error",
-    "edge_function_error": "Edge function error"
+    "edge_function_error": "Edge function error",
+    "cache_failure": "Failed to load data from cache."
   },
   "common": {
     "partial_content_loaded": "Partial content loaded",
@@ -232,6 +233,7 @@
     "Germany": "Germany"
   },
   "navigation": {
+    "brand_name": "Palm Tree",
     "home": "Home",
     "programs": "Programs",
     "artists": "Artists",

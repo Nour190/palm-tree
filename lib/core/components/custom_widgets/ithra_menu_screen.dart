@@ -4,10 +4,11 @@ import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/core/resourses/style_manager.dart';
 import 'package:baseqat/core/resourses/assets_manager.dart';
 import 'package:baseqat/core/services/locale_service.dart';
- import 'dart:ui' as ui;
+import 'dart:ui' as ui;
 
 import '../../responsive/responsive.dart';
 import '../../utils/rtl_helper.dart';
+import '../../network/connectivity_service.dart';
 
 class IthraMenuScreen extends StatefulWidget {
   const IthraMenuScreen({
@@ -35,15 +36,30 @@ class IthraMenuScreen extends StatefulWidget {
 
 class _IthraMenuScreenState extends State<IthraMenuScreen> {
   bool _isLanguageExpanded = false;
-
+  final ConnectivityService _connectivityService = ConnectivityService();
 
   final List<Map<String, dynamic>> _languages = [
     {'name': 'language.Arabic'.tr(), 'code': 'ar', 'locale': const Locale('ar', 'SA'), 'flag': '🇸🇦'},
     {'name': 'language.English'.tr(), 'code': 'en', 'locale': const Locale('en', 'US'), 'flag': '🇬🇧'},
-    {'name': 'language.Germany'.tr(), 'code': 'de', 'locale': const Locale('de', 'DE'), 'flag': '🇩🇪'},
+    // {'name': 'language.Germany'.tr(), 'code': 'de', 'locale': const Locale('de', 'DE'), 'flag': '🇩🇪'},
   ];
 
   Future<void> _changeLanguage(Map<String, dynamic> language) async {
+    final hasConnection = await _connectivityService.hasConnection();
+
+    if (!hasConnection) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('common.offline_language_change'.tr()),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+      return;
+    }
+
     await LocaleService.changeLocale(context, language['locale']);
     if (mounted) {
       Navigator.of(context).pop();
@@ -55,7 +71,7 @@ class _IthraMenuScreenState extends State<IthraMenuScreen> {
     final devType = Responsive.deviceTypeOf(context);
     final isRTL = LocaleService.isRTL(context.locale);
     final currentLang = _languages.firstWhere(
-      (lang) => lang['code'] == context.locale.languageCode,
+          (lang) => lang['code'] == context.locale.languageCode,
       orElse: () => _languages[0],
     );
 
@@ -68,7 +84,7 @@ class _IthraMenuScreenState extends State<IthraMenuScreen> {
             image: DecorationImage(
               image: AssetImage(AppAssetsManager.background),
               fit: BoxFit.contain,
-             // opacity: 0.03,
+              // opacity: 0.03,
               alignment: Alignment.bottomCenter,
             ),
           ),
@@ -85,19 +101,19 @@ class _IthraMenuScreenState extends State<IthraMenuScreen> {
                         children: [
                           Container(
                             width: 40.sW,
-                            height: 40.sH,
+                            height: 62.sH,
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8.sH),
+                              borderRadius: BorderRadius.circular(8.sR),
                             ),
                             child: Image.asset(
                               widget.logoPath,
                               fit: BoxFit.contain,
                             ),
                           ),
-                          SizedBox(width: 12.sSp),
+                         // SizedBox(width: 12.sSp),
                           Text(
                             widget.brand,
-                            style: TextStyleHelper.instance.headline24BoldInter.copyWith(
+                            style: TextStyleHelper.instance.headline28BoldInter.copyWith(
                               color: Colors.black,
                               fontWeight: FontWeight.w600,
                             ),
@@ -113,16 +129,21 @@ class _IthraMenuScreenState extends State<IthraMenuScreen> {
                               child: Container(
                                 width: 48.sW,
                                 height: 48.sH,
-                                margin: RTLHelper.getDirectionalPadding(end: 12.sSp),
+                                //margin: RTLHelper.getDirectionalPadding(end: 12.sSp),
                                 decoration: const BoxDecoration(
                                   color: Colors.black,
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(
-                                  Icons.qr_code_scanner,
-                                  color: Colors.white,
-                                  size: 24,
+                                child:Center(
+                                  child: Image.asset(AppAssetsManager.scanIcon,
+                                    fit: BoxFit.contain,height:30.sH ,width:45.sW,
+                                  ),
                                 ),
+                                // const Icon(
+                                //   Icons.qr_code_scanner,
+                                //   color: Colors.white,
+                                //   size: 24,
+                                // ),
                               ),
                             ),
                           GestureDetector(
@@ -131,7 +152,7 @@ class _IthraMenuScreenState extends State<IthraMenuScreen> {
                               width: 48.sW,
                               height: 48.sH,
                               decoration: BoxDecoration(
-                                border: Border.all(color: Colors.black, width: 2),
+                                border: Border.all(color: Colors.black, width: 1),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
@@ -146,7 +167,6 @@ class _IthraMenuScreenState extends State<IthraMenuScreen> {
                     ],
                   ),
                 ),
-
                 // Content
                 Expanded(
                   child: SingleChildScrollView(
@@ -154,8 +174,6 @@ class _IthraMenuScreenState extends State<IthraMenuScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                     //   SizedBox(height: 40.sH),
-
                         // Menu items
                         ...widget.items.asMap().entries.map((entry) {
                           final index = entry.key;
@@ -192,13 +210,25 @@ class _IthraMenuScreenState extends State<IthraMenuScreen> {
                           );
                         }).toList(),
 
-                        //SizedBox(height: 20.sH),
-
                         // Language section
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 8.sW),
                           child: GestureDetector(
-                            onTap: () {
+                            onTap: () async {
+                              final hasConnection = await _connectivityService.hasConnection();
+                              if (!hasConnection) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('common.offline_language_change'.tr()),
+                                      backgroundColor: Colors.orange,
+                                      duration: const Duration(seconds: 3),
+                                    ),
+                                  );
+                                }
+                                return;
+                              }
+
                               setState(() {
                                 _isLanguageExpanded = !_isLanguageExpanded;
                               });
@@ -267,10 +297,10 @@ class _IthraMenuScreenState extends State<IthraMenuScreen> {
                                           ),
                                           child: isSelected
                                               ? Icon(
-                                                  Icons.circle,
-                                                  color: Colors.white,
-                                                  size: 16.sSp,
-                                                )
+                                            Icons.circle,
+                                            color: Colors.white,
+                                            size: 16.sSp,
+                                          )
                                               : null,
                                         ),
                                       ],
@@ -286,49 +316,11 @@ class _IthraMenuScreenState extends State<IthraMenuScreen> {
                           color: Colors.black87,
                           margin: EdgeInsets.symmetric(vertical: 16.sSp),
                         ),
-
-                        // SizedBox(height: 40.sH),
-                        //
-                        // // Login button
-                        // BlocBuilder<AuthCubit, AuthState>(
-                        //   builder: (context, state) {
-                        //     final isAuthenticated = state is AuthAuthenticated;
-                        //
-                        //     if (!isAuthenticated) {
-                        //       return Container(
-                        //         width: double.infinity,
-                        //         margin: EdgeInsets.only(bottom: 40.sH),
-                        //         child: GestureDetector(
-                        //           onTap: () {
-                        //             widget.onLoginTap?.call();
-                        //             Navigator.of(context).pop();
-                        //           },
-                        //           child: Container(
-                        //             height: 80.sH,
-                        //             decoration: const BoxDecoration(
-                        //               color: Colors.black,
-                        //             ),
-                        //             child: Center(
-                        //               child: Text(
-                        //                 'Login',
-                        //                 style: TextStyleHelper.instance.headline24BoldInter.copyWith(
-                        //                   color: Colors.white,
-                        //                   fontWeight: FontWeight.w600,
-                        //                 ),
-                        //               ),
-                        //             ),
-                        //           ),
-                        //         ),
-                        //       );
-                        //     } else {
-                        //       return const SizedBox.shrink();
-                        //     }
-                        //   },
-                        // ),
                       ],
                     ),
                   ),
                 ),
+
               ],
             ),
           ),
@@ -337,4 +329,3 @@ class _IthraMenuScreenState extends State<IthraMenuScreen> {
     );
   }
 }
-

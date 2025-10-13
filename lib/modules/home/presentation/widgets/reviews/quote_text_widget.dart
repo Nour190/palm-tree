@@ -36,7 +36,7 @@ class QuoteTextWidget extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            textAlign: alignLeft ? TextAlign.left : TextAlign.center,
+            textAlign:  TextAlign.center,
             maxLines: maxLines,
             overflow: TextOverflow.ellipsis,
             style: base.copyWith(

@@ -56,6 +56,7 @@ class Assets {
   static const String imagesImgWithWideWidth = 'assets/images/img_with_wide_width.png';
   static const String imagesIthra = 'assets/images/ithra.png';
   static const String imagesLogoBlack = 'assets/images/logo_black.png';
+  static const String imagesTablerLineScan = 'assets/images/tabler_line_scan.png';
   static const String translationsAr = 'assets/translations/ar.json';
   static const String translationsDe = 'assets/translations/de.json';
   static const String translationsEn = 'assets/translations/en.json';

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
-
 
 class HomeImage extends StatelessWidget {
   const HomeImage({
@@ -39,19 +38,20 @@ class HomeImage extends StatelessWidget {
 
     if (_looksLikeNetwork) {
       return _wrapWithSizing(
-        Image.network(
-          path,
+        CachedNetworkImage(
+          imageUrl: path,
           width: width,
           height: height,
           fit: fit,
           alignment: alignment,
           filterQuality: filterQuality,
-          loadingBuilder: (context, child, progress) {
-            if (progress == null) return child;
-            return _wrapWithSizing(_placeholder());
-          },
-          errorBuilder: (context, error, stackTrace) =>
-              _wrapWithSizing(_errorFallback()),
+          placeholder: (context, url) => _placeholder(),
+          errorWidget: (context, url, error) => _errorFallback(),
+          // Cache configuration for optimal performance
+          maxHeightDiskCache: 1000,
+          maxWidthDiskCache: 1000,
+          memCacheHeight: 500,
+          memCacheWidth: 500,
         ),
       );
     }

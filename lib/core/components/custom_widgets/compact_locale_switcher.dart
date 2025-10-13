@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
 import '../../resourses/color_manager.dart';
 import '../../resourses/style_manager.dart';
+import '../../network/connectivity_service.dart';
 
 /// Compact language switcher for desktop top bars
 /// Follows familiar web design patterns with dropdown menu
@@ -18,12 +19,29 @@ class DesktopLanguageSwitcher extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentLang = _languages.firstWhere(
-      (lang) => lang['code'] == context.locale.languageCode,
+          (lang) => lang['code'] == context.locale.languageCode,
       orElse: () => _languages[0],
     );
 
+    final connectivityService = ConnectivityService();
+
     return PopupMenuButton<Map<String, dynamic>>(
       onSelected: (lang) async {
+        final hasConnection = await connectivityService.hasConnection();
+
+        if (!hasConnection) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('common.offline_language_change'.tr()),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+          return;
+        }
+
         await context.setLocale(lang['locale']);
       },
       offset: Offset(0, 40.sH),
@@ -107,7 +125,23 @@ class MobileLanguageSwitcher extends StatelessWidget {
     {'name': 'Deutsch', 'code': 'de', 'locale': Locale('de', 'DE'), 'flag': '🇩🇪'},
   ];
 
-  void _showLanguageSheet(BuildContext context) {
+  void _showLanguageSheet(BuildContext context) async {
+    final connectivityService = ConnectivityService();
+    final hasConnection = await connectivityService.hasConnection();
+
+    if (!hasConnection) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('common.offline_language_change'.tr()),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+      return;
+    }
+
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColor.white,
@@ -162,10 +196,10 @@ class MobileLanguageSwitcher extends StatelessWidget {
                   ),
                   trailing: isSelected
                       ? Icon(
-                          Icons.check_circle,
-                          color: AppColor.primaryColor,
-                          size: 20.sSp,
-                        )
+                    Icons.check_circle,
+                    color: AppColor.primaryColor,
+                    size: 20.sSp,
+                  )
                       : null,
                   onTap: () async {
                     Navigator.of(ctx).pop();
@@ -184,7 +218,7 @@ class MobileLanguageSwitcher extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentLang = _languages.firstWhere(
-      (lang) => lang['code'] == context.locale.languageCode,
+          (lang) => lang['code'] == context.locale.languageCode,
       orElse: () => _languages[0],
     );
 

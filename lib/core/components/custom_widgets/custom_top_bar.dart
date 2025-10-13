@@ -42,7 +42,7 @@ class TopBar extends StatelessWidget {
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) => IthraMenuScreen(
           logoPath: logoPath,
-          brand: brand?? "navigation.home".tr(),
+          brand: brand?? "navigation.brand_name".tr(),
           items: items,
           selectedIndex: selectedIndex,
           onItemTap: onItemTap,
@@ -70,32 +70,33 @@ class TopBar extends StatelessWidget {
       textDirection: isRTL ? ui.TextDirection.rtl : ui.TextDirection.ltr,
       child: Container(
         height: 80.sH,
-        padding: EdgeInsets.symmetric( vertical: 16.sSp, horizontal: 12.sSp),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(
-            bottom: BorderSide(color: AppColor.gray200, width: 1),
-          ),
-        ),
+        padding: EdgeInsets.symmetric( horizontal: 12.sSp),
+        // decoration: const BoxDecoration(
+        //   color: Colors.white,
+        //   border: Border(
+        //     bottom: BorderSide(color: AppColor.gray200, width: 1),
+        //   ),
+        // ),
         child: Row(
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Container(
                   width: 40.sW,
-                  height: 40.sH,
+                  height: 62.sH,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8.sH),
+                    borderRadius: BorderRadius.circular(8.sR),
                   ),
                   child: Image.asset(
                     logoPath,
                     fit: BoxFit.contain,
                   ),
                 ),
-                SizedBox(width: 12.sSp),
+                //SizedBox(width: 4.sSp),
                 Text(
-                  brand?? "navigation.home".tr(),
-                  style: TextStyleHelper.instance.headline24BoldInter.copyWith(
+                  brand?? "navigation.brand_name".tr(),
+                  style: TextStyleHelper.instance.headline28BoldInter.copyWith(
                     color: Colors.black,
                     fontWeight: FontWeight.w600,
                   ),
@@ -109,18 +110,23 @@ class TopBar extends StatelessWidget {
                 child: Container(
                   width: 48.sW,
                   height: 48.sH,
-                  margin:RTLHelper.getDirectionalPadding(end: 12.sSp),
+                 //margin:RTLHelper.getDirectionalPadding(end: 12.sSp),
                   decoration: BoxDecoration(
                     color: Colors.black,
                     //borderRadius: BorderRadius.circular(8.sH),
                     shape: BoxShape.circle,
 
                   ),
-                  child: const Icon(
-                    Icons.qr_code_scanner,
-                    color: Colors.white,
-                    size: 24,
+                  child: Center(
+                    child: Image.asset(AppAssetsManager.scanIcon,
+                      fit: BoxFit.contain,height:30.sH ,width:45.sW,
+                    ),
                   ),
+                  // Icon(
+                  //   Icons.scanner,
+                  //   color: Colors.white,
+                  //   size: 24,
+                  // ),
                 ),
               ),
             GestureDetector(
@@ -129,7 +135,7 @@ class TopBar extends StatelessWidget {
                 width: 48.sW,
                 height: 48.sH,
                 decoration:  BoxDecoration(
-                  border: Border.all(color: AppColor.primaryColor, width: 2),
+                  border: Border.all(color: AppColor.primaryColor, width: 1),
                   color: AppColor.white,
                   shape: BoxShape.circle,
                 ),

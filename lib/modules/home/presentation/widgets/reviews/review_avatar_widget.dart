@@ -1,6 +1,7 @@
 import 'package:baseqat/core/responsive/responsive.dart';
 import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
+import 'package:baseqat/modules/home/presentation/widgets/common/cached_home_image.dart';
 import 'package:flutter/material.dart';
 
 class ReviewAvatarWidget extends StatelessWidget {
@@ -36,16 +37,10 @@ class ReviewAvatarWidget extends StatelessWidget {
         ],
       ),
       child: ClipOval(
-        child: Image.network(
-          avatarUrl,
+        child: CachedHomeImage(
+          path: avatarUrl,
           fit: BoxFit.cover,
-          filterQuality: FilterQuality.high,
-          loadingBuilder: (context, child, progress) {
-            if (progress == null) return child;
-            return _loading(size);
-          },
-          errorBuilder: (context, error, stackTrace) =>
-              _fallback(size, context),
+          errorChild: _fallback(size, context),
         ),
       ),
     );
@@ -68,19 +63,6 @@ class ReviewAvatarWidget extends StatelessWidget {
             fontWeight: FontWeight.w700,
             fontSize: Responsive.isDesktop(context) ? 36.sSp : 28.sSp,
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _loading(double size) {
-    return Container(
-      decoration: BoxDecoration(color: AppColor.gray100),
-      child: Center(
-        child: Icon(
-          Icons.person_outline,
-          size: size * 0.4,
-          color: AppColor.gray400,
         ),
       ),
     );

@@ -5,12 +5,11 @@ import 'events_mobile_tablet_view.dart';
 
 class EventsScreenResponsive extends StatelessWidget {
   const EventsScreenResponsive({super.key});
-
   @override
   Widget build(BuildContext context) {
     final devType = Responsive.deviceTypeOf(context);
     return devType == DeviceType.desktop
         ? const EventsDesktopView()
-        : const EventsMobileTabletView();
+        :  EventsMobileTabletView();
   }
 }

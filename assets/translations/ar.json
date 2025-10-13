@@ -140,7 +140,8 @@
     "supabase_query_error": "خطأ في الاستعلام",
     "supabase_storage_error": "خطأ في التخزين",
     "realtime_subscription_error": "خطأ في الاشتراك الفوري",
-    "edge_function_error": "خطأ في وظيفة الحافة"
+    "edge_function_error": "خطأ في وظيفة الحافة",
+    "cache_failure": "فشل في تحميل البيانات من الذاكرة المؤقتة."
   },
   "logs": {
     "retry_artists": "إعادة محاولة تحميل المتحدثين: {error}",
@@ -226,6 +227,7 @@
     "invalid_email": "يرجى إدخال عنوان بريد إلكتروني صالح"
   },
   "navigation": {
+    "brand_name": "الباسقات",
     "home": "الرئيسية",
     "programs": "البرامج",
     "artists": "الفنانون",

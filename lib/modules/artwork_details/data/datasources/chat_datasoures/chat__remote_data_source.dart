@@ -5,32 +5,25 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Contract (chat-only)
 abstract class ChatRemoteDataSource {
-  /// Get latest conversation for (user, artwork) or create one.
-  /// Optionally writes a denormalized snapshot of the artwork on create.
   Future<ConversationRecord> getOrCreateConversation({
-    required String userId,
+    required String session_id,
     required String artworkId,
     String? sessionLabel,
     Map<String, dynamic>? metadata,
     bool singleActive,
-
-    // NEW: denormalized artwork snapshot (saved only on create)
     String? artworkName,
     List<String>? artworkGallery,
     String? artworkDescription,
   });
 
-  /// List conversations for a user (optionally filtered by artwork).
   Future<List<ConversationRecord>> listConversations({
-    required String userId,
+    required String session_id,
     String? artworkId,
     int limit,
     int offset,
     bool activeOnly,
   });
 
-  /// Fetch messages for a conversation, ordered by created_at ASC.
-  /// Page via [after] (created_at > after) or [before] (created_at < before).
   Future<List<MessageRecord>> fetchMessages({
     required String conversationId,
     DateTime? after,
@@ -38,7 +31,6 @@ abstract class ChatRemoteDataSource {
     int limit,
   });
 
-  /// Insert a user message. If original was audio, set [isVoice]=true and pass [voiceDurationS].
   Future<MessageRecord> insertUserMessage({
     required String conversationId,
     required String content,
@@ -52,7 +44,6 @@ abstract class ChatRemoteDataSource {
     Map<String, dynamic>? extras,
   });
 
-  /// Insert a model message.
   Future<MessageRecord> insertModelMessage({
     required String conversationId,
     required String content,
@@ -64,7 +55,6 @@ abstract class ChatRemoteDataSource {
     Map<String, dynamic>? extras,
   });
 
-  /// Update translation UI state for a specific message.
   Future<void> updateMessageTranslation({
     required String messageId,
     required bool showTranslation,
@@ -72,7 +62,6 @@ abstract class ChatRemoteDataSource {
     String? translationLang,
   });
 
-  /// Optional helper if you added `is_active` to conversations.
   Future<void> setConversationActive({
     required String conversationId,
     required bool isActive,
@@ -89,54 +78,47 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
 
   @override
   Future<ConversationRecord> getOrCreateConversation({
-    required String userId,
+    required String session_id,
     required String artworkId,
     String? sessionLabel,
     Map<String, dynamic>? metadata,
     bool singleActive = false,
-
-    // NEW snapshot args
     String? artworkName,
     List<String>? artworkGallery,
     String? artworkDescription,
   }) async {
+    print('[RemoteDataSource] getOrCreateConversation() START');
+    print('[RemoteDataSource] session_id: $session_id');
+    print('[RemoteDataSource] artworkId: $artworkId');
+
     try {
       await ensureOnline();
+      print('[RemoteDataSource] Online check passed');
 
-      if (singleActive) {
-        // Optional column; ignore if missing
-        try {
-          await client
-              .from(_tableConversations)
-              .update({'is_active': false})
-              .eq('user_id', userId)
-              .eq('artwork_id', artworkId)
-              .eq('is_active', true);
-        } catch (_) {}
-      }
+      print('[RemoteDataSource] Checking for existing conversation...');
 
       final existing = await client
           .from(_tableConversations)
           .select()
-          .eq('user_id', userId)
+          .eq('user_id', session_id)
           .eq('artwork_id', artworkId)
           .order('started_at', ascending: false)
           .limit(1)
           .maybeSingle();
 
       if (existing != null) {
+        print('[RemoteDataSource] Found existing conversation: ${existing['id']}');
         return ConversationRecord.fromMap(existing);
       }
 
+      print('[RemoteDataSource] No existing conversation found, creating new one...');
+
       final payload = <String, dynamic>{
-        'user_id': userId,
+        'user_id': session_id,
         'artwork_id': artworkId,
         'metadata': (metadata ?? const {}),
         if (sessionLabel != null && sessionLabel.trim().isNotEmpty)
           'session_label': sessionLabel.trim(),
-        if (singleActive) 'is_active': true,
-
-        // NEW snapshot fields (saved only on create)
         if (artworkName != null && artworkName.trim().isNotEmpty)
           'artwork_name': artworkName.trim(),
         if (artworkGallery != null) 'artwork_gallery': artworkGallery,
@@ -144,21 +126,32 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
           'artwork_description': artworkDescription.trim(),
       };
 
+      print('[RemoteDataSource] Payload: $payload');
+      print('[RemoteDataSource] Inserting into conversations table...');
+
       final created = await client
           .from(_tableConversations)
           .insert(payload)
           .select()
           .single();
 
+      print('[RemoteDataSource] Conversation created successfully: ${created['id']}');
+      print('[RemoteDataSource] getOrCreateConversation() COMPLETE');
+
       return ConversationRecord.fromMap(created);
     } catch (e, st) {
+      print('═══════════════════════════════════════════════════════════');
+      print('[RemoteDataSource] getOrCreateConversation() ERROR');
+      print('[RemoteDataSource] Error: $e');
+      print('[RemoteDataSource] Stack trace: $st');
+      print('═══════════════════════════════════════════════════════════');
       throw mapError(e, st);
     }
   }
 
   @override
   Future<List<ConversationRecord>> listConversations({
-    required String userId,
+    required String session_id,
     String? artworkId,
     int limit = 20,
     int offset = 0,
@@ -170,17 +163,10 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
       var query = client
           .from(_tableConversations)
           .select()
-          .eq('user_id', userId);
+          .eq('user_id', session_id);
 
       if (artworkId != null && artworkId.isNotEmpty) {
         query = query.eq('artwork_id', artworkId);
-      }
-
-      if (activeOnly) {
-        // Optional column; ignore if missing
-        try {
-          query = query.eq('is_active', true);
-        } catch (_) {}
       }
 
       final rows = await query
@@ -339,14 +325,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     required String conversationId,
     required bool isActive,
   }) async {
-    try {
-      await ensureOnline();
-      await client
-          .from(_tableConversations)
-          .update({'is_active': isActive})
-          .eq('id', conversationId);
-    } catch (_) {
-      // swallow if column doesn't exist
-    }
+    // This method is kept for interface compatibility but does nothing
+    return;
   }
 }

@@ -108,11 +108,11 @@ class ChatState extends Equatable {
       streamingMessageId: streamingMessageId ?? this.streamingMessageId,
       streamingText: streamingText ?? this.streamingText,
       streamingShowTranslation:
-          streamingShowTranslation ?? this.streamingShowTranslation,
+      streamingShowTranslation ?? this.streamingShowTranslation,
       streamingTranslationText:
-          streamingTranslationText ?? this.streamingTranslationText,
+      streamingTranslationText ?? this.streamingTranslationText,
       streamingTranslationCode:
-          streamingTranslationCode ?? this.streamingTranslationCode,
+      streamingTranslationCode ?? this.streamingTranslationCode,
     );
   }
 

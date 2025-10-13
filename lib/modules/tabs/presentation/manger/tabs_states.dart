@@ -9,6 +9,8 @@ class TabsInitial extends TabsState {
 
 class SelectedIndexChanged extends TabsState {
   final int selectedIndex;
+
+
   const SelectedIndexChanged(this.selectedIndex);
 }
 

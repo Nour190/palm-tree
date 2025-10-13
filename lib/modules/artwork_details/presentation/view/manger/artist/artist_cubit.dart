@@ -13,12 +13,25 @@ class ArtistCubit extends Cubit<ArtistState> {
     final either = await repo.getArtistById(id);
 
     either.fold(
-      (f) => emit(state.copyWith(status: ArtistStatus.error, error: f.message)),
-      (artist) => emit(
+          (f) {
+        if (f == 'OFFLINE_NO_CACHE') {
+          emit(state.copyWith(
+            status: ArtistStatus.offline,
+            error: f.message,
+          ));
+        } else {
+          emit(state.copyWith(
+            status: ArtistStatus.error,
+            error: f.message,
+          ));
+        }
+      },
+          (artist) => emit(
         state.copyWith(
           status: ArtistStatus.loaded,
           artist: artist,
           clearError: true,
+          isFromCache: false,
         ),
       ),
     );

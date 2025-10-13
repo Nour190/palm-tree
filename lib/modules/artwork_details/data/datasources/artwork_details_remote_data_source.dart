@@ -10,7 +10,7 @@ abstract class ArtworkDetailsRemoteDataSource {
   Future<Artwork> getArtworkById(String id);
   Future<Artist> getArtistById(String id);
   Future<void> submitFeedback({
-    required String userId,
+    required String session_id,
     required String artworkId,
     required int rating,
     required String message,
@@ -62,7 +62,7 @@ class ArtworkDetailsRemoteDataSourceImpl
 
   @override
   Future<void> submitFeedback({
-    required String userId,
+    required String session_id,
     required String artworkId,
     required int rating,
     required String message,
@@ -77,7 +77,7 @@ class ArtworkDetailsRemoteDataSourceImpl
       final String safeMessage = message.trim();
 
       final payload = {
-        'user_id': userId,
+        'user_id': session_id,
         'artwork_id': artworkId,
         'rating': safeRating,
         'message': safeMessage,
@@ -85,7 +85,6 @@ class ArtworkDetailsRemoteDataSourceImpl
       };
 
       if (upsertIfExists) {
-        // requires a UNIQUE(artwork_id, user_id) index to be meaningful
         await client
             .from(_tableFeedback)
             .upsert(payload, onConflict: 'artwork_id,user_id');

@@ -16,7 +16,7 @@ import 'dart:convert';
 
 class ConversationRecord {
   final String id;
-  final String userId;
+  final String sessionId;
   final String artworkId;
   final String? sessionLabel;
   final Map<String, dynamic> metadata;
@@ -32,7 +32,7 @@ class ConversationRecord {
 
   ConversationRecord({
     required this.id,
-    required this.userId,
+    required this.sessionId,
     required this.artworkId,
     this.sessionLabel,
     this.metadata = const {},
@@ -59,27 +59,27 @@ class ConversationRecord {
     // artwork_name -> name -> artwork.name
     final String? name =
         _readString(m['artwork_name']) ??
-        _readString(m['name']) ??
-        _readString(artwork?['name']);
+            _readString(m['name']) ??
+            _readString(artwork?['name']);
 
     // Description resolution priority:
     // artwork_description -> description -> artwork.description
     final String? desc =
         _readString(m['artwork_description']) ??
-        _readString(m['description']) ??
-        _readString(artwork?['description']);
+            _readString(m['description']) ??
+            _readString(artwork?['description']);
 
     // Gallery resolution priority:
     // artwork_gallery -> gallery -> artwork.gallery
     final List<String> gallery =
         _readStringList(m['artwork_gallery']) ??
-        _readStringList(m['gallery']) ??
-        _readStringList(artwork?['gallery']) ??
-        const <String>[];
+            _readStringList(m['gallery']) ??
+            _readStringList(artwork?['gallery']) ??
+            const <String>[];
 
     return ConversationRecord(
       id: m['id'] as String,
-      userId: m['user_id'] as String,
+      sessionId: m['user_id'] as String,
       artworkId: m['artwork_id'] as String,
       sessionLabel: m['session_label'] as String?,
       metadata: (m['metadata'] is Map)
@@ -105,7 +105,7 @@ class ConversationRecord {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'user_id': userId,
+      'user_id': sessionId,
       'artwork_id': artworkId,
       'session_label': sessionLabel,
       'metadata': metadata,

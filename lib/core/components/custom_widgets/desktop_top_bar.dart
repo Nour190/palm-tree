@@ -42,7 +42,7 @@ class DesktopTopBar extends StatelessWidget {
       child: Row(
         children: [
           // Logo and brand on the left
-          _DesktopBrand(logoPath: logoPath, brand: brand?? "navigation.home".tr(),),
+          _DesktopBrand(logoPath: logoPath, brand: brand?? "navigation.brand_name".tr(),),
           SizedBox(width: 48.sSp),
 
           // Navigation tabs in the center
