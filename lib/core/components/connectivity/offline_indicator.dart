@@ -51,30 +51,30 @@ class _OfflineIndicatorState extends State<OfflineIndicator> {
     return Column(
       children: [
         if (!_isOnline)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            color: Colors.orange[700],
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.cloud_off,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'common.offline_mode'.tr(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // Container(
+          //   width: double.infinity,
+          //   padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          //   color: Colors.orange[700],
+          //   child: Row(
+          //     mainAxisAlignment: MainAxisAlignment.center,
+          //     children: [
+          //       const Icon(
+          //         Icons.cloud_off,
+          //         color: Colors.white,
+          //         size: 20,
+          //       ),
+          //       const SizedBox(width: 8),
+          //       Text(
+          //         'common.offline_mode'.tr(),
+          //         style: const TextStyle(
+          //           color: Colors.white,
+          //           fontWeight: FontWeight.w600,
+          //           fontSize: 14,
+          //         ),
+          //       ),
+            //  ],
+            //),
+          //),
         Expanded(child: widget.child),
       ],
     );

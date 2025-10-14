@@ -203,6 +203,7 @@
     "cache_failure": "Failed to load data from cache."
   },
   "common": {
+    "offline_language_change_error": "Language change is unavailable offline. Please connect to the internet and try again.",
     "partial_content_loaded": "Partial content loaded",
     "loading": "Loading...",
     "refreshing": "Refreshing...",

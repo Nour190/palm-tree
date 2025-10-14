@@ -154,6 +154,8 @@
     "reviews_load_failed": "فشل تحميل التقييمات: {error}"
   },
   "common": {
+    "offline_language_change_error": "تغيير اللغة غير متاح في وضع عدم الاتصال. يرجى الاتصال بالإنترنت والمحاولة مرة أخرى.",
+
     "partial_content_loaded": "تم تحميل محتوى جزئي",
     "loading": "جاري التحميل...",
     "refreshing": "جاري التحديث...",

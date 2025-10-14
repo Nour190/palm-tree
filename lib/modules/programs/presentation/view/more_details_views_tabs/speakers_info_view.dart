@@ -105,7 +105,7 @@ class _SpeakersInfoScreenState extends State<SpeakersInfoScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Location permission is required for navigation'),
-              backgroundColor: Colors.orange,
+              backgroundColor: AppColor.primaryColor,
             ),
           );
         }
@@ -125,7 +125,7 @@ class _SpeakersInfoScreenState extends State<SpeakersInfoScreen> {
         _isLoadingLocation = false;
       });
 
-      if (_isMapReady && _mapController != null && _isOnline) {
+      if (_isMapReady && _mapController != null) {
         await _updateMapWithRoute(position);
       }
     } catch (e) {
@@ -246,19 +246,20 @@ class _SpeakersInfoScreenState extends State<SpeakersInfoScreen> {
         ),
       );
 
-      // Draw route
-      final road = await _mapController!.drawRoad(
-        currentGeoPoint,
-        destinationGeoPoint,
-        roadType: RoadType.foot,
-        roadOption: RoadOption(
-          roadWidth: 10,
-          roadColor: _isNavigating ? Colors.blue : Colors.blue.shade300,
-        ),
-      );
+      if (_isOnline) {
+        final road = await _mapController!.drawRoad(
+          currentGeoPoint,
+          destinationGeoPoint,
+          roadType: RoadType.foot,
+          roadOption: RoadOption(
+            roadWidth: 10,
+            roadColor: _isNavigating ? Colors.blue : Colors.blue.shade300,
+          ),
+        );
 
-      if (mounted) {
-        setState(() => _currentRoad = road);
+        if (mounted) {
+          setState(() => _currentRoad = road);
+        }
       }
 
       // Zoom to show complete route
@@ -347,7 +348,7 @@ class _SpeakersInfoScreenState extends State<SpeakersInfoScreen> {
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.orange,
+                    color: AppColor.primaryColor,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -693,13 +694,13 @@ class _NavigationInfo extends StatelessWidget {
       return Container(
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.orange.shade50,
+          color: AppColor.primaryColor.withOpacity(0.05),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.orange.shade200),
+          border: Border.all(color: AppColor.primaryColor.withOpacity(0.2)),
         ),
         child: Row(
           children: [
-            Icon(Icons.location_off, size: 24, color: Colors.orange),
+            Icon(Icons.location_off, size: 24, color: AppColor.primaryColor),
             SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -707,7 +708,7 @@ class _NavigationInfo extends StatelessWidget {
                 style: ProgramsTypography.bodySecondary(context).copyWith(
                   fontWeight: FontWeight.w400,
                   fontSize: 14,
-                  color: Colors.orange.shade900,
+                  color: AppColor.gray900,
                 ),
               ),
             ),
@@ -728,12 +729,12 @@ class _NavigationInfo extends StatelessWidget {
       decoration: BoxDecoration(
         color: isNavigating
             ? Colors.blue.shade50
-            : (isCachedLocation ? Colors.orange.shade50 : AppColor.gray50),
+            : (isCachedLocation ? AppColor.primaryColor.withOpacity(0.05) : AppColor.gray50),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isNavigating
               ? Colors.blue
-              : (isCachedLocation ? Colors.orange : AppColor.gray200),
+              : (isCachedLocation ? AppColor.primaryColor : AppColor.gray200),
           width: 2,
         ),
       ),
@@ -746,7 +747,7 @@ class _NavigationInfo extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isNavigating
                       ? Colors.blue
-                      : (isCachedLocation ? Colors.orange : AppColor.black),
+                      : (isCachedLocation ? AppColor.primaryColor : AppColor.black),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -800,7 +801,7 @@ class _NavigationInfo extends StatelessWidget {
                             padding: EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: Colors.orange,
+                              color: AppColor.primaryColor,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
@@ -836,20 +837,20 @@ class _NavigationInfo extends StatelessWidget {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.orange.shade100,
+                color: AppColor.primaryColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.info_outline,
-                      size: 16, color: Colors.orange.shade900),
+                      size: 16, color: AppColor.gray900),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Showing last known location (offline)',
                       style: TextStyle(
-                        color: Colors.orange.shade900,
+                        color: AppColor.gray900,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
@@ -940,47 +941,6 @@ class _MapPreview extends StatelessWidget {
       );
     }
 
-    if (!isOnline) {
-      return Container(
-        height: mapHeight,
-        decoration: BoxDecoration(
-          color: Colors.orange.shade50,
-          borderRadius: BorderRadius.circular(ProgramsLayout.radius16(context)),
-          border: Border.all(color: Colors.orange, width: 2),
-        ),
-        child: Center(
-          child: Padding(
-            padding: EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.cloud_off, size: 64, color: Colors.orange),
-                SizedBox(height: 16),
-                Text(
-                  'Map unavailable offline',
-                  style: TextStyle(
-                    color: Colors.orange.shade900,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Maps require an internet connection to load tiles. Your last known location is saved.',
-                  style: TextStyle(
-                    color: Colors.orange.shade700,
-                    fontSize: 14,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
     return ClipRRect(
       borderRadius: BorderRadius.circular(ProgramsLayout.radius16(context)),
       child: Container(
@@ -1021,6 +981,54 @@ class _MapPreview extends StatelessWidget {
                       Text(
                         'Loading map...',
                         style: TextStyle(color: AppColor.gray600),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            if (!isOnline && isMapReady)
+              Positioned(
+                top: 16,
+                left: 16,
+                right: 16,
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppColor.primaryColor,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.cloud_off, color: Colors.white, size: 24),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Offline Mode',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            Text(
+                              'Showing last known location',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),

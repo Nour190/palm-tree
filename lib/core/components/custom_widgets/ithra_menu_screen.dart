@@ -6,6 +6,7 @@ import 'package:baseqat/core/resourses/assets_manager.dart';
 import 'package:baseqat/core/services/locale_service.dart';
 import 'dart:ui' as ui;
 
+import '../../resourses/color_manager.dart';
 import '../../responsive/responsive.dart';
 import '../../utils/rtl_helper.dart';
 import '../../network/connectivity_service.dart';
@@ -52,7 +53,7 @@ class _IthraMenuScreenState extends State<IthraMenuScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('common.offline_language_change'.tr()),
-            backgroundColor: Colors.orange,
+            backgroundColor: AppColor.primaryColor,
             duration: const Duration(seconds: 3),
           ),
         );

@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'dart:math' show cos, sqrt, asin;
 
+import 'package:baseqat/core/network/connectivity_service.dart';
+import 'package:baseqat/core/location/location_service.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/modules/home/data/models/workshop_model.dart';
 import 'package:baseqat/modules/programs/presentation/theme/programs_theme.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:geolocator/geolocator.dart';
@@ -36,11 +39,16 @@ class _WorkshopInfoScreenState extends State<WorkshopInfoScreen> {
   bool _isNavigating = false;
   Timer? _mapUpdateTimer;
 
+  bool _isOnline = true;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+
   @override
   void initState() {
     super.initState();
     _initializeMap();
+    _checkConnectivity();
     _initializeLocation();
+    _listenToConnectivity();
   }
 
   void _initializeMap() {
@@ -54,6 +62,33 @@ class _WorkshopInfoScreenState extends State<WorkshopInfoScreen> {
     }
   }
 
+  Future<void> _checkConnectivity() async {
+    final isOnline = await ConnectivityService().hasConnection();
+    if (mounted) {
+      setState(() => _isOnline = isOnline);
+    }
+  }
+
+  void _listenToConnectivity() {
+    _connectivitySubscription = ConnectivityService()
+        .onConnectivityChanged
+        .listen((List<ConnectivityResult> results) {
+      final hasConnection = results.any((result) =>
+      result == ConnectivityResult.mobile ||
+          result == ConnectivityResult.wifi ||
+          result == ConnectivityResult.ethernet);
+
+      if (mounted && _isOnline != hasConnection) {
+        setState(() => _isOnline = hasConnection);
+
+        if (hasConnection) {
+          // Reconnected - refresh location
+          _initializeLocation();
+        }
+      }
+    });
+  }
+
   Future<void> _initializeLocation() async {
     try {
       // Check if we have valid workshop location
@@ -62,35 +97,20 @@ class _WorkshopInfoScreenState extends State<WorkshopInfoScreen> {
         return;
       }
 
-      // Check permissions
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
+      final position = await LocationService.getCurrentPosition();
 
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
+      if (position == null) {
         setState(() => _isLoadingLocation = false);
-        if (mounted) {
+        if (mounted && _isOnline) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Location permission is required for navigation'),
-              backgroundColor: Colors.orange,
+              backgroundColor: AppColor.primaryColor,
             ),
           );
         }
         return;
       }
-
-      // Get current position
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      ).timeout(
-        Duration(seconds: 10),
-        onTimeout: () {
-          throw TimeoutException('Location request timed out');
-        },
-      );
 
       if (!mounted) return;
 
@@ -105,7 +125,6 @@ class _WorkshopInfoScreenState extends State<WorkshopInfoScreen> {
         _isLoadingLocation = false;
       });
 
-      // Update map if ready
       if (_isMapReady && _mapController != null) {
         await _updateMapWithRoute(position);
       }
@@ -113,12 +132,15 @@ class _WorkshopInfoScreenState extends State<WorkshopInfoScreen> {
       if (!mounted) return;
       setState(() => _isLoadingLocation = false);
       debugPrint('Error getting location: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to get location: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+
+      if (_isOnline) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to get location: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -224,19 +246,20 @@ class _WorkshopInfoScreenState extends State<WorkshopInfoScreen> {
         ),
       );
 
-      // Draw route
-      final road = await _mapController!.drawRoad(
-        currentGeoPoint,
-        destinationGeoPoint,
-        roadType: RoadType.foot,
-        roadOption: RoadOption(
-          roadWidth: 10,
-          roadColor: _isNavigating ? Colors.blue : Colors.blue.shade300,
-        ),
-      );
+      if (_isOnline) {
+        final road = await _mapController!.drawRoad(
+          currentGeoPoint,
+          destinationGeoPoint,
+          roadType: RoadType.foot,
+          roadOption: RoadOption(
+            roadWidth: 10,
+            roadColor: _isNavigating ? Colors.blue : Colors.blue.shade300,
+          ),
+        );
 
-      if (mounted) {
-        setState(() => _currentRoad = road);
+        if (mounted) {
+          setState(() => _currentRoad = road);
+        }
       }
 
       // Zoom to show complete route
@@ -314,6 +337,7 @@ class _WorkshopInfoScreenState extends State<WorkshopInfoScreen> {
   void dispose() {
     _positionStream?.cancel();
     _mapUpdateTimer?.cancel();
+    _connectivitySubscription?.cancel();
     _mapController?.dispose();
     super.dispose();
   }
@@ -336,6 +360,34 @@ class _WorkshopInfoScreenState extends State<WorkshopInfoScreen> {
         foregroundColor: AppColor.black,
         elevation: 0,
         actions: [
+          if (!_isOnline)
+            Padding(
+              padding: EdgeInsets.only(right: 8),
+              child: Center(
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColor.primaryColor,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.cloud_off, size: 14, color: Colors.white),
+                      SizedBox(width: 4),
+                      Text(
+                        'Offline',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           if (_isNavigating)
             IconButton(
               icon: Icon(Icons.close),
@@ -374,6 +426,8 @@ class _WorkshopInfoScreenState extends State<WorkshopInfoScreen> {
                 currentRoad: _currentRoad,
                 formatDistance: _formatDistance,
                 estimateWalkingTime: _estimateWalkingTime,
+                isOnline: _isOnline,
+                currentPosition: _currentPosition,
               ),
               SizedBox(height: spacingMedium),
               _MapPreview(
@@ -381,9 +435,10 @@ class _WorkshopInfoScreenState extends State<WorkshopInfoScreen> {
                 isMapReady: _isMapReady,
                 isNavigating: _isNavigating,
                 distanceInMeters: _distanceInMeters,
+                isOnline: _isOnline,
                 onReady: () {
                   setState(() => _isMapReady = true);
-                  if (_currentPosition != null) {
+                  if (_currentPosition != null && _isOnline) {
                     _updateMapWithRoute(_currentPosition!);
                   }
                 },
@@ -405,7 +460,8 @@ class _WorkshopInfoScreenState extends State<WorkshopInfoScreen> {
           child: ElevatedButton(
             onPressed: (_currentPosition == null ||
                 _isLoadingLocation ||
-                _mapController == null)
+                _mapController == null ||
+                !_isOnline)
                 ? null
                 : () {
               if (_isNavigating) {
@@ -439,7 +495,9 @@ class _WorkshopInfoScreenState extends State<WorkshopInfoScreen> {
                 Icon(_isNavigating ? Icons.stop : Icons.navigation),
                 SizedBox(width: 8),
                 Text(
-                  _isNavigating ? 'Stop Navigation' : 'Start Navigation',
+                  !_isOnline
+                      ? 'Navigation unavailable offline'
+                      : (_isNavigating ? 'Stop Navigation' : 'Start Navigation'),
                   style: ProgramsTypography.bodyPrimary(context).copyWith(
                     color: AppColor.white,
                     fontWeight: FontWeight.w500,
@@ -714,6 +772,8 @@ class _NavigationInfo extends StatelessWidget {
     required this.currentRoad,
     required this.formatDistance,
     required this.estimateWalkingTime,
+    required this.isOnline,
+    required this.currentPosition,
   });
 
   final double? distanceInMeters;
@@ -722,6 +782,8 @@ class _NavigationInfo extends StatelessWidget {
   final RoadInfo? currentRoad;
   final String Function(double) formatDistance;
   final int Function(double) estimateWalkingTime;
+  final bool isOnline;
+  final Position? currentPosition;
 
   @override
   Widget build(BuildContext context) {
@@ -760,13 +822,13 @@ class _NavigationInfo extends StatelessWidget {
       return Container(
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.orange.shade50,
+          color: AppColor.primaryColor.withOpacity(0.05),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.orange.shade200),
+          border: Border.all(color: AppColor.primaryColor.withOpacity(0.2)),
         ),
         child: Row(
           children: [
-            Icon(Icons.location_off, size: 24, color: Colors.orange),
+            Icon(Icons.location_off, size: 24, color: AppColor.primaryColor),
             SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -774,7 +836,7 @@ class _NavigationInfo extends StatelessWidget {
                 style: ProgramsTypography.bodySecondary(context).copyWith(
                   fontWeight: FontWeight.w400,
                   fontSize: 14,
-                  color: Colors.orange.shade900,
+                  color: AppColor.gray900,
                 ),
               ),
             ),
@@ -788,13 +850,19 @@ class _NavigationInfo extends StatelessWidget {
     final roadDistance = currentRoad?.distance;
     final roadDuration = currentRoad?.duration;
 
+    final isCachedLocation = !isOnline && currentPosition != null;
+
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isNavigating ? Colors.blue.shade50 : AppColor.gray50,
+        color: isNavigating
+            ? Colors.blue.shade50
+            : (isCachedLocation ? AppColor.primaryColor.withOpacity(0.05) : AppColor.gray50),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isNavigating ? Colors.blue : AppColor.gray200,
+          color: isNavigating
+              ? Colors.blue
+              : (isCachedLocation ? AppColor.primaryColor : AppColor.gray200),
           width: 2,
         ),
       ),
@@ -805,11 +873,15 @@ class _NavigationInfo extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: isNavigating ? Colors.blue : AppColor.black,
+                  color: isNavigating
+                      ? Colors.blue
+                      : (isCachedLocation ? AppColor.primaryColor : AppColor.black),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
-                  isNavigating ? Icons.navigation : Icons.directions_walk,
+                  isNavigating
+                      ? Icons.navigation
+                      : (isCachedLocation ? Icons.history : Icons.directions_walk),
                   color: Colors.white,
                   size: 28,
                 ),
@@ -851,6 +923,25 @@ class _NavigationInfo extends StatelessWidget {
                             ),
                           ),
                         ],
+                        if (isCachedLocation) ...[
+                          SizedBox(width: 8),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColor.primaryColor,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              'CACHED',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                     SizedBox(height: 4),
@@ -869,6 +960,34 @@ class _NavigationInfo extends StatelessWidget {
               ),
             ],
           ),
+          if (isCachedLocation) ...[
+            SizedBox(height: 12),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColor.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.info_outline,
+                      size: 16, color: AppColor.gray900),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Showing last known location (offline)',
+                      style: TextStyle(
+                        color: AppColor.gray900,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           if (isNavigating) ...[
             SizedBox(height: 12),
             Container(
@@ -909,6 +1028,7 @@ class _MapPreview extends StatelessWidget {
     required this.isMapReady,
     required this.isNavigating,
     required this.distanceInMeters,
+    required this.isOnline,
     required this.onReady,
   });
 
@@ -916,6 +1036,7 @@ class _MapPreview extends StatelessWidget {
   final bool isMapReady;
   final bool isNavigating;
   final double? distanceInMeters;
+  final bool isOnline;
   final VoidCallback onReady;
 
   @override
@@ -987,6 +1108,54 @@ class _MapPreview extends StatelessWidget {
                       Text(
                         'Loading map...',
                         style: TextStyle(color: AppColor.gray600),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            if (!isOnline && isMapReady)
+              Positioned(
+                top: 16,
+                left: 16,
+                right: 16,
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppColor.primaryColor,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.cloud_off, color: Colors.white, size: 24),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Offline Mode',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            Text(
+                              'Showing last known location',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
