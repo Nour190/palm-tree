@@ -43,10 +43,10 @@ class _ArtistTabContentState extends State<ArtistTabContent> {
   Widget build(BuildContext context) {
     final body = widget.artists.isEmpty
         ? _EmptyState(
-            title: widget.emptyStateTitle ?? 'programs.empty.artists_title'.tr(),
-            subtitle: widget.emptyStateSubtitle ?? 'programs.empty.artists_subtitle'.tr(),
-            icon: widget.emptyStateIcon,
-          )
+      title: widget.emptyStateTitle ?? 'programs.empty.artists_title'.tr(),
+      subtitle: widget.emptyStateSubtitle ?? 'programs.empty.artists_subtitle'.tr(),
+      icon: widget.emptyStateIcon,
+    )
         : (_useGrid ? _buildGrid() : _buildList());
 
     if (widget.onRefresh != null) {
@@ -116,10 +116,11 @@ class _ArtistTabContentState extends State<ArtistTabContent> {
     if (widget.onArtistTap != null) {
       widget.onArtistTap!(artist);
     } else {
-     // navigateTo(context, ArtistDetailsPage(artistId: artist.id));
+      navigateTo(context, ArtistDetailsPage(artistId: artist.id));
     }
   }
 }
+
 class _EmptyState extends StatelessWidget {
   const _EmptyState({
     required this.title,

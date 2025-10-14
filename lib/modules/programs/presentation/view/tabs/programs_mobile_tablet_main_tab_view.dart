@@ -1,8 +1,12 @@
 import 'package:baseqat/core/components/alerts/custom_loading.dart';
+import 'package:baseqat/core/components/connectivity/offline_indicator.dart';
+import 'package:baseqat/core/database/image_cache_service.dart';
+import 'package:baseqat/core/network/connectivity_service.dart';
 import 'package:baseqat/core/resourses/assets_manager.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/modules/home/data/models/artist_model.dart';
 import 'package:baseqat/modules/home/data/models/artwork_model.dart';
+import 'package:baseqat/modules/programs/data/datasources/events_local_data_source.dart';
 import 'package:baseqat/modules/programs/data/datasources/events_remote_data_source.dart';
 import 'package:baseqat/modules/programs/data/models/gallery_item.dart';
 import 'package:baseqat/modules/programs/data/models/month_data.dart';
@@ -16,6 +20,8 @@ import 'package:baseqat/modules/programs/presentation/view/tabs/artist_tab.dart'
 import 'package:baseqat/modules/programs/presentation/view/tabs/gallery_tav_tab.dart';
 import 'package:baseqat/modules/programs/presentation/view/tabs/speakers_tab.dart';
 import 'package:baseqat/modules/programs/presentation/view/tabs/virtual_tour_tab.dart';
+import 'package:baseqat/modules/tabs/presentation/manger/tabs_cubit.dart';
+import 'package:baseqat/modules/tabs/presentation/manger/tabs_states.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -33,7 +39,11 @@ class EventsMobileTabletView extends StatelessWidget {
     final repo = _repository;
     if (repo != null) return repo;
     final client = Supabase.instance.client;
-    return EventsRepositoryImpl(EventsRemoteDataSourceImpl(client));
+    return EventsRepositoryImpl(
+      EventsRemoteDataSourceImpl(client),
+      EventsLocalDataSourceImpl(),
+      ConnectivityService(),
+    );
   }
 
   @override
@@ -70,6 +80,20 @@ class _EventsViewState extends State<_EventsView> {
   ProgramsTab _tab = ProgramsTab.artworks;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final tabsCubit = context.read<TabsCubit>();
+      final initialTabIndex = tabsCubit.selectedSubIndex;
+      if (initialTabIndex >= 0 && initialTabIndex < ProgramsTab.values.length) {
+        setState(() {
+          _tab = ProgramsTab.values[initialTabIndex];
+        });
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -77,41 +101,56 @@ class _EventsViewState extends State<_EventsView> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<EventsCubit, EventsState>(
-      builder: (context, state) {
-        return Container(
-          color: AppColor.white,
-          child: SafeArea(
-            child: Column(
-              children: [
-                Padding(
-                  padding: ProgramsLayout.pagePadding(context),
-                  child: Column(
-                    children: [
-                      _ProgramsHeader(
-                        controller: _searchController,
-                        onChanged: context.read<EventsCubit>().setSearchQuery,
-                      ),
-                      SizedBox(height: ProgramsLayout.spacingLarge(context)),
-                      _ProgramsTabBar(
-                        selected: _tab,
-                        onSelected: (tab) => setState(() => _tab = tab),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: ProgramsLayout.spacingMedium(context)),
-                Expanded(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 220),
-                    child: _buildBody(_tab),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
+    return BlocListener<TabsCubit, TabsState>(
+      listener: (context, state) {
+        if (state is SelectedSubIndexChanged) {
+          final newIndex = state.selectedSubIndex;
+          if (newIndex >= 0 && newIndex < ProgramsTab.values.length) {
+            setState(() {
+              _tab = ProgramsTab.values[newIndex];
+            });
+          }
+        }
       },
+      child: BlocBuilder<EventsCubit, EventsState>(
+        builder: (context, state) {
+          return OfflineIndicator(
+            child: Container(
+              color: AppColor.white,
+              child: SafeArea(
+                bottom: false,
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: ProgramsLayout.pagePadding(context),
+                      child: Column(
+                        children: [
+                          _ProgramsHeader(
+                            controller: _searchController,
+                            onChanged: context.read<EventsCubit>().setSearchQuery,
+                          ),
+                          SizedBox(height: ProgramsLayout.spacingLarge(context)),
+                          _ProgramsTabBar(
+                            selected: _tab,
+                            onSelected: (tab) => setState(() => _tab = tab),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: ProgramsLayout.spacingMedium(context)),
+                    Expanded(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 220),
+                        child: _buildBody(_tab),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -150,41 +189,41 @@ class _ProgramsHeader extends StatelessWidget {
             ),
             SizedBox(width: ProgramsLayout.spacingSmall(context)),
 
-        Expanded(
-          flex: 3,
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppColor.gray50,
-              borderRadius:
+            Expanded(
+              flex: 3,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColor.gray50,
+                  borderRadius:
                   BorderRadius.circular(ProgramsLayout.radius20(context)),
-              border: Border.all(color: AppColor.gray200),
-            ),
-            padding: EdgeInsets.symmetric(
-              horizontal: ProgramsLayout.pagePadding(context).left * 0.25,
-            ),
-            child: TextField(
-            
-              controller: controller,
-              onChanged: onChanged,
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration(
-                hintText: 'programs.header.search_placeholder'.tr(),
-                hintStyle: ProgramsTypography.bodySecondary(context)
-                    .copyWith(color: AppColor.gray500),
-                border: InputBorder.none,
-                icon: Image.asset(
-                  AppAssetsManager.imgSearch,
-                  width: ProgramsLayout.size(context, 20),
-                  height: ProgramsLayout.size(context, 25),
-                  color: AppColor.gray500,
+                  border: Border.all(color: AppColor.gray200),
+                ),
+                padding: EdgeInsets.symmetric(
+                  horizontal: ProgramsLayout.pagePadding(context).left * 0.25,
+                ),
+                child: TextField(
+                  controller: controller,
+                  onChanged: onChanged,
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    hintText: 'programs.header.search_placeholder'.tr(),
+                    hintStyle: ProgramsTypography.bodySecondary(context)
+                        .copyWith(color: AppColor.gray500),
+                    border: InputBorder.none,
+                    icon: Image.asset(
+                      AppAssetsManager.imgSearch,
+                      width: ProgramsLayout.size(context, 20),
+                      height: ProgramsLayout.size(context, 25),
+                      color: AppColor.gray500,
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
-               ],
-        ),
-        SizedBox(height: ProgramsLayout.spacingLarge(context)), ],
+        SizedBox(height: ProgramsLayout.spacingLarge(context)),
+      ],
     );
   }
 }
@@ -202,16 +241,16 @@ class _ProgramsTabBar extends StatelessWidget {
       child: Row(
         children: ProgramsTab.values
             .map((tab) => Padding(
-                  padding: EdgeInsetsDirectional.only(
-                    end: ProgramsLayout.spacingMedium(context),
-                  ),
-                  child: _TabChip(
-                    label: tab.labelKey.tr(),
-                    icon: tab.icon,
-                    isSelected: tab == selected,
-                    onTap: () => onSelected(tab),
-                  ),
-                ))
+          padding: EdgeInsetsDirectional.only(
+            end: ProgramsLayout.spacingMedium(context),
+          ),
+          child: _TabChip(
+            label: tab.labelKey.tr(),
+            icon: tab.icon,
+            isSelected: tab == selected,
+            onTap: () => onSelected(tab),
+          ),
+        ))
             .toList(),
       ),
     );
@@ -426,46 +465,66 @@ class _InlineError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        margin: ProgramsLayout.sectionPadding(context),
-        padding: EdgeInsets.all(ProgramsLayout.size(context, 20)),
-        decoration: BoxDecoration(
-          color: AppColor.gray50,
-          borderRadius:
+    return FutureBuilder<bool>(
+      future: ConnectivityService().hasConnection(),
+      builder: (context, snapshot) {
+        final isOffline = snapshot.data == false;
+
+        return Center(
+          child: Container(
+            margin: ProgramsLayout.sectionPadding(context),
+            padding: EdgeInsets.all(ProgramsLayout.size(context, 20)),
+            decoration: BoxDecoration(
+              color: AppColor.gray50,
+              borderRadius:
               BorderRadius.circular(ProgramsLayout.radius16(context)),
-          border: Border.all(color: AppColor.gray200),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+              border: Border.all(color: AppColor.gray200),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.error_outline_rounded,
-              color: AppColor.gray700,
-              size: ProgramsLayout.size(context, 36),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icon(
+                //   isOffline ? Icons.cloud_off_rounded : Icons.error_outline_rounded,
+                //   color: isOffline ? Colors.orange[700] : AppColor.gray700,
+                //   size: ProgramsLayout.size(context, 36),
+                // ),
+                SizedBox(height: ProgramsLayout.spacingLarge(context)),
+                Text(
+                  isOffline
+                      ? 'programs.offline.no_cached_data'.tr()
+                      : title,
+                  style: ProgramsTypography.headingMedium(context)
+                      .copyWith(color: AppColor.gray900),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: ProgramsLayout.spacingSmall(context)),
+                Text(
+                  isOffline
+                      ? 'programs.offline.connect_to_load'.tr()
+                      : 'programs.errors.generic_subtitle'.tr(),
+                  style: ProgramsTypography.bodySecondary(context)
+                      .copyWith(color: AppColor.gray600),
+                  textAlign: TextAlign.center,
+                ),
+                if (!isOffline) ...[
+                  SizedBox(height: ProgramsLayout.spacingMedium(context)),
+                  OutlinedButton(
+                    onPressed: onRetry,
+                    child: Text('programs.actions.retry'.tr()),
+                  ),
+                ],
+              ],
             ),
-            SizedBox(height: ProgramsLayout.spacingLarge(context)),
-            Text(
-              title,
-              style: ProgramsTypography.headingMedium(context)
-                  .copyWith(color: AppColor.gray900),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: ProgramsLayout.spacingMedium(context)),
-            OutlinedButton(
-              onPressed: onRetry,
-              child: Text('programs.actions.retry'.tr()),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -481,3 +540,4 @@ class _SliceData<T> {
   final SliceStatus status;
   final String? errorMessage;
 }
+

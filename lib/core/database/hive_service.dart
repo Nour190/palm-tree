@@ -7,12 +7,16 @@ import 'package:baseqat/modules/home/data/models/artist_model.dart';
 import 'package:baseqat/modules/home/data/models/artwork_model.dart';
 import 'package:baseqat/modules/home/data/models/InfoModel.dart';
 import 'package:baseqat/modules/home/data/models/review_model.dart';
+import 'package:baseqat/modules/home/data/models/speaker_model.dart';
+import 'package:baseqat/modules/home/data/models/workshop_model.dart';
 import 'package:baseqat/modules/artwork_details/data/models/pending_feedback_model.dart';
 import 'package:baseqat/core/database/type_adapters/artist_adapter.dart';
 import 'package:baseqat/core/database/type_adapters/artwork_adapter.dart';
 import 'package:baseqat/core/database/type_adapters/info_adapter.dart';
 import 'package:baseqat/core/database/type_adapters/review_adapter.dart';
 import 'package:baseqat/core/database/type_adapters/pending_feedback_adapter.dart';
+import 'package:baseqat/core/database/type_adapters/speaker_adapter.dart';
+import 'package:baseqat/core/database/type_adapters/workshop_adapter.dart';
 
 import '../../modules/artwork_details/data/models/conversation_models.dart';
 
@@ -27,6 +31,11 @@ class HiveService {
   static const String conversationsBox = 'conversations_box';
   static const String messagesBox = 'messages_box';
   static const String locationCacheBox = 'location_cache_box';
+
+  static const String programsArtistsBox = 'programs_artists_box';
+  static const String programsArtworksBox = 'programs_artworks_box';
+  static const String programsSpeakersBox = 'programs_speakers_box';
+  static const String programsWorkshopsBox = 'programs_workshops_box';
 
   static Future<void> initialize() async {
     if (kIsWeb) {
@@ -55,8 +64,14 @@ class HiveService {
     if (!Hive.isAdapterRegistered(4)) {
       Hive.registerAdapter(ConversationAdapter());
     }
-    if (!Hive.isAdapterRegistered(5)) {
+    if (!Hive.isAdapterRegistered(6)) {
       Hive.registerAdapter(MessageAdapter());
+    }
+    if (!Hive.isAdapterRegistered(7)) {
+      Hive.registerAdapter(SpeakerAdapter());
+    }
+    if (!Hive.isAdapterRegistered(8)) {
+      Hive.registerAdapter(WorkshopAdapter());
     }
 
     // Open boxes
@@ -71,6 +86,10 @@ class HiveService {
     await Hive.openBox(metadataBox);
     await Hive.openBox(locationCacheBox);
 
+    await Hive.openBox<Artist>(programsArtistsBox);
+    await Hive.openBox<Artwork>(programsArtworksBox);
+    await Hive.openBox<Speaker>(programsSpeakersBox);
+    await Hive.openBox<Workshop>(programsWorkshopsBox);
   }
 
   static Future<void> clearAllData() async {
@@ -83,6 +102,10 @@ class HiveService {
     await Hive.box<MessageRecord>(messagesBox).clear();
     await Hive.box(locationCacheBox).clear();
 
+    await Hive.box<Artist>(programsArtistsBox).clear();
+    await Hive.box<Artwork>(programsArtworksBox).clear();
+    await Hive.box<Speaker>(programsSpeakersBox).clear();
+    await Hive.box<Workshop>(programsWorkshopsBox).clear();
   }
 
   static Future<void> closeAll() async {

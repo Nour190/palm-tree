@@ -1,3 +1,4 @@
+import 'package:baseqat/core/components/custom_widgets/cached_network_image_widget.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/modules/home/data/models/artist_model.dart';
 import 'package:baseqat/modules/programs/presentation/theme/programs_theme.dart';
@@ -105,11 +106,12 @@ class _TopImage extends StatelessWidget {
         child: ColoredBox(
           color: AppColor.gray100,
           child: profileImage?.isNotEmpty == true
-              ? Image.network(
-                  profileImage!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => _placeholder(context),
-                )
+              ? OfflineCachedImage(
+            imageUrl: profileImage!,
+            fit: BoxFit.cover,
+            placeholder: _placeholder(context),
+            errorWidget: _placeholder(context),
+          )
               : _placeholder(context),
         ),
       ),

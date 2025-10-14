@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:geolocator/geolocator.dart';
 
+import '../../../../../core/components/custom_widgets/cached_network_image_widget.dart';
+
 class WorkshopInfoScreen extends StatefulWidget {
   const WorkshopInfoScreen({
     super.key,
@@ -284,20 +286,20 @@ class _WorkshopInfoScreenState extends State<WorkshopInfoScreen> {
   String _formatDateTime(DateTime start, DateTime end) {
     final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    
+
     final dayOfWeek = days[start.weekday - 1];
     final month = months[start.month - 1];
     final day = start.day;
     final year = start.year;
-    
+
     final startHour = start.hour > 12 ? start.hour - 12 : (start.hour == 0 ? 12 : start.hour);
     final startMinute = start.minute.toString().padLeft(2, '0');
     final startPeriod = start.hour >= 12 ? 'PM' : 'AM';
-    
+
     final endHour = end.hour > 12 ? end.hour - 12 : (end.hour == 0 ? 12 : end.hour);
     final endMinute = end.minute.toString().padLeft(2, '0');
     final endPeriod = end.hour >= 12 ? 'PM' : 'AM';
-    
+
     return '$dayOfWeek, $month $day, $year – from $startHour:$startMinute $startPeriod to $endHour:$endMinute $endPeriod';
   }
 
@@ -401,17 +403,17 @@ class _WorkshopInfoScreenState extends State<WorkshopInfoScreen> {
         child: SizedBox(
           height: ProgramsLayout.size(context, 56),
           child: ElevatedButton(
-            onPressed: (_currentPosition == null || 
-                       _isLoadingLocation || 
-                       _mapController == null)
+            onPressed: (_currentPosition == null ||
+                _isLoadingLocation ||
+                _mapController == null)
                 ? null
                 : () {
-                    if (_isNavigating) {
-                      _stopNavigation();
-                    } else {
-                      _startNavigation();
-                    }
-                  },
+              if (_isNavigating) {
+                _stopNavigation();
+              } else {
+                _startNavigation();
+              }
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: _isNavigating ? Colors.red : AppColor.black,
               foregroundColor: AppColor.white,
@@ -424,27 +426,27 @@ class _WorkshopInfoScreenState extends State<WorkshopInfoScreen> {
             ),
             child: _isLoadingLocation
                 ? SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColor.white,
-                    ),
-                  )
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColor.white,
+              ),
+            )
                 : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(_isNavigating ? Icons.stop : Icons.navigation),
-                      SizedBox(width: 8),
-                      Text(
-                        _isNavigating ? 'Stop Navigation' : 'Start Navigation',
-                        style: ProgramsTypography.bodyPrimary(context).copyWith(
-                          color: AppColor.white,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(_isNavigating ? Icons.stop : Icons.navigation),
+                SizedBox(width: 8),
+                Text(
+                  _isNavigating ? 'Stop Navigation' : 'Start Navigation',
+                  style: ProgramsTypography.bodyPrimary(context).copyWith(
+                    color: AppColor.white,
+                    fontWeight: FontWeight.w500,
                   ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -472,11 +474,12 @@ class _WorkshopHeaderImage extends StatelessWidget {
           child: AspectRatio(
             aspectRatio: 343 / 174,
             child: imageUrl?.isNotEmpty ?? false
-                ? Image.network(
-                    imageUrl!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _placeholder,
-                  )
+                ? OfflineCachedImage(
+              imageUrl: imageUrl!,
+              fit: BoxFit.cover,
+              placeholder: _placeholder,
+              errorWidget: _placeholder,
+            )
                 : _placeholder,
           ),
         ),
@@ -493,11 +496,11 @@ class _WorkshopHeaderImage extends StatelessWidget {
   }
 
   Widget get _placeholder => Container(
-        color: AppColor.gray100,
-        child: Center(
-          child: Icon(Icons.image_outlined, color: AppColor.gray400),
-        ),
-      );
+    color: AppColor.gray100,
+    child: Center(
+      child: Icon(Icons.image_outlined, color: AppColor.gray400),
+    ),
+  );
 }
 
 class _FavoriteButton extends StatelessWidget {

@@ -129,6 +129,7 @@ class TopBar extends StatelessWidget {
                   // ),
                 ),
               ),
+            SizedBox(width:10.sW),
             GestureDetector(
               onTap: () => _openMenu(context),
               child: Container(

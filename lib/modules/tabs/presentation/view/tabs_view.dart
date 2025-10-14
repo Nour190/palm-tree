@@ -55,69 +55,73 @@ class _TabsViewBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
 
-          // ---------------- Top element in the view ----------------
-          BlocBuilder<TabsCubit, TabsState>(
-            builder: (context, state) {
-              final devType = Responsive.deviceTypeOf(context);
-              final selectedIndex = _selectedIndexFrom(context, state);
-
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  devType == DeviceType.desktop
-                      ? DesktopTopBar(
-                    items: [
-                      "navigation.home".tr(),
-                      "navigation.programs".tr(),
-                      "navigation.virtual_tour".tr(),
-                      //'Profile',
-                    ],
-                    selectedIndex: selectedIndex,
-                    onItemTap: context
-                        .read<TabsCubit>()
-                        .changeSelectedIndex,
-                    onLoginTap: () {},
-                    showScanButton: true,
-                    onScanTap: () => _handleQRScan(context),
-                  )
-                      : TopBar(
-                    items:  [
-                      "navigation.home".tr(),
-                      "navigation.programs".tr(),
-                      "navigation.virtual_tour".tr(),
-                      // 'Profile',
-                    ],
-                    selectedIndex: selectedIndex,
-                    onItemTap: context
-                        .read<TabsCubit>()
-                        .changeSelectedIndex,
-                    onLoginTap: () {},
-                    showScanButton: true,
-                    onScanTap: () => _handleQRScan(context),
-                  ),
-                  if (devType != DeviceType.desktop)
-                    Divider(
-                      height: 1,
-                      thickness: 1,
-                      color: Theme.of(context).dividerColor.withOpacity(0.2),
-                    ),
-                ],
-              );
-            },
-          ),
-          // ---------------- Body switches by selectedIndex ----------------
-          Expanded(
-            child: BlocBuilder<TabsCubit, TabsState>(
+            // ---------------- Top element in the view ----------------
+            BlocBuilder<TabsCubit, TabsState>(
               builder: (context, state) {
+                final devType = Responsive.deviceTypeOf(context);
                 final selectedIndex = _selectedIndexFrom(context, state);
-                return _bodyForSelectedIndex(selectedIndex);
+
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    devType == DeviceType.desktop
+                        ? DesktopTopBar(
+                      items: [
+                        "navigation.home".tr(),
+                        "navigation.programs".tr(),
+                        "navigation.virtual_tour".tr(),
+                        //'Profile',
+                      ],
+                      selectedIndex: selectedIndex,
+                      onItemTap: context
+                          .read<TabsCubit>()
+                          .changeSelectedIndex,
+                      onLoginTap: () {},
+                      showScanButton: true,
+                      onScanTap: () => _handleQRScan(context),
+                    )
+                        : TopBar(
+                      items:  [
+                        "navigation.home".tr(),
+                        "navigation.programs".tr(),
+                        "navigation.virtual_tour".tr(),
+                        // 'Profile',
+                      ],
+                      selectedIndex: selectedIndex,
+                      onItemTap: context
+                          .read<TabsCubit>()
+                          .changeSelectedIndex,
+                      onLoginTap: () {},
+                      showScanButton: true,
+                      onScanTap: () => _handleQRScan(context),
+                    ),
+                    if (devType != DeviceType.desktop)
+                      Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: Theme.of(context).dividerColor.withOpacity(0.2),
+                      ),
+                  ],
+                );
               },
             ),
-          ),
-        ],
+            // ---------------- Body switches by selectedIndex ----------------
+            Expanded(
+              child: BlocBuilder<TabsCubit, TabsState>(
+                builder: (context, state) {
+                  final selectedIndex = _selectedIndexFrom(context, state);
+                  return _bodyForSelectedIndex(selectedIndex);
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

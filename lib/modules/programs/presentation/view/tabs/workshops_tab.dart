@@ -1,3 +1,4 @@
+import 'package:baseqat/core/components/custom_widgets/cached_network_image_widget.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/modules/home/data/models/workshop_model.dart';
 import 'package:baseqat/modules/programs/presentation/theme/programs_theme.dart';
@@ -27,16 +28,16 @@ class WorkshopCardWidget extends StatelessWidget {
   String _getLocalizedDescription() {
     return languageCode == 'ar'
         ? (workshop.descriptionAr?.isNotEmpty == true
-            ? workshop.descriptionAr!
-            : workshop.description ?? '')
+        ? workshop.descriptionAr!
+        : workshop.description ?? '')
         : (workshop.description ?? '');
   }
 
   String _getInstructorName() {
     return languageCode == 'ar'
         ? (workshop.artistNameAr?.isNotEmpty == true
-            ? workshop.artistNameAr!
-            : workshop.artistName ?? 'programs.workshop.no_instructor'.tr())
+        ? workshop.artistNameAr!
+        : workshop.artistName ?? 'programs.workshop.no_instructor'.tr())
         : (workshop.artistName ?? 'programs.workshop.no_instructor'.tr());
   }
 
@@ -112,13 +113,13 @@ class WorkshopCardWidget extends StatelessWidget {
                   border: Border.all(color: AppColor.black, width: 1),
                 ),
                 child: workshop.coverImage != null
-                    ? Image.network(
-                        workshop.coverImage!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const _PlaceholderImage(
-                          icon: Icons.image_outlined,
-                        ),
-                      )
+                    ? OfflineCachedImage(
+                  imageUrl: workshop.coverImage!,
+                  fit: BoxFit.cover,
+                  errorWidget: const _PlaceholderImage(
+                    icon: Icons.image_outlined,
+                  ),
+                )
                     : const _PlaceholderImage(icon: Icons.image_outlined),
               ),
 
@@ -191,22 +192,21 @@ class WorkshopCardWidget extends StatelessWidget {
                                   ),
                                   child: workshop.coverImage != null
                                       ? ClipOval(
-                                          child: Image.network(
-                                            workshop.coverImage!,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (_, __, ___) =>
-                                                const Icon(
-                                              Icons.person_outline,
-                                              size: 16,
-                                              color: AppColor.gray400,
-                                            ),
-                                          ),
-                                        )
+                                    child: OfflineCachedImage(
+                                      imageUrl: workshop.coverImage!,
+                                      fit: BoxFit.cover,
+                                      errorWidget: const Icon(
+                                        Icons.person_outline,
+                                        size: 16,
+                                        color: AppColor.gray400,
+                                      ),
+                                    ),
+                                  )
                                       : const Icon(
-                                          Icons.person_outline,
-                                          size: 16,
-                                          color: AppColor.gray400,
-                                        ),
+                                    Icons.person_outline,
+                                    size: 16,
+                                    color: AppColor.gray400,
+                                  ),
                                 ),
                                 const SizedBox(width: 8),
                                 // Name and role

@@ -220,13 +220,12 @@ class HomeView extends StatelessWidget {
                                   context.read<TabsCubit>().changeSelectedSubIndex(1);
                                 },
                                 onArtistTap: (index) {
-                                  // navigateTo(
-                                  //   context,
-                                  //   // ArtistDetailsPage(
-                                  //   //   artistId:
-                                  //   //   (artistsSel[index] as dynamic).id,
-                                  //   // ),
-                                  // );
+                                  navigateTo(
+                                    context,
+                                    ArtistDetailsPage(
+                                      artistId: (artistsSel[index] as dynamic).id,
+                                    ),
+                                  );
                                 },
                               ),
                             ],
@@ -389,8 +388,8 @@ class HomeView extends StatelessWidget {
                                   ),
                                 ),
                               Reviews(
-                                isLoading: isRefreshingSel, reviewsData:List.from(reviewsSel),
-
+                                isLoading: isRefreshingSel,
+                                reviewsData: List.from(reviewsSel),
                               ),
                             ],
                           );
@@ -415,7 +414,7 @@ class HomeView extends StatelessWidget {
                         child: Container(
                           color: AppColor.gray900,
                           width: double.infinity,
-                          padding:EdgeInsets.symmetric(horizontal: 25.sW),
+                          padding: EdgeInsets.symmetric(horizontal: 25.sW),
                           child: Image.asset(
                             AppAssetsManager.footerBackground,
                             alignment: Alignment.bottomCenter,

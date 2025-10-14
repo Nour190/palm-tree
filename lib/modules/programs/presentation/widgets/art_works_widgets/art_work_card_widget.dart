@@ -1,3 +1,4 @@
+import 'package:baseqat/core/components/custom_widgets/cached_network_image_widget.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/modules/home/data/models/artwork_model.dart';
 import 'package:baseqat/modules/programs/presentation/theme/programs_theme.dart';
@@ -131,11 +132,12 @@ class _ArtworkImage extends StatelessWidget {
         height: height,
         width: double.infinity,
         child: url?.isNotEmpty ?? false
-            ? Image.network(
-                url!,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _placeholder(context),
-              )
+            ? OfflineCachedImage(
+          imageUrl: url!,
+          fit: BoxFit.cover,
+          placeholder: _placeholder(context),
+          errorWidget: _placeholder(context),
+        )
             : _placeholder(context),
       ),
     );
@@ -169,7 +171,7 @@ class _ArtistInfo extends StatelessWidget {
     final radius = ProgramsLayout.radius16(context);
     final artistName =
         artwork.localizedArtistName(languageCode: languageCode) ??
-        'programs.artwork_card.unknown_artist'.tr();
+            'programs.artwork_card.unknown_artist'.tr();
     final materials = artwork.localizedMaterials(languageCode: languageCode);
 
     return Row(
@@ -177,12 +179,12 @@ class _ArtistInfo extends StatelessWidget {
         if (artwork.artistProfileImage?.isNotEmpty ?? false)
           ClipRRect(
             borderRadius: BorderRadius.circular(radius),
-            child: Image.network(
-              artwork.artistProfileImage!,
+            child: OfflineCachedImage(
+              imageUrl: artwork.artistProfileImage!,
               width: ProgramsLayout.size(context, 44),
               height: ProgramsLayout.size(context, 44),
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => _artistPlaceholder(context),
+              errorWidget: _artistPlaceholder(context),
             ),
           )
         else

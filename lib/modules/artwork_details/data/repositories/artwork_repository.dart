@@ -15,10 +15,11 @@ abstract class ArtworkDetailsRepository {
   // ----- Artworks / Artists / Feedback -----
   Future<Either<Failure, Artwork>> getArtworkById(String id);
   Future<Either<Failure, Artist>> getArtistById(String id);
+  Future<Either<Failure, List<Artwork>>> getArtworksByArtistId(String artistId);
 
   /// Upserts by default when a unique(artwork_id,session_id) exists.
   Future<Either<Failure, Unit>> submitFeedback({
-    required String sessionId, // Changed from userId to sessionId
+    required String sessionId,
     required String artworkId,
     required int rating,
     required String message,
@@ -120,8 +121,46 @@ class ArtworkDetailsRepositoryImpl implements ArtworkDetailsRepository {
   }
 
   @override
+  Future<Either<Failure, List<Artwork>>> getArtworksByArtistId(String artistId) async {
+    try {
+      final hasConnection = await connectivity.hasConnection();
+
+      if (hasConnection) {
+        // Online: fetch from remote and cache
+        try {
+          final result = await remote.getArtworksByArtistId(artistId);
+          // Cache the results
+          await local.saveArtistArtworks(artistId, result);
+          debugPrint('[Repository] Fetched and cached ${result.length} artworks for artist: $artistId');
+          return Right(result);
+        } catch (e, st) {
+          // If remote fails, try local
+          debugPrint('[Repository] Remote fetch failed, trying local: $e');
+          final localResult = await local.getArtworksByArtistId(artistId);
+          if (localResult.isNotEmpty) {
+            return Right(localResult);
+          }
+          return Left(mapError(e, st));
+        }
+      } else {
+        // Offline: try local first
+        debugPrint('[Repository] Offline mode - fetching artworks from local');
+        final localResult = await local.getArtworksByArtistId(artistId);
+        if (localResult.isNotEmpty) {
+          return Right(localResult);
+        }
+        return Left(CacheFailure(
+          'No internet connection and no cached artworks available',
+        ));
+      }
+    } catch (e, st) {
+      return Left(mapError(e, st));
+    }
+  }
+
+  @override
   Future<Either<Failure, Unit>> submitFeedback({
-    required String sessionId, // Changed from userId to sessionId
+    required String sessionId,
     required String artworkId,
     required int rating,
     required String message,
@@ -135,7 +174,7 @@ class ArtworkDetailsRepositoryImpl implements ArtworkDetailsRepository {
         // Online: submit directly
         try {
           await remote.submitFeedback(
-            session_id: sessionId, // Using sessionId as userId
+            session_id: sessionId,
             artworkId: artworkId,
             rating: rating,
             message: message,

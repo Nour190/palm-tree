@@ -12,6 +12,9 @@ abstract class ArtworkDetailsLocalDataSource {
   Future<Artist?> getArtistById(String id);
   Future<void> saveArtist(Artist artist);
 
+  Future<List<Artwork>> getArtworksByArtistId(String artistId);
+  Future<void> saveArtistArtworks(String artistId, List<Artwork> artworks);
+
   Future<void> savePendingFeedback(PendingFeedbackModel feedback);
   Future<List<PendingFeedbackModel>> getPendingFeedback();
   Future<void> markFeedbackAsSynced(String id);
@@ -64,6 +67,32 @@ class ArtworkDetailsLocalDataSourceImpl implements ArtworkDetailsLocalDataSource
       debugPrint('[LocalDataSource] Saved artist: ${artist.id}');
     } catch (e) {
       debugPrint('[LocalDataSource] Error saving artist: $e');
+    }
+  }
+
+  @override
+  Future<List<Artwork>> getArtworksByArtistId(String artistId) async {
+    try {
+      final box = Hive.box<Artwork>(HiveService.artworksBox);
+      final artworks = box.values.where((a) => a.artistId == artistId).toList();
+      debugPrint('[LocalDataSource] Retrieved ${artworks.length} artworks for artist: $artistId');
+      return artworks;
+    } catch (e) {
+      debugPrint('[LocalDataSource] Error getting artworks by artist: $e');
+      return [];
+    }
+  }
+
+  @override
+  Future<void> saveArtistArtworks(String artistId, List<Artwork> artworks) async {
+    try {
+      final box = Hive.box<Artwork>(HiveService.artworksBox);
+      for (final artwork in artworks) {
+        await box.put(artwork.id, artwork);
+      }
+      debugPrint('[LocalDataSource] Saved ${artworks.length} artworks for artist: $artistId');
+    } catch (e) {
+      debugPrint('[LocalDataSource] Error saving artist artworks: $e');
     }
   }
 

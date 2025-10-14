@@ -9,13 +9,14 @@ import 'package:baseqat/modules/home/data/models/artist_model.dart';
 abstract class ArtworkDetailsRemoteDataSource {
   Future<Artwork> getArtworkById(String id);
   Future<Artist> getArtistById(String id);
+  Future<List<Artwork>> getArtworksByArtistId(String artistId);
   Future<void> submitFeedback({
     required String session_id,
     required String artworkId,
     required int rating,
     required String message,
     required List<String> tags,
-    bool upsertIfExists, // optional behavior flag
+    bool upsertIfExists,
   });
 }
 
@@ -55,6 +56,21 @@ class ArtworkDetailsRemoteDataSourceImpl
           .eq('id', id)
           .single();
       return Artist.fromMap(res);
+    } catch (e, st) {
+      throw mapError(e, st);
+    }
+  }
+
+  @override
+  Future<List<Artwork>> getArtworksByArtistId(String artistId) async {
+    try {
+      await ensureOnline();
+      final res = await client
+          .from(_tableArtworks)
+          .select()
+          .eq('artist_id', artistId)
+          .order('created_at', ascending: false);
+      return (res as List).map((e) => Artwork.fromMap(e)).toList();
     } catch (e, st) {
       throw mapError(e, st);
     }

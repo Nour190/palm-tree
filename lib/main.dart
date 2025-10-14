@@ -21,6 +21,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:baseqat/core/database/hive_service.dart';
 import 'package:baseqat/core/session/session_manager.dart';
 
+import 'core/database/image_cache_service.dart';
 import 'core/utils/deep_link_handler.dart'; // for InAppWebView
 void main() async {
   runZonedGuarded(() async {
@@ -53,7 +54,8 @@ void main() async {
 
       await HiveService.initialize();
       debugPrint('Hive database initialized successfully');
-
+      await ImageCacheService.initialize();
+      debugPrint('Image cache service initialized successfully');
 
       final sessionManager = SessionManager();
       await sessionManager.restoreSession();

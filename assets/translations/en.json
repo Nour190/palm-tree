@@ -484,5 +484,7 @@
     "artwork_card": {
       "unknown_artist": "Unknown artist"
     }
-  }
+  },
+  "age": "Age",
+  "no_artworks": "No artworks available"
 }

@@ -1,3 +1,4 @@
+import 'package:baseqat/core/components/custom_widgets/cached_network_image_widget.dart';
 import 'package:baseqat/modules/programs/data/models/gallery_item.dart';
 import 'package:baseqat/modules/programs/presentation/theme/programs_theme.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +22,7 @@ class GalleryGrid extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount =
-            constraints.maxWidth >= ProgramsBreakpoints.tablet ? 3 : 2;
+        constraints.maxWidth >= ProgramsBreakpoints.tablet ? 3 : 2;
         final spacing = ProgramsLayout.spacingLarge(context);
 
         return GridView.builder(
@@ -116,17 +117,14 @@ class _GalleryImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.network(
-      url,
+    return OfflineCachedImage(
+      imageUrl: url,
       fit: BoxFit.cover,
-      loadingBuilder: (context, child, progress) {
-        if (progress == null) return child;
-        return const ColoredBox(
-          color: Color(0xFFE7E7E7),
-          child: Center(child: CircularProgressIndicator.adaptive()),
-        );
-      },
-      errorBuilder: (_, __, ___) => const ColoredBox(
+      placeholder: const ColoredBox(
+        color: Color(0xFFE7E7E7),
+        child: Center(child: CircularProgressIndicator.adaptive()),
+      ),
+      errorWidget: const ColoredBox(
         color: Colors.black12,
         child: Center(
           child: Icon(Icons.broken_image_outlined, color: Colors.black45),
