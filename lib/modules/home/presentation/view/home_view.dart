@@ -313,7 +313,7 @@ class HomeView extends StatelessWidget {
 
                       Padding(
                         padding:
-                        EdgeInsets.symmetric(horizontal: isDesktop ? 12.sW : 8.0.sW),
+                        EdgeInsets.symmetric(horizontal: 16.sW,),
                         child: SpeakersSection(
                           onSeeMore: () {
                             context.read<TabsCubit>().changeSelectedIndex(1);

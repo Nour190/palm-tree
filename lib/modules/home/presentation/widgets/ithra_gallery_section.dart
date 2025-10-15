@@ -28,16 +28,13 @@ class IthraGallerySection extends StatelessWidget {
     final bool isTablet = deviceType == DeviceType.tablet;
     final bool isDesktop = deviceType == DeviceType.desktop;
 
-    final double horizontalPadding = isDesktop
-        ? 16.sW
-        : isTablet
-        ? 12.sW
-        : 8.sW;
+    final double horizontalPadding =16.sW;
+
 
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: horizontalPadding,
-        vertical: isMobile ? 24.sH : 32.sH,
+        vertical: 20.sH,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

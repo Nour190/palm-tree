@@ -1,4 +1,3 @@
-
 import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -7,7 +6,7 @@ import 'package:baseqat/core/resourses/style_manager.dart';
 import 'package:baseqat/core/resourses/assets_manager.dart';
 import 'package:baseqat/core/services/locale_service.dart';
 import 'package:baseqat/core/components/custom_widgets/ithra_menu_screen.dart';
- import 'dart:ui' as ui;
+import 'dart:ui' as ui;
 
 import '../../utils/rtl_helper.dart';
 
@@ -15,7 +14,7 @@ class TopBar extends StatelessWidget {
   TopBar({
     super.key,
     String? logoPath,
-    this.brand ,
+    this.brand,
     required this.items,
     this.selectedIndex = 0,
     this.onItemTap,
@@ -38,11 +37,13 @@ class TopBar extends StatelessWidget {
   final bool compactOnMobile;
 
   void _openMenu(BuildContext context) {
+    final isRTL = LocaleService.isRTL(context.locale);
+
     Navigator.of(context).push(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) => IthraMenuScreen(
           logoPath: logoPath,
-          brand: brand?? "navigation.brand_name".tr(),
+          brand: brand ?? "navigation.brand_name".tr(),
           items: items,
           selectedIndex: selectedIndex,
           onItemTap: onItemTap,
@@ -50,7 +51,7 @@ class TopBar extends StatelessWidget {
           onScanTap: onScanTap,
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          const begin = Offset(0.0, -1.0);
+          final begin = isRTL ? const Offset(-1.0, 0.0) : const Offset(1.0, 0.0);
           const end = Offset.zero;
           const curve = Curves.easeInOut;
           var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
@@ -70,7 +71,7 @@ class TopBar extends StatelessWidget {
       textDirection: isRTL ? ui.TextDirection.rtl : ui.TextDirection.ltr,
       child: Container(
         height: 80.sH,
-        padding: EdgeInsets.symmetric( horizontal: 12.sSp),
+        padding: EdgeInsets.symmetric(horizontal: 12.sSp),
         // decoration: const BoxDecoration(
         //   color: Colors.white,
         //   border: Border(
@@ -93,9 +94,9 @@ class TopBar extends StatelessWidget {
                     fit: BoxFit.contain,
                   ),
                 ),
-                //SizedBox(width: 4.sSp),
+                // SizedBox(width: 4.sSp),
                 Text(
-                  brand?? "navigation.brand_name".tr(),
+                  brand ?? "navigation.brand_name".tr(),
                   style: TextStyleHelper.instance.headline28BoldInter.copyWith(
                     color: Colors.black,
                     fontWeight: FontWeight.w600,
@@ -110,16 +111,17 @@ class TopBar extends StatelessWidget {
                 child: Container(
                   width: 48.sW,
                   height: 48.sH,
-                 //margin:RTLHelper.getDirectionalPadding(end: 12.sSp),
+                  // margin: RTLHelper.getDirectionalPadding(end: 12.sSp),
                   decoration: BoxDecoration(
                     color: Colors.black,
-                    //borderRadius: BorderRadius.circular(8.sH),
+                    // borderRadius: BorderRadius.circular(8.sH),
                     shape: BoxShape.circle,
-
                   ),
                   child: Center(
                     child: Image.asset(AppAssetsManager.scanIcon,
-                      fit: BoxFit.contain,height:30.sH ,width:45.sW,
+                      fit: BoxFit.contain,
+                      height: 30.sH,
+                      width: 45.sW,
                     ),
                   ),
                   // Icon(
@@ -129,13 +131,13 @@ class TopBar extends StatelessWidget {
                   // ),
                 ),
               ),
-            SizedBox(width:10.sW),
+            SizedBox(width: 10.sW),
             GestureDetector(
               onTap: () => _openMenu(context),
               child: Container(
                 width: 48.sW,
                 height: 48.sH,
-                decoration:  BoxDecoration(
+                decoration: BoxDecoration(
                   border: Border.all(color: AppColor.primaryColor, width: 1),
                   color: AppColor.white,
                   shape: BoxShape.circle,
@@ -153,7 +155,6 @@ class TopBar extends StatelessWidget {
     );
   }
 }
-
 
 // class _CurvedBackgroundPainter extends CustomPainter {
 //   @override

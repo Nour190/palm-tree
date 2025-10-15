@@ -35,12 +35,12 @@ class IthraArtworksSection extends StatelessWidget {
     // keep UI the same; only choose AR/EN strings
     final bool isRTL = LocaleService.isRTL(context.locale);
 
-    final double horizontalPadding = isDesktop ? 16.sW : isTablet ? 12.sW : 8.sW;
+    final double horizontalPadding = 16.sW;
 
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: horizontalPadding,
-        vertical: isMobile ? 24.sH : 32.sH,
+        vertical: 20.sH ,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -93,10 +93,10 @@ class IthraArtworksSection extends StatelessWidget {
     // Mobile grows with screen height but clamped to keep visual parity
     final double cardHeight =
         isMobile
-        ? (screenH * 0.62).clamp(300, 400)
+        ? (screenH * 0.62).clamp(300, 420)
         : isTablet
-            ? (screenH * 0.58).clamp(350.0, 450.0)
-            : (screenH * 0.54).clamp(360.0, 460.0);
+            ? (screenH * 0.58).clamp(350.0, 470.0)
+            : (screenH * 0.54).clamp(360.0, 480.0);
 
     // sequence: Divider, Card, Divider, Card, ..., Divider
     final int totalItems = artworks.length * 2 + 1;

@@ -111,7 +111,7 @@ class _IthraMenuScreenState extends State<IthraMenuScreen> {
                               fit: BoxFit.contain,
                             ),
                           ),
-                         // SizedBox(width: 12.sSp),
+                          // SizedBox(width: 12.sSp),
                           Text(
                             widget.brand,
                             style: TextStyleHelper.instance.headline28BoldInter.copyWith(
@@ -222,7 +222,7 @@ class _IthraMenuScreenState extends State<IthraMenuScreen> {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text('common.offline_language_change'.tr()),
-                                      backgroundColor: Colors.orange,
+                                      backgroundColor: AppColor.primaryColor,
                                       duration: const Duration(seconds: 3),
                                     ),
                                   );
@@ -273,7 +273,11 @@ class _IthraMenuScreenState extends State<IthraMenuScreen> {
                                       children: [
                                         Text(
                                           language['flag']!,
-                                          style: TextStyle(fontSize: 32.sSp),
+                                          style: TextStyle(
+                                            fontSize: 32.sSp,
+                                            fontFamily: null, // Use system emoji font
+                                          ),
+                                          textDirection: ui.TextDirection.ltr, // Emojis render best in LTR
                                         ),
                                         SizedBox(width: 14.sH),
                                         Expanded(

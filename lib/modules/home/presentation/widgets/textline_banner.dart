@@ -1,7 +1,10 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui; // Added dart:ui import to explicitly use Flutter's TextDirection
 import 'package:baseqat/core/resourses/color_manager.dart';
 import 'package:baseqat/core/resourses/style_manager.dart';
+import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/core/responsive/size_utils.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class TextLineBanner extends StatefulWidget {
@@ -109,6 +112,15 @@ class _TextLineBannerState extends State<TextLineBanner>
     );
   }
 
+  ui.TextDirection _getTextDirection(BuildContext context) {
+    try {
+      final locale = context.locale;
+      return locale.languageCode == 'ar' ? ui.TextDirection.rtl : ui.TextDirection.ltr;
+    } catch (e) {
+      return ui.TextDirection.ltr;
+    }
+  }
+
   double _measureTextWidth() {
     final t = widget.text;
     final s = _textStyle;
@@ -117,7 +129,7 @@ class _TextLineBannerState extends State<TextLineBanner>
     }
     final painter = TextPainter(
       text: TextSpan(text: t, style: s),
-      textDirection: TextDirection.ltr,
+      textDirection: ui.TextDirection.ltr, // Keep LTR for measurement consistency
       maxLines: 1,
     )..layout();
     _cachedTextWidth = painter.width;
@@ -176,11 +188,13 @@ class _TextLineBannerState extends State<TextLineBanner>
 
   @override
   Widget build(BuildContext context) {
+    final textDirection = _getTextDirection(context);
+
     Widget banner = Container(
       height: widget.height.h,
       width: double.infinity,
       color: widget.backgroundColor ?? AppColor.gray900,
-      padding: EdgeInsets.symmetric(horizontal: 16.h),
+      padding: EdgeInsets.symmetric(horizontal: 15.sW),
       alignment: Alignment.centerLeft,
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -196,35 +210,36 @@ class _TextLineBannerState extends State<TextLineBanner>
             style: _textStyle.copyWith(
               shadows: widget.showGlow
                   ? [
-                      Shadow(
-                        color: Colors.white.withOpacity(
-                          0.3 +
-                              0.4 *
-                                  (math.sin(
-                                        _glowController.value * math.pi * 2,
-                                      ) +
-                                      1) /
-                                  2,
-                        ),
-                        blurRadius:
-                            8 +
-                            15 *
-                                ((math.sin(
-                                          _glowController.value * math.pi * 2,
-                                        ) +
-                                        1) /
-                                    2),
-                      ),
-                      Shadow(
-                        color: AppColor.whiteCustom.withOpacity(0.2),
-                        blurRadius: 20,
-                      ),
-                    ]
+                Shadow(
+                  color: Colors.white.withOpacity(
+                    0.3 +
+                        0.4 *
+                            (math.sin(
+                              _glowController.value * math.pi * 2,
+                            ) +
+                                1) /
+                            2,
+                  ),
+                  blurRadius:
+                  8 +
+                      15 *
+                          ((math.sin(
+                            _glowController.value * math.pi * 2,
+                          ) +
+                              1) /
+                              2),
+                ),
+                Shadow(
+                  color: AppColor.whiteCustom.withOpacity(0.2),
+                  blurRadius: 20,
+                ),
+              ]
                   : null,
             ),
             gap: widget.gap,
             // progress 0..1 across one cycle
             progress: widget.enableMarquee ? _marqueeController.value : 0.0,
+            textDirection: textDirection,
           );
 
           Widget content = RepaintBoundary(
@@ -255,15 +270,15 @@ class _TextLineBannerState extends State<TextLineBanner>
             ),
             child: SlideTransition(
               position:
-                  Tween<Offset>(
-                    begin: const Offset(0, -0.25),
-                    end: Offset.zero,
-                  ).animate(
-                    CurvedAnimation(
-                      parent: _entryController,
-                      curve: Curves.easeOutBack,
-                    ),
-                  ),
+              Tween<Offset>(
+                begin: const Offset(0, -0.25),
+                end: Offset.zero,
+              ).animate(
+                CurvedAnimation(
+                  parent: _entryController,
+                  curve: Curves.easeOutBack,
+                ),
+              ),
               child: child,
             ),
           );
@@ -282,18 +297,20 @@ class _MarqueePainter extends CustomPainter {
     required this.style,
     required this.gap,
     required this.progress,
+    required this.textDirection,
   }) : super(repaint: null);
 
   final String text;
   final TextStyle style;
   final double gap;
   final double progress; // 0..1
+  final ui.TextDirection textDirection; // Updated field type to ui.TextDirection
 
   @override
   void paint(Canvas canvas, Size size) {
     final tp = TextPainter(
       text: TextSpan(text: text, style: style),
-      textDirection: TextDirection.ltr,
+      textDirection: textDirection,
       maxLines: 1,
     )..layout();
 
@@ -320,6 +337,7 @@ class _MarqueePainter extends CustomPainter {
     return old.text != text ||
         old.style != style ||
         old.gap != gap ||
-        old.progress != progress;
+        old.progress != progress ||
+        old.textDirection != textDirection;
   }
 }

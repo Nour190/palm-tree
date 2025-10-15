@@ -4,9 +4,9 @@ import 'package:baseqat/core/responsive/size_ext.dart';
 import '../../resourses/color_manager.dart';
 import '../../resourses/style_manager.dart';
 import '../../network/connectivity_service.dart';
+import 'dart:ui' as ui;
 
-/// Compact language switcher for desktop top bars
-/// Follows familiar web design patterns with dropdown menu
+
 class DesktopLanguageSwitcher extends StatelessWidget {
   const DesktopLanguageSwitcher({super.key});
 
@@ -58,6 +58,7 @@ class DesktopLanguageSwitcher extends StatelessWidget {
               Text(
                 lang['flag'],
                 style: TextStyle(fontSize: 16.sSp),
+                textDirection: ui.TextDirection.ltr, // Emojis render best in LTR
               ),
               SizedBox(width: 8.sSp),
               Text(
@@ -93,6 +94,7 @@ class DesktopLanguageSwitcher extends StatelessWidget {
             Text(
               currentLang['flag'],
               style: TextStyle(fontSize: 14.sSp),
+              textDirection: ui.TextDirection.ltr, // Emojis render best in LTR
             ),
             SizedBox(width: 6.sSp),
             Text(
@@ -186,7 +188,11 @@ class MobileLanguageSwitcher extends StatelessWidget {
                 return ListTile(
                   leading: Text(
                     lang['flag'],
-                    style: TextStyle(fontSize: 20.sSp),
+                    style: TextStyle(
+                      fontSize: 20.sSp,
+                      fontFamily: null, // Use system emoji font
+                    ),
+                    textDirection: ui.TextDirection.ltr, // Emojis render best in LTR
                   ),
                   title: Text(
                     lang['name'],
@@ -236,7 +242,11 @@ class MobileLanguageSwitcher extends StatelessWidget {
         child: Center(
           child: Text(
             currentLang['flag'],
-            style: TextStyle(fontSize: 18.sSp),
+            style: TextStyle(
+              fontSize: 18.sSp,
+              fontFamily: null, // Use system emoji font
+            ),
+            textDirection: ui.TextDirection.ltr, // Emojis render best in LTR
           ),
         ),
       ),

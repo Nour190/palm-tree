@@ -49,14 +49,14 @@ class _IthraWelcomeSectionState extends State<IthraWelcomeSection> {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: _isDesktop ? 16.sW : _isTablet ? 12.sW : 8.sW,
-        vertical: _isMobile ? 24.sH : 32.sH,
+        horizontal:  16.sW,
+        vertical:  20.sH,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildWelcomeText(),
-          SizedBox(height: 32.sH),
+          SizedBox(height: 20.sH),
           _buildHeroCarousel(),
         ],
       ),
@@ -70,12 +70,12 @@ class _IthraWelcomeSectionState extends State<IthraWelcomeSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildText(_getLocalizedText(widget.title, widget.titleAr), TextStyleHelper.instance.headline28MediumInter.copyWith(fontWeight: FontWeight.w900),maxLines:1 ),
-          SizedBox(height: 16.sH),
+          SizedBox(height: 8.sH),
           Padding(
             padding:_isTablet? RTLHelper.getDirectionalPadding(end: 60.sW): EdgeInsets.all(0),
             child: _buildText(_getLocalizedText(widget.subtitle, widget.subtitleAr), TextStyleHelper.instance.title16RegularInter, maxLines: _isTablet?3:5),
           ),
-          SizedBox(height: 24.sH),
+          SizedBox(height: 20.sH),
           _buildText(_getHighlightsLabel(), TextStyleHelper.instance.title16BoldInter),
         ],
       ),
@@ -144,9 +144,9 @@ class _IthraWelcomeSectionState extends State<IthraWelcomeSection> {
       children: List.generate(
         widget.images.length.clamp(0, 5),
         (index) => GestureDetector(
-          onTap: () => _carouselController.animateToPage(index, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut),
+          onTap: () => _carouselController.animateToPage(index, duration: const Duration(milliseconds: 600),),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
+            duration: const Duration(milliseconds: 600),
             margin: EdgeInsets.symmetric(horizontal: 4.sW),
             width: index == _currentIndex ? 24.sW : 8.sW,
             height: 8.sH,
