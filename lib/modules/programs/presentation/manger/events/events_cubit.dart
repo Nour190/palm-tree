@@ -12,7 +12,7 @@ import 'events_state.dart';
 
 class EventsCubit extends Cubit<EventsState> {
   final EventsRepository repo;
-  
+
   EventsCubit(this.repo) : super(const EventsState());
 
   // --- request tokens to ignore stale responses (latest-wins) ---
@@ -61,26 +61,26 @@ class EventsCubit extends Cubit<EventsState> {
 
     final req = ++_artistsReq;
     developer.log('Artists request token: $req', name: 'EventsCubit');
-    
+
     emit(state.copyWith(artistsStatus: SliceStatus.loading, artistsError: null));
 
     try {
       final failureOrData = await repo.getArtists(limit: limit);
-      
+
       if (req != _artistsReq) {
         developer.log('Artists request $req outdated (current: $_artistsReq)', name: 'EventsCubit');
         return;
       }
 
       failureOrData.fold(
-        (failure) {
+            (failure) {
           developer.log('Artists load failed: ${failure.message}', name: 'EventsCubit');
           emit(state.copyWith(
             artistsStatus: SliceStatus.error,
             artistsError: failure.message,
           ));
         },
-        (data) {
+            (data) {
           developer.log('Artists loaded successfully: ${data.length} items', name: 'EventsCubit');
           _artistsAll = List<Artist>.unmodifiable(data);
           _applyFilters(emitArtistsOnly: true);
@@ -107,26 +107,26 @@ class EventsCubit extends Cubit<EventsState> {
 
     final req = ++_artworksReq;
     developer.log('Artworks request token: $req', name: 'EventsCubit');
-    
+
     emit(state.copyWith(artworksStatus: SliceStatus.loading, artworksError: null));
 
     try {
       final failureOrData = await repo.getArtworks(limit: limit);
-      
+
       if (req != _artworksReq) {
         developer.log('Artworks request $req outdated (current: $_artworksReq)', name: 'EventsCubit');
         return;
       }
 
       failureOrData.fold(
-        (failure) {
+            (failure) {
           developer.log('Artworks load failed: ${failure.message}', name: 'EventsCubit');
           emit(state.copyWith(
             artworksStatus: SliceStatus.error,
             artworksError: failure.message,
           ));
         },
-        (data) {
+            (data) {
           developer.log('Artworks loaded successfully: ${data.length} items', name: 'EventsCubit');
           _artworksAll = List<Artwork>.unmodifiable(data);
           _applyFilters(emitArtworksOnly: true);
@@ -153,26 +153,26 @@ class EventsCubit extends Cubit<EventsState> {
 
     final req = ++_speakersReq;
     developer.log('Speakers request token: $req', name: 'EventsCubit');
-    
+
     emit(state.copyWith(speakersStatus: SliceStatus.loading, speakersError: null));
 
     try {
       final failureOrData = await repo.getSpeakers(limit: limit);
-      
+
       if (req != _speakersReq) {
         developer.log('Speakers request $req outdated (current: $_speakersReq)', name: 'EventsCubit');
         return;
       }
 
       failureOrData.fold(
-        (failure) {
+            (failure) {
           developer.log('Speakers load failed: ${failure.message}', name: 'EventsCubit');
           emit(state.copyWith(
             speakersStatus: SliceStatus.error,
             speakersError: failure.message,
           ));
         },
-        (data) {
+            (data) {
           developer.log('Speakers loaded successfully: ${data.length} items', name: 'EventsCubit');
           _speakersAll = List<Speaker>.unmodifiable(data);
           _applyFilters(emitSpeakersOnly: true);
@@ -199,26 +199,26 @@ class EventsCubit extends Cubit<EventsState> {
 
     final req = ++_workshopsReq;
     developer.log('Workshops request token: $req', name: 'EventsCubit');
-    
+
     emit(state.copyWith(workshopsStatus: SliceStatus.loading, workshopsError: null));
 
     try {
       final failureOrData = await repo.getWorkshops(limit: limit);
-      
+
       if (req != _workshopsReq) {
         developer.log('Workshops request $req outdated (current: $_workshopsReq)', name: 'EventsCubit');
         return;
       }
 
       failureOrData.fold(
-        (failure) {
+            (failure) {
           developer.log('Workshops load failed: ${failure.message}', name: 'EventsCubit');
           emit(state.copyWith(
             workshopsStatus: SliceStatus.error,
             workshopsError: failure.message,
           ));
         },
-        (data) {
+            (data) {
           developer.log('Workshops loaded successfully: ${data.length} items', name: 'EventsCubit');
           _workshopsAll = List<Workshop>.unmodifiable(data);
           _applyFilters(emitWorkshopsOnly: true);
@@ -236,8 +236,8 @@ class EventsCubit extends Cubit<EventsState> {
   // ---------------------------------------------------------------------------
   // Gallery (derived from artists via repo helper)
   // ---------------------------------------------------------------------------
-  Future<void> loadGallery({int limitArtists = 10, bool force = false}) async {
-    developer.log('loadGallery - limitArtists: $limitArtists, force: $force', name: 'EventsCubit');
+  Future<void> loadGallery({int limitArtworks = 50, bool force = false}) async {
+    developer.log('loadGallery - limitArtworks: $limitArtworks, force: $force', name: 'EventsCubit');
     if (!force && state.galleryStatus == SliceStatus.loading) {
       developer.log('Gallery already loading, skipping', name: 'EventsCubit');
       return;
@@ -245,26 +245,26 @@ class EventsCubit extends Cubit<EventsState> {
 
     final req = ++_galleryReq;
     developer.log('Gallery request token: $req', name: 'EventsCubit');
-    
+
     emit(state.copyWith(galleryStatus: SliceStatus.loading, galleryError: null));
 
     try {
-      final failureOrData = await repo.getGalleryFromArtists(limitArtists: limitArtists);
-      
+      final failureOrData = await repo.getGalleryFromArtworks(limitArtworks: limitArtworks);
+
       if (req != _galleryReq) {
         developer.log('Gallery request $req outdated (current: $_galleryReq)', name: 'EventsCubit');
         return;
       }
 
       failureOrData.fold(
-        (failure) {
+            (failure) {
           developer.log('Gallery load failed: ${failure.message}', name: 'EventsCubit');
           emit(state.copyWith(
             galleryStatus: SliceStatus.error,
             galleryError: failure.message,
           ));
         },
-        (data) {
+            (data) {
           developer.log('Gallery loaded successfully: ${data.length} items', name: 'EventsCubit');
           emit(state.copyWith(
             gallery: List.unmodifiable(data),
@@ -293,7 +293,7 @@ class EventsCubit extends Cubit<EventsState> {
         loadArtworks(limit: limit),
         loadSpeakers(limit: limit),
         loadWorkshops(limit: limit),
-        loadGallery(limitArtists: limit),
+        loadGallery(limitArtworks: limit),
       ]);
       developer.log('loadHome completed successfully', name: 'EventsCubit');
     } catch (e, stackTrace) {
@@ -320,9 +320,9 @@ class EventsCubit extends Cubit<EventsState> {
       if (q.isNotEmpty) {
         list = list
             .where((a) => _matchAny(q, [
-              a.name, a.nameAr, a.about, a.aboutAr,
-              a.country, a.countryAr, a.city, a.cityAr,
-            ]))
+          a.name, a.nameAr, a.about, a.aboutAr,
+          a.country, a.countryAr, a.city, a.cityAr,
+        ]))
             .toList(growable: false);
       }
 
@@ -341,9 +341,9 @@ class EventsCubit extends Cubit<EventsState> {
       if (q.isNotEmpty) {
         list = list
             .where((w) => _matchAny(q, [
-              w.name, w.nameAr, w.description, w.descriptionAr,
-              w.artistName, w.artistNameAr,
-            ]))
+          w.name, w.nameAr, w.description, w.descriptionAr,
+          w.artistName, w.artistNameAr,
+        ]))
             .toList(growable: false);
       }
 
@@ -362,10 +362,10 @@ class EventsCubit extends Cubit<EventsState> {
       if (q.isNotEmpty) {
         list = list
             .where((s) => _matchAny(q, [
-              s.name, s.nameAr, s.bio, s.bioAr,
-              s.topicName, s.topicNameAr,
-              s.topicDescription, s.topicDescriptionAr,
-            ]))
+          s.name, s.nameAr, s.bio, s.bioAr,
+          s.topicName, s.topicNameAr,
+          s.topicDescription, s.topicDescriptionAr,
+        ]))
             .toList(growable: false);
       }
 
@@ -384,9 +384,9 @@ class EventsCubit extends Cubit<EventsState> {
       if (q.isNotEmpty) {
         list = list
             .where((w) => _matchAny(q, [
-              w.name, w.nameAr,
-              w.description, w.descriptionAr,
-            ]))
+          w.name, w.nameAr,
+          w.description, w.descriptionAr,
+        ]))
             .toList(growable: false);
       }
 

@@ -1,4 +1,4 @@
-// lib/modules/events/data/repositories/events_repository.dart
+// lib/modules/programs/data/repositories/events/events_repository.dart
 import 'package:baseqat/core/network/remote/supabase_failure.dart';
 import 'package:baseqat/modules/home/data/models/workshop_model.dart';
 import 'package:baseqat/modules/programs/data/models/fav_extension.dart';
@@ -15,8 +15,9 @@ abstract class EventsRepository {
   Future<Either<Failure, List<Artwork>>> getArtworks({int limit = 10});
   Future<Either<Failure, List<Workshop>>> getWorkshops({int limit = 10});
   Future<Either<Failure, List<Speaker>>> getSpeakers({int limit = 10});
-  Future<Either<Failure, List<GalleryItem>>> getGalleryFromArtists({
-    int limitArtists = 10,
+
+  Future<Either<Failure, List<GalleryItem>>> getGalleryFromArtworks({
+    int limitArtworks = 50,
   });
 
   /// Mark/unmark an entity as favorite for a given user.

@@ -32,9 +32,9 @@ class IthraGallerySection extends StatelessWidget {
 
 
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: horizontalPadding,
-        vertical: 20.sH,
+      padding: EdgeInsets.only(
+        left:horizontalPadding ,right:horizontalPadding ,
+        top: 20.sH,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,7 +57,7 @@ class IthraGallerySection extends StatelessWidget {
             ],
           ),
 
-          SizedBox(height: isMobile ? 20.sH : 24.sH),
+          SizedBox(height: 20.sH),
 
           if (imageUrls.isEmpty)
             _buildEmptyState(context, deviceType)
@@ -73,9 +73,9 @@ class IthraGallerySection extends StatelessWidget {
     final bool isTablet = deviceType == DeviceType.tablet;
 
     // Show max 12 images
-    final displayImages = imageUrls.take(12).toList();
+    final displayImages =isTablet? imageUrls.take(8).toList():imageUrls.take(4).toList();
 
-    final crossAxisCount = isMobile ? 2 : isTablet ? 3 : 4;
+    final crossAxisCount = isMobile ? 2 : isTablet ? 4 : 4;
     final spacing = isMobile ? 16.sW : isTablet ? 20.sW : 24.sW;
 
     return MasonryGridView.count(
@@ -104,7 +104,7 @@ class IthraGallerySection extends StatelessWidget {
       ) {
     final bool isMobile = deviceType == DeviceType.mobile;
 
-    final heights = [200.0, 280.0, 240.0, 300.0, 220.0, 260.0];
+    final heights = isMobile? [220.0.sH, 340.0.sH,340.0.sH,220.0.sH]:[280.sH,220.0.sH,340.0.sH,448.sH, 340.sH, 280.0.sH,220.0.sH,112.sH];
     final height = heights[index % heights.length];
 
     return GestureDetector(
@@ -122,10 +122,11 @@ class IthraGallerySection extends StatelessWidget {
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(isMobile ? 12.sR : 16.sR),
-          child: _buildImage(imagePath),
-        ),
+        child:_buildImage(imagePath),
+        // ClipRRect(
+        //   borderRadius: BorderRadius.circular(isMobile ? 12.sR : 16.sR),
+        //   child:
+        // ),
       ),
     );
   }

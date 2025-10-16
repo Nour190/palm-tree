@@ -93,18 +93,15 @@ class SpeakersSection extends StatelessWidget {
             SizedBox(height: 24.sH),
             // Hero (text card + image)
             if (isMobile) ...[
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8.0.sW),
-                child: _HeroTextCard(
-                  cardRadius: cardRadius,
-                  paddingAll: heroPadding,
-                  emblemPath: _topEmblem,
-                  emblemSize: emblemSize,
-                  headline: 'home.speakers_headline'.tr(),
-                  body: 'home.speakers_body'.tr(),
-                  desktop: false,
-                  //onJoinNow: onJoinNow,
-                ),
+              _HeroTextCard(
+                cardRadius: cardRadius,
+                paddingAll: heroPadding,
+                emblemPath: _topEmblem,
+                emblemSize: emblemSize,
+                headline: 'home.speakers_headline'.tr(),
+                body: 'home.speakers_body'.tr(),
+                desktop: false,
+                //onJoinNow: onJoinNow,
               ),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 30.sW),

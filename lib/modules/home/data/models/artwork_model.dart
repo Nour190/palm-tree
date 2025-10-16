@@ -16,6 +16,8 @@ class Artwork {
   // Media
   final List<String> gallery;
 
+  final String? artworkType;
+
   // Denormalized (optional)
   final String? artistId;
   final String? artistName;
@@ -37,6 +39,7 @@ class Artwork {
     this.materialsAr,
     this.visionAr,
     this.gallery = const [],
+    this.artworkType,
     this.artistId,
     this.artistName,
     this.artistNameAr,
@@ -119,6 +122,7 @@ class Artwork {
       visionAr: map['vision_ar'] as String?,
 
       gallery: _stringList(map['gallery']),
+      artworkType: map['artwork_type'] as String?,
       artistId: map['artist_id'] as String?,
       artistName: map['artist_name'] as String?,
       artistNameAr: map['artist_name_ar'] as String?,
@@ -144,6 +148,7 @@ class Artwork {
       'vision_ar': visionAr,
       // Media
       'gallery': gallery,
+      'artwork_type': artworkType,
       // FK (usually only artist_id on writes)
       'artist_id': artistId,
     };

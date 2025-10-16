@@ -439,7 +439,7 @@ class _GallerySection extends StatelessWidget {
       errorKey: 'programs.errors.gallery',
       onRetry: () => context
           .read<EventsCubit>()
-          .loadGallery(limitArtists: 10, force: true),
+          .loadGallery(limitArtworks: 50, force: true),
       builder: (context, gallery) => GalleryGrid(items: gallery, onTap: (_) {}),
     );
   }
@@ -540,4 +540,3 @@ class _SliceData<T> {
   final SliceStatus status;
   final String? errorMessage;
 }
-

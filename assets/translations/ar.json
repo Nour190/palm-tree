@@ -320,6 +320,7 @@
     "submit_feedback": "إرسال التقييم",
     "thank_you": "شكراً لك على تقييمك!"
   },
+  "view_artwork_details": "عرض تفاصيل العمل الفني",
   "about": "حول",
   "gallery": "المعرض",
   "location": "الموقع",
@@ -419,30 +420,31 @@
   "programs": {
     "header": {
       "title": "البرامج",
-      "search_placeholder": "ابحث في البرامج والفنانين والأعمال الفنية..."
+      "search_placeholder": "ماذا تريد أن تشاهد اليوم؟"
     },
     "tabs": {
-      "artworks": "أعمال فنية",
-      "artists": "فنانون",
+      "artworks": "الأعمال الفنية",
+      "artists": "الفنانون",
       "schedule": "الجدول",
       "gallery": "المعرض",
-      "virtual_tour": "جولة افتراضية"
+      "virtual_tour": "الجولة الافتراضية"
     },
     "errors": {
       "artworks": "تعذر تحميل الأعمال الفنية",
-      "artists": "تعذر تحميل الفنانين",
+      "artists": "تعذر تحميل قائمة الفنانين",
       "schedule": "تعذر تحميل الجدول",
-      "gallery": "تعذر تحميل المعرض",
-      "retry_hint": "اضغط إعادة المحاولة للحصول على أحدث البيانات."
+      "retry_hint": "اضغط على إعادة المحاولة لجلب أحدث البيانات.",
+      "gallery": "فشل في تحميل المعرض",
+      "generic_subtitle": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
     },
     "empty": {
-      "artists_title": "لا يوجد فنانون متاحون",
-      "artists_subtitle": "عد لاحقًا لاكتشاف فنانين جدد.",
-      "artworks_title": "لا توجد أعمال فنية متاحة",
-      "artworks_subtitle": "عد لاحقًا لاستكشاف أعمال فنية جديدة.",
+      "artists_title": "لا يوجد فنانون حالياً",
+      "artists_subtitle": "تحقق لاحقاً لمشاهدة فنانين جدد.",
+      "artworks_title": "لا توجد أعمال فنية حالياً",
+      "artworks_subtitle": "تحقق لاحقاً لمشاهدة أعمال جديدة.",
       "artworks_semantics": "قائمة الأعمال الفنية فارغة",
       "gallery_title": "لا توجد صور بعد",
-      "gallery_subtitle": "ستظهر صور المعرض هنا."
+      "gallery_subtitle": "سيظهر معرضك هنا قريباً"
     },
     "actions": {
       "retry": "إعادة المحاولة",
@@ -451,40 +453,50 @@
       "remove_from_favourites": "إزالة من المفضلة",
       "mark_favourite": "إضافة للمفضلة",
       "remove_favourite": "إزالة من المفضلة",
-      "open_directions": "فتح الاتجاهات"
+      "open_directions": "عرض الاتجاهات"
     },
     "schedule": {
-      "header": "جدول الفعالية",
-      "cta_title": "نتطلع لرؤيتك\nغدًا",
-      "cta_subtitle": "لا تفوّت الجلسات المشوّقة حول رعاية النخيل والتمور.",
+      "header": "جدول المهرجان",
+      "cta_title": "نتطلع لرؤيتك\nغداً",
+      "cta_subtitle": "لا تفوت الجلسات المميزة حول التمور وزراعة النخيل.",
       "tabs": {
         "speakers": "المتحدثون",
         "workshops": "ورش العمل"
       },
       "day_empty": "لا توجد جلسات مجدولة لهذا اليوم.",
-      "list_empty": "لا توجد جلسات في هذا اليوم."
+      "list_empty": "لا توجد جلسات لهذا اليوم."
     },
     "virtual_tour": {
       "loading": "جارٍ تحميل الجولة الافتراضية...",
       "unavailable_title": "الجولة الافتراضية غير متاحة",
-      "http_error": "HTTP {}: تعذّر تحميل الجولة."
+      "http_error": "خطأ HTTP {}: تعذر تحميل الجولة."
     },
     "speakers": {
       "live_now": "مباشر الآن",
-      "upcoming": "قادمة",
+      "upcoming": "القادم",
       "location_label": "الموقع",
-      "location_pending": "سيتم الإعلان عن تفاصيل الموقع قريبًا.",
+      "location_pending": "سيتم الإعلان عن تفاصيل الموقع قريباً.",
       "location_unavailable": "الموقع غير متاح",
-      "directions_error": "تعذّر فتح الاتجاهات."
+      "directions_error": "تعذر فتح الاتجاهات."
     },
     "artist_card": {
       "semantics": "بطاقة الفنان: {}"
     },
     "artwork_card": {
       "unknown_artist": "فنان غير معروف"
+    },
+    "gallery": {
+      "empty_title": "لا توجد صور بعد",
+      "empty_subtitle": "سيظهر معرضك هنا قريباً",
+      "no_items_in_category": "لم يتم العثور على أعمال فنية في فئة {category}"
+    },
+    "offline": {
+      "no_cached_data": "لا توجد بيانات متاحة في وضع عدم الاتصال",
+      "connect_to_load": "اتصل بالإنترنت لتحميل المحتوى"
     }
   },
-  "age": "العمر",
-  "no_artworks": "لا توجد أعمال فنية متاحة"
 
+  "age": "العمر",
+  "no_artworks": "لا توجد أعمال فنية متاحة",
+  "to_festival_speakers": "إلى متحدثي المهرجان"
 }

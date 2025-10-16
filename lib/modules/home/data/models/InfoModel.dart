@@ -6,7 +6,8 @@ class InfoModel {
   // EN
   final String mainTitle;
   final String subTitle;
-  final List<String> images;
+  final List<String> bannerImages;
+  final List<String> galleryImages;
   final String? about;
   final List<String> aboutImages;
   final String? vision;
@@ -29,7 +30,8 @@ class InfoModel {
     required this.id,
     required this.mainTitle,
     required this.subTitle,
-    this.images = const [],
+    this.bannerImages = const [],
+    this.galleryImages=const [],
     this.about,
     this.aboutImages = const [],
     this.vision,
@@ -100,7 +102,8 @@ class InfoModel {
       // EN
       mainTitle: map['main_title'] as String,
       subTitle: map['sub_title'] as String,
-      images: _stringList(map['images']),
+      bannerImages: _stringList(map['banner_images']),
+      galleryImages: _stringList(map['gallery']),
       about: map['about'] as String?,
       aboutImages: _stringList(map['about_images']),
       vision: map['vision'] as String?,
@@ -124,7 +127,8 @@ class InfoModel {
         // EN
         'main_title': mainTitle,
         'sub_title': subTitle,
-        'images': images,
+        'banner_images': bannerImages,
+        'gallery':galleryImages,
         'about': about,
         'about_images': aboutImages,
         'vision': vision,
@@ -147,7 +151,8 @@ class InfoModel {
     String? id,
     String? mainTitle,
     String? subTitle,
-    List<String>? images,
+    List<String>? bannerImages,
+    List<String>? galleryImages,
     String? about,
     List<String>? aboutImages,
     String? vision,
@@ -166,7 +171,8 @@ class InfoModel {
       id: id ?? this.id,
       mainTitle: mainTitle ?? this.mainTitle,
       subTitle: subTitle ?? this.subTitle,
-      images: images ?? this.images,
+      bannerImages: bannerImages ?? this.bannerImages,
+      galleryImages: galleryImages ?? this.galleryImages,
       about: about ?? this.about,
       aboutImages: aboutImages ?? this.aboutImages,
       vision: vision ?? this.vision,

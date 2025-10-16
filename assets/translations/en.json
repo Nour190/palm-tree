@@ -326,6 +326,7 @@
     "submit_feedback": "Submit Feedback",
     "thank_you": "Thank you for your feedback!"
   },
+  "view_artwork_details": "View Artwork Details",
   "about": "About",
   "gallery": "Gallery",
   "location": "Location",
@@ -421,7 +422,7 @@
   "programs": {
     "header": {
       "title": "Programs",
-      "search_placeholder": "Search programs, artists, artworks..."
+      "search_placeholder": "What do you want to see today?"
     },
     "tabs": {
       "artworks": "Art Works",
@@ -434,8 +435,9 @@
       "artworks": "Unable to load artworks",
       "artists": "Unable to load artists",
       "schedule": "Unable to load schedule",
-      "gallery": "Unable to load gallery",
-      "retry_hint": "Tap retry to attempt fetching the latest data."
+      "retry_hint": "Tap retry to attempt fetching the latest data.",
+      "gallery": "Failed to load gallery",
+      "generic_subtitle": "Something went wrong. Please try again."
     },
     "empty": {
       "artists_title": "No artists available",
@@ -484,8 +486,21 @@
     },
     "artwork_card": {
       "unknown_artist": "Unknown artist"
+    },
+    "gallery": {
+      "empty_title": "No Images Yet",
+      "empty_subtitle": "Your gallery will appear here",
+      "no_items_in_category": "No {category} artworks found"
+    },
+    "offline": {
+      "no_cached_data": "No offline data available",
+      "connect_to_load": "Connect to the internet to load content"
     }
+
   },
   "age": "Age",
-  "no_artworks": "No artworks available"
+  "no_artworks": "No artworks available",
+  "to_festival_speakers": "To Festival Speakers"
+
+
 }

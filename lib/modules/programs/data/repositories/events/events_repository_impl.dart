@@ -9,6 +9,7 @@ import 'package:baseqat/modules/home/data/models/artwork_model.dart';
 import 'package:baseqat/modules/home/data/models/speaker_model.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/foundation.dart';
+import 'dart:math' as math;
 
 import '../../datasources/events_remote_data_source.dart';
 import '../../models/gallery_item.dart';
@@ -16,10 +17,21 @@ import 'events_repository.dart';
 
 import 'package:baseqat/core/network/remote/supabase_failure.dart'; // Failure types
 
+const List<String> _kStaticArtworkTypes = [
+  'Photography',
+  'Eastern Art',
+  'Drawings',
+  'Abstract Art',
+  'Old Masters',
+  'Sculpture',
+  'Digital Art',
+];
+
 class EventsRepositoryImpl implements EventsRepository {
   final EventsRemoteDataSource remote;
   final EventsLocalDataSource local;
   final ConnectivityService connectivity;
+  final math.Random _random = math.Random();
 
   EventsRepositoryImpl(this.remote, this.local, this.connectivity);
 
@@ -231,6 +243,85 @@ class EventsRepositoryImpl implements EventsRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, List<GalleryItem>>> getGalleryFromArtworks({
+    int limitArtworks = 50,
+  }) async {
+    try {
+      final isOnline = await connectivity.hasConnection();
+
+      if (isOnline) {
+        debugPrint('[EventsRepo] Fetching artworks for gallery from remote');
+        final artworks = await remote.fetchArtworks(limit: limitArtworks);
+        final items = <GalleryItem>[];
+
+        for (final artwork in artworks) {
+          // Take only the first image from each artwork's gallery
+          if (artwork.gallery.isNotEmpty) {
+            final firstImage = artwork.gallery.first;
+            if (firstImage.isNotEmpty) {
+              final artworkType = _getArtworkType(artwork.artworkType, artwork.id);
+
+              items.add(
+                GalleryItem(
+                  imageUrl: firstImage,
+                  artworkId: artwork.id,
+                  artworkName: artwork.name,
+                  artworkType: artworkType,
+                  fullGallery: artwork.gallery,
+                  artistId: artwork.artistId,
+                  artistName: artwork.artistName,
+                  artistProfileImage: artwork.artistProfileImage,
+                ),
+              );
+            }
+          }
+        }
+
+        // Cache images in background
+        final imageUrls = items.map((item) => item.imageUrl).toList();
+        unawaited(ImageCacheService.cacheImages(imageUrls));
+
+        debugPrint('[EventsRepo] Gallery built with ${items.length} items from ${artworks.length} artworks');
+        return Right(items);
+      } else {
+        debugPrint('[EventsRepo] Building gallery from cached artworks (offline)');
+        final artworks = await local.getCachedArtworks();
+        final items = <GalleryItem>[];
+
+        for (final artwork in artworks) {
+          // Take only the first image from each artwork's gallery
+          if (artwork.gallery.isNotEmpty) {
+            final firstImage = artwork.gallery.first;
+            if (firstImage.isNotEmpty) {
+              final artworkType = _getArtworkType(artwork.artworkType, artwork.id);
+
+              items.add(
+                GalleryItem(
+                  imageUrl: firstImage,
+                  artworkId: artwork.id,
+                  artworkName: artwork.name,
+                  artworkType: artworkType,
+                  fullGallery: artwork.gallery,
+                  artistId: artwork.artistId,
+                  artistName: artwork.artistName,
+                  artistProfileImage: artwork.artistProfileImage,
+                ),
+              );
+            }
+          }
+        }
+
+        debugPrint('[EventsRepo] Gallery built from cache with ${items.length} items');
+        return Right(items);
+      }
+    } catch (e, stackTrace) {
+      debugPrint('[EventsRepo] Error building gallery: $e');
+      debugPrint('[EventsRepo] Stack trace: $stackTrace');
+      return Left(_asFailure(e));
+    }
+  }
+
   // ---------------- Favorites: core ops ----------------
   @override
   Future<Either<Failure, Unit>> setFavorite({
@@ -354,6 +445,16 @@ class EventsRepositoryImpl implements EventsRepository {
       (e is Failure) ? e : UnknownFailure('Unexpected error', cause: e);
 
   String? _nz(String? s) => (s == null || s.trim().isEmpty) ? null : s.trim();
+
+  String _getArtworkType(String? artworkType, String artworkId) {
+    if (artworkType != null && artworkType.isNotEmpty) {
+      return artworkType;
+    }
+    // Use artwork ID as seed for consistent type assignment
+    final seed = artworkId.hashCode;
+    final random = math.Random(seed);
+    return _kStaticArtworkTypes[random.nextInt(_kStaticArtworkTypes.length)];
+  }
 }
 
 void unawaited(Future<void> future) {

@@ -144,7 +144,7 @@ class MyApp extends StatelessWidget {
               return MaterialApp(
                 key: ValueKey(context.locale.toString()), // Forces rebuild on locale change
                 debugShowCheckedModeBanner: false,
-                title: 'Ithra',
+                title: 'Palm tree',
                 theme: AppTheme.light,
                 darkTheme: AppTheme.dark,
                 themeMode: ThemeMode.light,

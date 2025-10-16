@@ -61,7 +61,7 @@ class _AboutInfoState extends State<AboutInfo> {
   Widget _buildHeader() {
     final mainTitle = _getLocalizedTitle(widget.info.mainTitle, widget.info.mainTitleAr);
     final subTitle = _normalizeText(_getLocalizedTitle(widget.info.subTitle, widget.info.subTitleAr));
-    final heroImage = widget.info.images?.firstOrNull;
+    final heroImage = widget.info.bannerImages?.firstOrNull;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

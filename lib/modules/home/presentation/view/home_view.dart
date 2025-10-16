@@ -153,7 +153,7 @@ class HomeView extends StatelessWidget {
                           highlightsLabel: 'Highlights',
                           highlightsLabelAr: 'المختارات',
                           subtitleAr: info.subTitleAr,
-                          images: info.images,
+                          images: info.bannerImages,
                         ),
                         if (loaded.infoError != null)
                           SectionErrorBanner(
@@ -296,7 +296,7 @@ class HomeView extends StatelessWidget {
                       Padding(
                         padding: EdgeInsets.symmetric(
                           vertical: 8.0.sH,
-                          horizontal: 8.sW,
+                          horizontal: 12.sW,
                         ),
                         child: TextLineBanner(
                           text: 'home.textline_banner'.tr(),
@@ -335,7 +335,7 @@ class HomeView extends StatelessWidget {
                       BlocSelector<HomeCubit, HomeState, List<String>>(
                         selector: (state) {
                           if (state is HomeLoaded && state.info != null) {
-                            return state.info!.images;
+                            return state.info!.galleryImages;
                           }
                           return const <String>[];
                         },
