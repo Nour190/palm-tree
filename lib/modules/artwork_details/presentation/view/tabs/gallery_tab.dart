@@ -40,21 +40,19 @@ class _GalleryTabState extends State<GalleryTab> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if ((widget.about ?? '').isNotEmpty) ...[
-            SizedBox(height: 10.h),
-            _AboutBlock(text: widget.about!),
-            SizedBox(height: 12.h),
-          ],
-          if (_items.isEmpty)
-            _EmptyState()
-          else
-            _GalleryLayout(items: _items, onTap: _openLightbox),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if ((widget.about ?? '').isNotEmpty) ...[
+          SizedBox(height: 10.h),
+          _AboutBlock(text: widget.about!),
+          SizedBox(height: 12.h),
         ],
-      ),
+        if (_items.isEmpty)
+          _EmptyState()
+        else
+          _GalleryLayout(items: _items, onTap: _openLightbox),
+      ],
     );
   }
 

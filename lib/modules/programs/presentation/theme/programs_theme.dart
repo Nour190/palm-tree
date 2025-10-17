@@ -123,4 +123,17 @@ class ProgramsTypography {
         fontWeight: FontWeight.w600,
         color: Theme.of(context).colorScheme.onSurfaceVariant,
       );
+
+  static TextStyle labelSmallLight(BuildContext context) =>
+      Theme.of(context).textTheme.labelSmall?.copyWith(
+        fontSize: 12 * _textScale(context),
+        letterSpacing: 0.4,
+        fontWeight: FontWeight.w400,
+      ) ??
+          TextStyle(
+            fontSize: 12 * _textScale(context),
+            letterSpacing: 0.4,
+            fontWeight: FontWeight.w400,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          );
 }

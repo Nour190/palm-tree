@@ -16,12 +16,14 @@ class SessionCard extends StatelessWidget {
     required this.index,
     required this.userId,
     this.onLongPress,
+    this.onTap, // Added optional onTap callback
   });
 
   final Speaker speaker;
   final int index;
   final String userId;
   final VoidCallback? onLongPress;
+  final VoidCallback? onTap; // Added optional onTap callback
 
   String _formatTimeLocal(BuildContext context, DateTime utc) =>
       DateFormat.jm(context.locale.toLanguageTag()).format(utc.toLocal());
@@ -39,17 +41,17 @@ class SessionCard extends StatelessWidget {
     final timeLabel = _formatTimeLocal(context, speaker.startAt).toUpperCase();
     final title =
         speaker.localizedTopicName(languageCode: languageCode) ??
-        speaker.localizedName(languageCode: languageCode);
+            speaker.localizedName(languageCode: languageCode);
     final summary =
         speaker.localizedTopicDescription(languageCode: languageCode) ??
-        speaker.localizedBio(languageCode: languageCode) ??
-        '';
+            speaker.localizedBio(languageCode: languageCode) ??
+            '';
 
     final padding = ProgramsLayout.sectionPadding(context);
     final radius = ProgramsLayout.radius20(context);
 
     return GestureDetector(
-      onTap: () {
+      onTap: onTap ?? () {
         navigateTo(
           context,
           SpeakersInfoScreen(speaker: speaker, userId: userId),
@@ -106,8 +108,8 @@ class SessionCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: ProgramsTypography.bodySecondary(context)
                                 .copyWith(
-                                  color: foreground.withValues(alpha: 0.86),
-                                ),
+                              color: foreground.withValues(alpha: 0.86),
+                            ),
                           ),
                       ],
                     ),

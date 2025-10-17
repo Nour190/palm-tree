@@ -10,6 +10,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:hugeicons/hugeicons.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/bi.dart';
 import 'package:record/record.dart';
 import 'package:audioplayers/audioplayers.dart';
 
@@ -79,7 +82,7 @@ class AIChatView extends StatefulWidget {
   const AIChatView({
     super.key,
     // Persona visuals
-    this.botName = 'ithra AI',
+    this.botName = 'Saud Ai',
     this.botAvatarIcon = Icons.smart_toy_outlined,
 
     // Gemini model
@@ -739,13 +742,19 @@ ${facts.join('\n')}
             titleSpacing: 0,
             title: Row(
               children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: AppColor.gray900,
-                  child: Icon(
-                    widget.botAvatarIcon,
-                    color: Colors.white,
-                    size: 18.sSp,
+                Container(
+                  height: 40,
+                  width: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColor.black, width: 1),
+                    color: AppColor.white
+                  ),
+                  alignment: Alignment.center,
+                  child: Image(
+                    image: AssetImage('assets/images/app_logo.png'),
+                    height: 30,
+                    width: 30,
                   ),
                 ),
                 SizedBox(width: 10.sW),
@@ -865,7 +874,7 @@ ${facts.join('\n')}
                       children: [
                         Icon(Icons.content_copy_rounded, size: 18, color: AppColor.gray900),
                         const SizedBox(width: 12),
-                        const Text('Copy transcript'),
+                        const Text('Copy Chat'),
                       ],
                     ),
                   ),
@@ -875,20 +884,20 @@ ${facts.join('\n')}
                       children: [
                         Icon(Icons.delete_outline_rounded, size: 18, color: AppColor.gray900),
                         const SizedBox(width: 12),
-                        const Text('Clear conversation data'),
+                        const Text('Clear Chat'),
                       ],
                     ),
                   ),
-                  PopupMenuItem<String>(
-                    value: 'clear_view',
-                    child: Row(
-                      children: [
-                        Icon(Icons.clear_all_rounded, size: 18, color: AppColor.gray900),
-                        const SizedBox(width: 12),
-                        const Text('Clear chat view'),
-                      ],
-                    ),
-                  ),
+                  // PopupMenuItem<String>(
+                  //   value: 'clear_view',
+                  //   child: Row(
+                  //     children: [
+                  //       Icon(Icons.clear_all_rounded, size: 18, color: AppColor.gray900),
+                  //       const SizedBox(width: 12),
+                  //       const Text('Clear chat view'),
+                  //     ],
+                  //   ),
+                  // ),
                 ],
               ),
               SizedBox(width: 8.sW),
@@ -1016,6 +1025,12 @@ ${facts.join('\n')}
                           alignment: Alignment.center,
                           child: Row(
                             children: [
+                              HugeIcon(
+                                icon: HugeIcons.strokeRoundedHappy01,
+                                size: 30,
+                                color: AppColor.black,
+                              ),
+                              SizedBox(width: 10.sW,),
                               Expanded(
                                 child: TextField(
                                   controller: _textCtrl,
@@ -1035,67 +1050,95 @@ ${facts.join('\n')}
                                   textInputAction: TextInputAction.send,
                                 ),
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.volume_up_rounded),
-                                color: AppColor.gray900,
-                                onPressed: () => _speak(_textCtrl.text),
-                                tooltip: 'Speak text (with translation)',
+                              // IconButton(
+                              //   icon: const Icon(Icons.volume_up_rounded),
+                              //   color: AppColor.gray900,
+                              //   onPressed: () => _speak(_textCtrl.text),
+                              //   tooltip: 'Speak text (with translation)',
+                              // ),
+
+                              GestureDetector(
+                                onLongPressStart: (_) => _startRecording(),
+                                onLongPressEnd: (_) => _stopRecordingAndSend(),
+                                onTap: () => _isRecording
+                                    ? _stopRecordingAndSend()
+                                    : _startRecording(),
+                                child: Icon(
+                                  _isRecording
+                                      ? Icons.stop_rounded
+                                      : Icons.mic_none,
+                                  color: AppColor.gray900,
+                                  size: 30,
+                                ),
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.send_rounded),
-                                color: AppColor.gray900,
-                                onPressed: _isSending ? null : _sendText,
-                                tooltip: 'Send',
-                              ),
+                              // IconButton(
+                              //   icon: const Icon(Icons.send_rounded),
+                              //   color: AppColor.gray900,
+                              //   onPressed: _isSending ? null : _sendText,
+                              //   tooltip: 'Send',
+                              // ),
                             ],
                           ),
                         ),
                       ),
                       SizedBox(width: 8.sSp),
-                      Tooltip(
-                        message: _isRecording
-                            ? 'Tap to stop & send'
-                            : 'Tap or hold to record',
-                        child: GestureDetector(
-                          onLongPressStart: (_) => _startRecording(),
-                          onLongPressEnd: (_) => _stopRecordingAndSend(),
-                          onTap: () => _isRecording
-                              ? _stopRecordingAndSend()
-                              : _startRecording(),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            width: 56.sSp,
-                            height: 56.sSp,
-                            decoration: BoxDecoration(
-                              color: _isRecording
-                                  ? AppColor.gray900
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(100),
-                              border: Border.all(
-                                color: AppColor.gray900,
-                                width: 2,
-                              ),
-                              boxShadow: _isRecording
-                                  ? [
-                                BoxShadow(
-                                  color: Colors.red.withOpacity(.25),
-                                  blurRadius: 18,
-                                  spreadRadius: 1,
-                                ),
-                              ]
-                                  : null,
-                            ),
-                            child: Icon(
-                              _isRecording
-                                  ? Icons.stop_rounded
-                                  : Icons.mic_rounded,
-                              color: _isRecording
-                                  ? Colors.white
-                                  : AppColor.gray900,
-                            ),
+                      InkWell(
+                        onTap: _isSending ? null : _sendText,
+                        child: Container(
+                          height: 35,
+                          width: 35,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: AppColor.black, width: 1.5)
                           ),
+                          alignment: Alignment.center,
+                          child: Icon(Icons.add, size: 20, color: AppColor.black,),
                         ),
                       ),
+                      // Tooltip(
+                      //   message: _isRecording
+                      //       ? 'Tap to stop & send'
+                      //       : 'Tap or hold to record',
+                      //   child: GestureDetector(
+                      //     onLongPressStart: (_) => _startRecording(),
+                      //     onLongPressEnd: (_) => _stopRecordingAndSend(),
+                      //     onTap: () => _isRecording
+                      //         ? _stopRecordingAndSend()
+                      //         : _startRecording(),
+                      //     child: AnimatedContainer(
+                      //       duration: const Duration(milliseconds: 200),
+                      //       width: 56.sSp,
+                      //       height: 56.sSp,
+                      //       decoration: BoxDecoration(
+                      //         color: _isRecording
+                      //             ? AppColor.gray900
+                      //             : Colors.transparent,
+                      //         borderRadius: BorderRadius.circular(100),
+                      //         border: Border.all(
+                      //           color: AppColor.gray900,
+                      //           width: 2,
+                      //         ),
+                      //         boxShadow: _isRecording
+                      //             ? [
+                      //           BoxShadow(
+                      //             color: Colors.red.withOpacity(.25),
+                      //             blurRadius: 18,
+                      //             spreadRadius: 1,
+                      //           ),
+                      //         ]
+                      //             : null,
+                      //       ),
+                      //       child: Icon(
+                      //         _isRecording
+                      //             ? Icons.stop_rounded
+                      //             : Icons.mic_rounded,
+                      //         color: _isRecording
+                      //             ? Colors.white
+                      //             : AppColor.gray900,
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
                     ],
                   ),
                 ),
@@ -1290,7 +1333,7 @@ class _Bubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = TextStyleHelper.instance;
 
-    final bg = fromUser ? AppColor.gray900 : const Color(0xFFF0F2F5);
+    final bg = fromUser ? AppColor.gray900 : AppColor.blueGray100;
     final fg = fromUser ? Colors.white : AppColor.gray900;
 
     final radius = fromUser

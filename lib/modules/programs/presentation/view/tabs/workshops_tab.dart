@@ -78,30 +78,23 @@ class WorkshopCardWidget extends StatelessWidget {
               if (showTimeBadge)
                 SizedBox(
                   width: 40,
-                  child: Stack(
-                    children: [
-                      // Background
-                      Container(
-                        color: AppColor.black,
-                      ),
-                      // Rotated text
-                      Center(
-                        child: Transform.rotate(
-                          angle: -1.5708, // -90 degrees in radians
-                          child: Text(
-                            timeRange,
-                            style: const TextStyle(
-                              color: AppColor.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              fontFamily: 'Inter',
-                              letterSpacing: -0.022,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
+                  child: Container(
+                    color: AppColor.black,
+                    alignment: Alignment.center,
+                    child: RotatedBox(
+                      quarterTurns: 3, // Rotates 270 degrees (counter-clockwise)
+                      child: Text(
+                        timeRange,
+                        style: const TextStyle(
+                          color: AppColor.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'Inter',
+                          letterSpacing: 0.5,
                         ),
+                        textAlign: TextAlign.center,
                       ),
-                    ],
+                    ),
                   ),
                 ),
 

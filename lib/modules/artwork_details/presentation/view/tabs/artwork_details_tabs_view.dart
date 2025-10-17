@@ -6,6 +6,10 @@ import 'package:baseqat/modules/artwork_details/presentation/widgets/artwork_des
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/bi.dart';
+import 'package:iconify_flutter/icons/material_symbols.dart';
+import 'package:iconify_flutter/icons/zondicons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:baseqat/core/resourses/color_manager.dart';
@@ -262,7 +266,7 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
   }
 
   Widget _buildMobileLayout() {
-    return Column(
+    return _selectedIndex == 3 ? Column(
       children: [
         // Mobile Header
         _MobileHeader(searchCtrl: _searchCtrl),
@@ -287,6 +291,32 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
           ),
         ),
       ],
+    ):SingleChildScrollView(
+      physics: BouncingScrollPhysics(),
+      child: Column(
+        children: [
+          // Mobile Header
+          _MobileHeader(searchCtrl: _searchCtrl),
+          // Mobile Tab Bar
+
+          if(_selectedIndex == 0 || _selectedIndex == 1 || _selectedIndex == 2)
+            _bannerImageWidget(),
+
+          if(_selectedIndex == 0 || _selectedIndex == 1 || _selectedIndex == 2)
+            SizedBox(height: 10.sH,),
+
+          _MobileTabBar(
+            selectedIndex: _selectedIndex,
+            onTabSelected: _onCategoryTap,
+            categories: _categories,
+          ),
+          // Content
+          Padding(
+            padding: EdgeInsets.all(16.sW),
+            child: _buildContent(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -503,31 +533,29 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
   Widget _buildTabBody({required int index, Artwork? artwork, Artist? artist}) {
     switch (index) {
       case 0: // About
-        return SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AboutTab(
-                title: artwork?.name ?? '—',
-                about: artwork?.description ?? '—',
-                materials: artwork?.materials ?? '—',
-                vision: artwork?.vision ?? '—',
-                galleryImages: artwork?.gallery ?? const [],
-                onAskAi: () {
-                  if (!_isOnline) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('ai_requires_internet'.tr()),
-                        backgroundColor: Colors.black,
-                      ),
-                    );
-                    return;
-                  }
-                  _onCategoryTap(3);
-                },
-              ),
-            ],
-          ),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AboutTab(
+              title: artwork?.name ?? '—',
+              about: artwork?.description ?? '—',
+              materials: artwork?.materials ?? '—',
+              vision: artwork?.vision ?? '—',
+              galleryImages: artwork?.gallery ?? const [],
+              onAskAi: () {
+                if (!_isOnline) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('ai_requires_internet'.tr()),
+                      backgroundColor: Colors.black,
+                    ),
+                  );
+                  return;
+                }
+                _onCategoryTap(3);
+              },
+            ),
+          ],
         );
 
       case 1: // Gallery
@@ -563,7 +591,7 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
             return parts.isEmpty ? 'live_map_navigation'.tr() : parts.join(' • ');
           })(),
           distanceLabel: 'distance'.tr(),
-          destinationLabel: 'destination'.tr(),
+          destinationLabel: 'to_festival_speakers'.tr(),
           addressLine: artist?.address,
           city: artist?.city,
           country: artist?.country,
@@ -571,7 +599,7 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
           longitude: lon,
           aboutTitle: (() {
             final name = artwork?.name ?? artist?.name;
-            return name == null || name.isEmpty ? null : '${'about'.tr()}$name';
+            return name == null || name.isEmpty ? null : '${'about'.tr()} $name';
           })(),
           aboutDescription: artwork?.description ?? artist?.about,
           onStartNavigation: () {
@@ -709,12 +737,20 @@ class _MobileHeader extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              IconButton(
-                onPressed: () => Navigator.of(context).pop(),
-                icon: Icon(Icons.arrow_back, size: 20.sW),
-                padding: EdgeInsets.zero,
-                constraints: BoxConstraints(minWidth: 24.sW, minHeight: 24.sH),
+              InkWell(
+                onTap: () => Navigator.of(context).pop(),
+                child: Iconify(
+                  MaterialSymbols.arrow_back_rounded,
+                  color: Colors.black,
+                  size: 32.sW,
+                ),
               ),
+              // IconButton(
+              //   onPressed: () => Navigator.of(context).pop(),
+              //   icon: Icon(Icons.arrow_back, size: 20.sW),
+              //   padding: EdgeInsets.zero,
+              //   constraints: BoxConstraints(minWidth: 24.sW, minHeight: 24.sH),
+              // ),
               BlocBuilder<ArtworkCubit, ArtworkState>(
                 builder: (context, state) {
                   final title = state.status == ArtworkStatus.loaded
@@ -722,7 +758,7 @@ class _MobileHeader extends StatelessWidget {
                       : 'artwork_details'.tr();
                   return Text(
                     title,
-                    style: TextStyleHelper.instance.headline20BoldInter,
+                    style: TextStyleHelper.instance.headline24BoldInter,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   );
@@ -737,7 +773,7 @@ class _MobileHeader extends StatelessWidget {
 }
 
 // ------------------ Mobile Tab Bar ------------------
-class _MobileTabBar extends StatelessWidget {
+class _MobileTabBar extends StatefulWidget {
   const _MobileTabBar({
     required this.selectedIndex,
     required this.onTabSelected,
@@ -747,6 +783,57 @@ class _MobileTabBar extends StatelessWidget {
   final int selectedIndex;
   final Function(int) onTabSelected;
   final List<events.CategoryModel> categories;
+
+  @override
+  State<_MobileTabBar> createState() => _MobileTabBarState();
+}
+
+class _MobileTabBarState extends State<_MobileTabBar> {
+  final ScrollController _scrollController = ScrollController();
+  final double _tabWidth = 112; // Width of each tab
+  final double _tabMargin = 8; // Right margin of each tab
+
+  @override
+  void didUpdateWidget(_MobileTabBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if(oldWidget.selectedIndex == 3 || oldWidget.selectedIndex == 4){
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+    if (oldWidget.selectedIndex != widget.selectedIndex && !(oldWidget.selectedIndex == 3 || oldWidget.selectedIndex == 4)) {
+      _scrollToSelectedTab();
+    }
+  }
+
+  void _scrollToSelectedTab() {
+    if (!_scrollController.hasClients) return;
+
+    final double tabTotalWidth = _tabWidth + _tabMargin;
+    final double targetScroll = widget.selectedIndex * tabTotalWidth;
+
+    // Calculate the viewport width to center the tab
+    final double viewportWidth = _scrollController.position.viewportDimension;
+    final double centeredScroll = targetScroll - (viewportWidth / 2) + (_tabWidth / 2);
+
+    // Clamp the scroll position to valid range
+    final double maxScroll = _scrollController.position.maxScrollExtent;
+    final double finalScroll = centeredScroll.clamp(0.0, maxScroll);
+
+    _scrollController.animateTo(
+      finalScroll,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -759,22 +846,25 @@ class _MobileTabBar extends StatelessWidget {
         ),
       ),
       child: SingleChildScrollView(
+        controller: _scrollController,
         scrollDirection: Axis.horizontal,
         child: Row(
-          children: List.generate(categories.length, (index) {
-            final category = categories[index];
-            final isSelected = index == selectedIndex;
+          children: List.generate(widget.categories.length, (index) {
+            final category = widget.categories[index];
+            final isSelected = index == widget.selectedIndex;
 
             return GestureDetector(
-              onTap: () => onTabSelected(index),
+              onTap: () => widget.onTabSelected(index),
               child: AnimatedContainer(
+                width: 112.sW,
+                height: 40.sH,
                 duration: const Duration(milliseconds: 250),
                 curve: Curves.easeInOut,
                 margin: EdgeInsets.only(right: 8.sW),
-                padding: EdgeInsets.symmetric(horizontal: 16.sW, vertical: 8.sH),
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: isSelected ? AppColor.primaryColor : Colors.transparent,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: isSelected ? AppColor.primaryColor : AppColor.gray200,
                     width: 1.5,
@@ -790,11 +880,11 @@ class _MobileTabBar extends StatelessWidget {
                       : [],
                 ),
                 child: Text(
-                  category.title!.tr() ,
+                  category.title!.tr(),
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 12,
                     fontWeight:
-                    isSelected ? FontWeight.w600 : FontWeight.w500,
+                    isSelected ? FontWeight.w500 : FontWeight.w400,
                     color: isSelected ? Colors.white : Colors.black87,
                   ),
                 ),

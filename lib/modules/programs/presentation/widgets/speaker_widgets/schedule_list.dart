@@ -30,7 +30,7 @@ class ScheduleList extends StatelessWidget {
           border: Border.all(color: AppColor.blueGray100),
         ),
         child: Text(
-          'programs.schedule.list_empty'.tr(),
+          'speakers_empty'.tr(),
           style: ProgramsTypography.bodySecondary(
             context,
           ).copyWith(color: AppColor.gray600),
@@ -51,6 +51,9 @@ class ScheduleList extends StatelessWidget {
             speaker: speaker,
             index: index,
             userId: userId,
+            onTap: onSpeakerTap != null
+                ? () => onSpeakerTap!(speaker)
+                : null,
             onLongPress: onSpeakerTap != null
                 ? () => onSpeakerTap!(speaker)
                 : null,

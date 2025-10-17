@@ -85,13 +85,11 @@ class _GalleryGridState extends State<GalleryGrid> {
         ),
         SizedBox(height: ProgramsLayout.spacingLarge(context)),
 
-        Expanded(
-          child: filteredItems.isEmpty
-              ? _EmptyCategoryState(category: _selectedCategory)
-              : _MasonryGalleryGrid(
-            items: filteredItems,
-            onTap: (item, index) => _openFullScreenViewer(context, item, index, filteredItems),
-          ),
+        filteredItems.isEmpty
+            ? _EmptyCategoryState(category: _selectedCategory)
+            : _MasonryGalleryGrid(
+          items: filteredItems,
+          onTap: (item, index) => _openFullScreenViewer(context, item, index, filteredItems),
         ),
       ],
     );
@@ -239,6 +237,8 @@ class _MasonryGalleryGrid extends StatelessWidget {
     final crossAxisCount = isTablet ? 3 : 2;
 
     return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       padding: EdgeInsets.symmetric(horizontal: padding, vertical: spacing),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,

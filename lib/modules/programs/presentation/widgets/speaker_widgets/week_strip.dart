@@ -68,7 +68,7 @@ class _WeekStripState extends State<WeekStrip> {
     final localeName = context.locale.toLanguageTag();
 
     return SizedBox(
-      height: ProgramsLayout.size(context, 72),
+      height: ProgramsLayout.size(context, 125),
       child: ListView.separated(
         controller: _controller,
         scrollDirection: Axis.horizontal,
@@ -108,14 +108,14 @@ class _DayPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final bg = selected ? AppColor.black : AppColor.white;
     final textColor = selected ? AppColor.white : AppColor.gray500;
-    final size = ProgramsLayout.size(context, 64);
+    final size = ProgramsLayout.size(context, 80);
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
         width: size,
-        height: ProgramsLayout.size(context, 56),
+        height: ProgramsLayout.size(context, 110),
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: bg,
@@ -125,7 +125,7 @@ class _DayPill extends StatelessWidget {
           ),
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             Text(
               dayLabel,

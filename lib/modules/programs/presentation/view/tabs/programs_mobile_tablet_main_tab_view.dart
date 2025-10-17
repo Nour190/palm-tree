@@ -10,6 +10,7 @@ import 'package:baseqat/modules/programs/data/datasources/events_local_data_sour
 import 'package:baseqat/modules/programs/data/datasources/events_remote_data_source.dart';
 import 'package:baseqat/modules/programs/data/models/gallery_item.dart';
 import 'package:baseqat/modules/programs/data/models/month_data.dart';
+
 import 'package:baseqat/modules/programs/data/repositories/events/events_repository.dart';
 import 'package:baseqat/modules/programs/data/repositories/events/events_repository_impl.dart';
 import 'package:baseqat/modules/programs/presentation/manger/events/events_cubit.dart';
@@ -26,6 +27,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../../../home/data/models/speaker_model.dart';
+import '../../../../home/data/models/workshop_model.dart';
+import '../more_details_views_tabs/speakers_info_view.dart';
+import '../more_details_views_tabs/workshop_info_view.dart';
+
 
 class EventsMobileTabletView extends StatelessWidget {
   const EventsMobileTabletView({
@@ -60,8 +67,8 @@ enum ProgramsTab {
   artworks('programs.tabs.artworks', Icons.palette_outlined),
   artists('programs.tabs.artists', Icons.people_alt_outlined),
   schedule('programs.tabs.schedule', Icons.event_available_outlined),
-  gallery('programs.tabs.gallery', Icons.photo_library_outlined),
-  virtualTour('programs.tabs.virtual_tour', Icons.explore_outlined);
+  gallery('programs.tabs.gallery', Icons.photo_library_outlined);
+  // virtualTour('programs.tabs.virtual_tour', Icons.explore_outlined);
 
   const ProgramsTab(this.labelKey, this.icon);
   final String labelKey;
@@ -119,32 +126,34 @@ class _EventsViewState extends State<_EventsView> {
               color: AppColor.white,
               child: SafeArea(
                 bottom: false,
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: ProgramsLayout.pagePadding(context),
-                      child: Column(
-                        children: [
-                          _ProgramsHeader(
-                            controller: _searchController,
-                            onChanged: context.read<EventsCubit>().setSearchQuery,
-                          ),
-                          SizedBox(height: ProgramsLayout.spacingLarge(context)),
-                          _ProgramsTabBar(
-                            selected: _tab,
-                            onSelected: (tab) => setState(() => _tab = tab),
-                          ),
-                        ],
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: ProgramsLayout.pagePadding(context),
+                        child: Column(
+                          children: [
+                            _ProgramsHeader(
+                              controller: _searchController,
+                              onChanged: context.read<EventsCubit>().setSearchQuery,
+                            ),
+                            SizedBox(height: ProgramsLayout.spacingSmall(context)),
+                            _ProgramsTabBar(
+                              selected: _tab,
+                              onSelected: (tab) => setState(() => _tab = tab),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    SizedBox(height: ProgramsLayout.spacingMedium(context)),
-                    Expanded(
-                      child: AnimatedSwitcher(
+                      SizedBox(height: ProgramsLayout.spacingSmall(context)),
+                      AnimatedSwitcher(
                         duration: const Duration(milliseconds: 220),
                         child: _buildBody(_tab),
                       ),
-                    ),
-                  ],
+                      SizedBox(height: ProgramsLayout.spacingMedium(context)),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -164,8 +173,8 @@ class _EventsViewState extends State<_EventsView> {
         return const _ScheduleSection();
       case ProgramsTab.gallery:
         return const _GallerySection();
-      case ProgramsTab.virtualTour:
-        return const _VirtualTourSection();
+    // case ProgramsTab.virtualTour:
+    //   return const _VirtualTourSection();
     }
   }
 }
@@ -182,13 +191,6 @@ class _ProgramsHeader extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text(
-              'programs.header.title'.tr(),
-              style: ProgramsTypography.headingLarge(context)
-                  .copyWith(color: AppColor.black),
-            ),
-            SizedBox(width: ProgramsLayout.spacingSmall(context)),
-
             Expanded(
               flex: 3,
               child: Container(
@@ -214,11 +216,17 @@ class _ProgramsHeader extends StatelessWidget {
                       AppAssetsManager.imgSearch,
                       width: ProgramsLayout.size(context, 20),
                       height: ProgramsLayout.size(context, 25),
-                      color: AppColor.gray500,
+                      color: AppColor.black,
                     ),
                   ),
                 ),
               ),
+            ),
+            SizedBox(width: ProgramsLayout.spacingSmall(context)),
+            Text(
+              'programs.header.title'.tr(),
+              style: ProgramsTypography.headingLarge(context)
+                  .copyWith(color: AppColor.black),
             ),
           ],
         ),
@@ -272,34 +280,26 @@ class _TabChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: isSelected ? AppColor.primaryColor : AppColor.gray100,
-      borderRadius: BorderRadius.circular(ProgramsLayout.radius20(context)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(ProgramsLayout.radius20(context)),
-        onTap: onTap,
+    return InkWell(
+      borderRadius: BorderRadius.circular(ProgramsLayout.radius16(context)),
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: isSelected ? AppColor.primaryColor : AppColor.transparent,
+          border: Border.all(color: isSelected ? AppColor.primaryColor : AppColor.gray200),
+          borderRadius: BorderRadius.circular(ProgramsLayout.radius16(context)),
+        ),
         child: Padding(
           padding: EdgeInsets.symmetric(
             horizontal: ProgramsLayout.size(context, 18),
             vertical: ProgramsLayout.spacingMedium(context),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: ProgramsLayout.size(context, 18),
-                color: isSelected ? AppColor.white : AppColor.gray600,
-              ),
-              SizedBox(width: ProgramsLayout.spacingSmall(context)),
-              Text(
-                label,
-                style: ProgramsTypography.bodyPrimary(context).copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: isSelected ? AppColor.white : AppColor.gray600,
-                ),
-              ),
-            ],
+          child: Text(
+            label,
+            style: ProgramsTypography.labelSmall(context).copyWith(
+              fontWeight: FontWeight.w500,
+              color: isSelected ? AppColor.white : AppColor.gray600,
+            ),
           ),
         ),
       ),
@@ -382,11 +382,82 @@ class _ArtistsSection extends StatelessWidget {
   }
 }
 
-class _ScheduleSection extends StatelessWidget {
+class _ScheduleSection extends StatefulWidget {
   const _ScheduleSection();
 
   @override
+  State<_ScheduleSection> createState() => _ScheduleSectionState();
+}
+
+class _ScheduleSectionState extends State<_ScheduleSection> {
+  String? _currentView;
+  Speaker? _selectedSpeaker;
+  Workshop? _selectedWorkshop;
+
+  void _showSpeakerDetail(Speaker speaker) {
+    setState(() {
+      _currentView = 'speaker';
+      _selectedSpeaker = speaker;
+    });
+  }
+
+  void _showWorkshopDetail(Workshop workshop) {
+    setState(() {
+      _currentView = 'workshop';
+      _selectedWorkshop = workshop;
+    });
+  }
+
+  void _backToSchedule() {
+    setState(() {
+      _currentView = null;
+      _selectedSpeaker = null;
+      _selectedWorkshop = null;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_currentView == 'speaker' && _selectedSpeaker != null) {
+      return Column(
+        children: [
+          Padding(
+            padding: ProgramsLayout.pagePadding(context),
+            child: _BackButton(onBack: _backToSchedule),
+          ),
+          SizedBox(height: ProgramsLayout.spacingMedium(context)),
+          Padding(
+            padding: ProgramsLayout.pagePadding(context),
+            child: SpeakersInfoScreen(
+              speaker: _selectedSpeaker!,
+              userId: "",
+              isEmbedded: true,
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (_currentView == 'workshop' && _selectedWorkshop != null) {
+      return Column(
+        children: [
+          Padding(
+            padding: ProgramsLayout.pagePadding(context),
+            child: _BackButton(onBack: _backToSchedule),
+          ),
+          SizedBox(height: ProgramsLayout.spacingMedium(context)),
+          Padding(
+            padding: ProgramsLayout.pagePadding(context),
+            child: WorkshopInfoScreen(
+              workshop: _selectedWorkshop!,
+              userId: "",
+             // isEmbedded: true,
+            ),
+          ),
+        ],
+      );
+    }
+
     return BlocBuilder<EventsCubit, EventsState>(
       builder: (context, state) {
         final hasError =
@@ -417,6 +488,8 @@ class _ScheduleSection extends StatelessWidget {
               ctaTitle: 'programs.schedule.cta_title'.tr(),
               onNextMonth: data.nextMonth,
               onPrevMonth: data.prevMonth,
+              onSpeakerTap: _showSpeakerDetail,
+              onWorkshopTap: _showWorkshopDetail,
             );
           },
         );
@@ -445,14 +518,48 @@ class _GallerySection extends StatelessWidget {
   }
 }
 
-class _VirtualTourSection extends StatelessWidget {
-  const _VirtualTourSection();
+class _BackButton extends StatelessWidget {
+  const _BackButton({required this.onBack});
+
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: ProgramsLayout.pagePadding(context),
-      child: const VirtualTourView(),
+    return Row(
+      children: [
+        InkWell(
+          onTap: onBack,
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: ProgramsLayout.size(context, 16),
+              vertical: ProgramsLayout.size(context, 8),
+            ),
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColor.gray200),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.arrow_back,
+                  size: ProgramsLayout.size(context, 20),
+                  color: AppColor.black,
+                ),
+                SizedBox(width: ProgramsLayout.spacingSmall(context)),
+                Text(
+                  'Back to Schedule',
+                  style: ProgramsTypography.bodyPrimary(context).copyWith(
+                    color: AppColor.black,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -490,11 +597,6 @@ class _InlineError extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Icon(
-                //   isOffline ? Icons.cloud_off_rounded : Icons.error_outline_rounded,
-                //   color: isOffline ? Colors.orange[700] : AppColor.gray700,
-                //   size: ProgramsLayout.size(context, 36),
-                // ),
                 SizedBox(height: ProgramsLayout.spacingLarge(context)),
                 Text(
                   isOffline

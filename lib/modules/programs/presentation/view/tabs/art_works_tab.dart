@@ -66,9 +66,8 @@ class ArtWorksGalleryContent extends StatelessWidget {
     final spacing = ProgramsLayout.spacingLarge(context);
 
     return ListView.separated(
-      physics: const BouncingScrollPhysics(
-        parent: AlwaysScrollableScrollPhysics(),
-      ),
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
       padding: EdgeInsets.symmetric(horizontal: padding, vertical: spacing),
       itemCount: artworks.length,
       itemBuilder: (context, index) {
@@ -90,9 +89,8 @@ class ArtWorksGalleryContent extends StatelessWidget {
     final spacing = ProgramsLayout.spacingLarge(context);
 
     return GridView.builder(
-      physics: const BouncingScrollPhysics(
-        parent: AlwaysScrollableScrollPhysics(),
-      ),
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
       padding: EdgeInsets.symmetric(horizontal: padding, vertical: spacing),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,

@@ -154,150 +154,149 @@ class _LocationTabState extends State<LocationTab> {
 
     return Container(
       color: Colors.white,
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Text(
+            widget.title, // ديناميكي - يترجم من ملف json إذا جالك key
+            style: s.body16MediumInter.copyWith(
+              fontWeight: FontWeight.w500,
+              color: Colors.black,
+            ),
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            widget.subtitle,
+            style: s.body12LightInter.copyWith(
+              color: AppColor.gray600,
+            ),
+          ),
+
+          SizedBox(height: 20.h),
+
+          // About Section
+          if ((widget.aboutTitle ?? '').isNotEmpty) ...[
             Text(
-              widget.title, // ديناميكي - يترجم من ملف json إذا جالك key
-              style: s.headline20BoldInter.copyWith(
+              widget.aboutTitle!,
+              style: s.body16MediumInter.copyWith(
+                fontWeight: FontWeight.w500,
                 color: Colors.black,
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
               ),
             ),
-            SizedBox(height: 4.h),
+            SizedBox(height: 8.h),
+          ],
+          if ((widget.aboutDescription ?? '').isNotEmpty) ...[
             Text(
-              widget.subtitle,
-              style: s.body14RegularInter.copyWith(
-                color: AppColor.gray600,
-                fontSize: 14,
+              widget.aboutDescription!,
+              style: s.body12LightInter.copyWith(
+                color: AppColor.gray700,
+                height: 1.5,
               ),
             ),
-
             SizedBox(height: 20.h),
+          ],
 
-            // About Section
-            if ((widget.aboutTitle ?? '').isNotEmpty) ...[
-              Text(
-                widget.aboutTitle!,
+          // Distance Badge
+          if (_dest != null) ...[
+            Row(
+              children: [
+                const Icon(Icons.directions_walk, size: 40, color: Colors.black),
+                SizedBox(width: 6.h),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${(_distanceToDestination / 1000 * 0.621371).toStringAsFixed(1)} ${'location.min'.tr()} ( ${_formatDistance(_distanceToDestination)} )',
+                      style: s.body16MediumInter.copyWith(
+                        color: Colors.black,
+                      ),
+                    ),
+                    Text(
+                      widget.destinationLabel, // ديناميكي
+                      style: s.body14RegularInter.copyWith(
+                        color: AppColor.gray600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            SizedBox(height: 20.h),
+          ],
+
+          // Map
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12.h),
+            child: Container(
+              height: 162.h,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                border: Border.all(color: AppColor.gray200, width: 1),
+                borderRadius: BorderRadius.circular(12.h),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: OSMFlutter(
+                controller: _mapController,
+                osmOption: OSMOption(
+                  zoomOption: const ZoomOption(
+                    initZoom: 14,
+                    minZoomLevel: 3,
+                    maxZoomLevel: 19,
+                    stepZoom: 1.0,
+                  ),
+                  userLocationMarker: UserLocationMaker(
+                    personMarker: const MarkerIcon(
+                      icon: Icon(
+                        Icons.location_history_rounded,
+                        color: Colors.blue,
+                        size: 48,
+                      ),
+                    ),
+                    directionArrowMarker: const MarkerIcon(
+                      icon: Icon(
+                        Icons.navigation,
+                        color: Colors.blue,
+                        size: 48,
+                      ),
+                    ),
+                  ),
+                ),
+                onMapIsReady: (ready) async {
+                  if (!mounted) return;
+                  _mapReady = ready;
+                  await _ensureDestMarker();
+                },
+              ),
+            ),
+          ),
+
+          SizedBox(height: 20.h),
+
+          // Start Now Button
+          GestureDetector(
+            onTap: widget.onStartNavigation,
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: 16.h),
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text(
+                'start_now'.tr(),
+                textAlign: TextAlign.center,
                 style: s.title16MediumInter.copyWith(
-                  color: Colors.black,
+                  color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              SizedBox(height: 8.h),
-            ],
-            if ((widget.aboutDescription ?? '').isNotEmpty) ...[
-              Text(
-                widget.aboutDescription!,
-                style: s.body14RegularInter.copyWith(
-                  color: AppColor.gray700,
-                  fontSize: 14,
-                  height: 1.5,
-                ),
-              ),
-              SizedBox(height: 20.h),
-            ],
-
-            // Distance Badge
-            if (_dest != null) ...[
-              Row(
-                children: [
-                  const Icon(Icons.directions_walk, size: 16, color: Colors.black),
-                  SizedBox(width: 6.h),
-                  Text(
-                    '${(_distanceToDestination / 1000 * 0.621371).toStringAsFixed(1)} ${'location.min'.tr()} ( ${_formatDistance(_distanceToDestination)} )',
-                    style: s.body14RegularInter.copyWith(
-                      color: Colors.black,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 4.h),
-              Text(
-                widget.destinationLabel, // ديناميكي
-                style: s.body14RegularInter.copyWith(
-                  color: AppColor.gray600,
-                  fontSize: 14,
-                ),
-              ),
-              SizedBox(height: 20.h),
-            ],
-
-            // Map
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12.h),
-              child: Container(
-                height: 280.h,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  border: Border.all(color: AppColor.gray200, width: 1),
-                  borderRadius: BorderRadius.circular(12.h),
-                ),
-                child: OSMFlutter(
-                  controller: _mapController,
-                  osmOption: OSMOption(
-                    zoomOption: const ZoomOption(
-                      initZoom: 14,
-                      minZoomLevel: 3,
-                      maxZoomLevel: 19,
-                      stepZoom: 1.0,
-                    ),
-                    userLocationMarker: UserLocationMaker(
-                      personMarker: const MarkerIcon(
-                        icon: Icon(
-                          Icons.location_history_rounded,
-                          color: Colors.blue,
-                          size: 48,
-                        ),
-                      ),
-                      directionArrowMarker: const MarkerIcon(
-                        icon: Icon(
-                          Icons.navigation,
-                          color: Colors.blue,
-                          size: 48,
-                        ),
-                      ),
-                    ),
-                  ),
-                  onMapIsReady: (ready) async {
-                    if (!mounted) return;
-                    _mapReady = ready;
-                    await _ensureDestMarker();
-                  },
-                ),
-              ),
             ),
-
-            SizedBox(height: 20.h),
-
-            // Start Now Button
-            GestureDetector(
-              onTap: widget.onStartNavigation,
-              child: Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(vertical: 16.h),
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(12.h),
-                ),
-                child: Text(
-                  'location.start_now'.tr(),
-                  textAlign: TextAlign.center,
-                  style: s.title16MediumInter.copyWith(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

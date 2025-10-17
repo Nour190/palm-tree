@@ -13,6 +13,7 @@ import 'package:baseqat/modules/programs/presentation/widgets/speaker_widgets/sp
 import 'package:baseqat/modules/programs/presentation/widgets/speaker_widgets/week_strip.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:intl/intl.dart';
 
 /// Combined tab showing both Speakers and Workshops with same UI
 class SpeakersWorkshopsTabContent extends StatefulWidget {
@@ -77,7 +78,7 @@ class _SpeakersWorkshopsTabContentState
     final last = DateTime(month.year, month.month + 1, 0);
     _daysInMonth = List.generate(
       last.day,
-      (i) => DateTime(month.year, month.month, i + 1),
+          (i) => DateTime(month.year, month.month, i + 1),
     );
 
     final today = DateTime.now();
@@ -163,15 +164,15 @@ class _SpeakersWorkshopsTabContentState
           SizedBox(height: spacingLarge),
           _tabIndex == 0
               ? _SpeakersSection(
-                  speakers: _speakersForSelectedDay(),
-                  languageCode: widget.languageCode,
-                  onSpeakerTap: widget.onSpeakerTap,
-                )
+            speakers: _speakersForSelectedDay(),
+            languageCode: widget.languageCode,
+            onSpeakerTap: widget.onSpeakerTap,
+          )
               : _WorkshopsSection(
-                  workshops: _workshopsForSelectedDay(),
-                  languageCode: widget.languageCode,
-                  onWorkshopTap: widget.onWorkshopTap,
-                ),
+            workshops: _workshopsForSelectedDay(),
+            languageCode: widget.languageCode,
+            onWorkshopTap: widget.onWorkshopTap,
+          ),
           SizedBox(height: spacingLarge),
           const Divider(color: AppColor.blueGray100),
           SizedBox(height: spacingMedium),
@@ -201,7 +202,7 @@ class _SpeakersSection extends StatelessWidget {
   Widget build(BuildContext context) {
     if (speakers.isEmpty) {
       return _EmptyState(
-        message: 'programs.schedule.speakers_empty'.tr(),
+        message: 'speakers_empty'.tr(),
         icon: Icons.event_busy_outlined,
       );
     }
@@ -245,7 +246,7 @@ class _WorkshopsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     if (workshops.isEmpty) {
       return _EmptyState(
-        message: 'programs.schedule.workshops_empty'.tr(),
+        message: 'workshops_empty'.tr(),
         icon: Icons.work_off_outlined,
       );
     }
@@ -255,8 +256,8 @@ class _WorkshopsSection extends StatelessWidget {
         WorkshopList(
           workshops: workshops,
           languageCode: languageCode,
-          onWorkshopTap: (workshop) {
-            navigateTo(context, WorkshopInfoScreen(workshop: workshop , userId: ""));
+          onWorkshopTap: onWorkshopTap ?? (workshop) {
+            navigateTo(context, WorkshopInfoScreen(workshop: workshop, userId: ""));
           },
         ),
         SizedBox(height: ProgramsLayout.spacingLarge(context)),

@@ -498,5 +498,7 @@
 
   "age": "العمر",
   "no_artworks": "لا توجد أعمال فنية متاحة",
-  "to_festival_speakers": "إلى متحدثي المهرجان"
+  "to_festival_speakers": "إلى متحدثي المهرجان",
+  "speakers_empty": "لا يوجد متحدثون متاحون",
+  "workshops_empty": "لا توجد ورش عمل متاحة"
 }

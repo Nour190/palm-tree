@@ -138,24 +138,21 @@ class _FeedbackTabState extends State<FeedbackTab>
         opacity: _fadeController,
         child: Container(
           color: AppColor.white,
-          child: SingleChildScrollView(
-            physics: const ClampingScrollPhysics(),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: _cachedMaxWidth),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildRatingSection(),
-                    SizedBox(height: 20.sH),
-                    _buildFeedbackSection(),
-                    SizedBox(height: 24.sH),
-                    _buildSubmitButton(),
-                    if (Responsive.isMobile(context))
-                      SizedBox(height: 40.sH),
-                  ],
-                ),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: _cachedMaxWidth),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildRatingSection(),
+                  SizedBox(height: 20.sH),
+                  _buildFeedbackSection(),
+                  SizedBox(height: 24.sH),
+                  _buildSubmitButton(),
+                  if (Responsive.isMobile(context))
+                    SizedBox(height: 40.sH),
+                ],
               ),
             ),
           ),
@@ -351,7 +348,7 @@ class _FeedbackTabState extends State<FeedbackTab>
           foregroundColor: AppColor.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.sW),
+            borderRadius: BorderRadius.circular(16),
           ),
           padding: EdgeInsets.zero,
         ),

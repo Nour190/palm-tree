@@ -22,19 +22,19 @@ class MonthSelector extends StatelessWidget {
     final nextIcon = isRtl ? Icons.chevron_left : Icons.chevron_right;
 
     return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         _CircleButton(icon: prevIcon, onTap: onPrev),
-        SizedBox(width: spacing),
-        Expanded(
-          child: Text(
-            monthLabel,
-            textAlign: TextAlign.center,
-            style: ProgramsTypography.headingMedium(
-              context,
-            ).copyWith(color: AppColor.gray900),
-          ),
+        SizedBox(width: ProgramsLayout.spacingMedium(context)),
+        Text(
+          monthLabel,
+          textAlign: TextAlign.center,
+          style: ProgramsTypography.bodyPrimary(
+            context,
+          ).copyWith(color: AppColor.black, fontWeight: FontWeight.w500),
         ),
-        SizedBox(width: spacing),
+        SizedBox(width: ProgramsLayout.spacingMedium(context)),
         _CircleButton(icon: nextIcon, onTap: onNext),
       ],
     );
@@ -51,25 +51,12 @@ class _CircleButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = ProgramsLayout.size(context, 40);
 
-    return Material(
-      color: AppColor.white,
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: AppColor.blueGray100),
-          ),
-          child: Icon(
-            icon,
-            size: ProgramsLayout.size(context, 20),
-            color: AppColor.gray900,
-          ),
-        ),
+    return InkWell(
+      onTap: onTap,
+      child: Icon(
+        icon,
+        size: ProgramsLayout.size(context, 30),
+        color: AppColor.black,
       ),
     );
   }

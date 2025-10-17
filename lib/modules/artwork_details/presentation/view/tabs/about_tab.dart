@@ -71,7 +71,8 @@ class _AboutTabState extends State<AboutTab> {
       children: [
         if (hasAbout)
           _textSection(
-            title: 'about_artist'.tr(),
+            // title: 'about_artist'.tr(),
+            title: widget.title,
             body: about,
             styles: s,
             expanded: _aboutExpanded,
@@ -379,7 +380,7 @@ class _AboutTabState extends State<AboutTab> {
           foregroundColor: Colors.white,
           padding: EdgeInsets.symmetric(vertical: 16.h),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10.h),
+            borderRadius: BorderRadius.circular(16),
           ),
           elevation: 0,
         ),

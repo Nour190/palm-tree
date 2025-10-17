@@ -32,10 +32,12 @@ class BottomCta extends StatelessWidget {
             ),
           ),
           child: Center(
-            child: Icon(
-              icon,
-              size: ProgramsLayout.size(context, 64),
-              color: Colors.white,
+            child: Image(
+              image: AssetImage(
+                'assets/images/sun_image.png',
+              ),
+              height: ProgramsLayout.size(context, 140),
+              width: ProgramsLayout.size(context, 140),
             ),
           ),
         ),

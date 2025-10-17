@@ -500,7 +500,8 @@
   },
   "age": "Age",
   "no_artworks": "No artworks available",
-  "to_festival_speakers": "To Festival Speakers"
-
+  "to_festival_speakers": "To Festival Speakers",
+  "speakers_empty": "No speakers available",
+  "workshops_empty": "No workshops available"
 
 }

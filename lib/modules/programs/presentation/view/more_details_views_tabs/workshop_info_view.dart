@@ -18,10 +18,12 @@ class WorkshopInfoScreen extends StatefulWidget {
     super.key,
     required this.workshop,
     required this.userId,
+    this.isEmbedded = false, // Added parameter to disable scroll when embedded
   });
 
   final Workshop workshop;
   final String userId;
+  final bool isEmbedded; // New parameter
 
   @override
   State<WorkshopInfoScreen> createState() => _WorkshopInfoScreenState();
@@ -349,6 +351,155 @@ class _WorkshopInfoScreenState extends State<WorkshopInfoScreen> {
     final localizedTitle = widget.workshop.name ?? 'Workshop';
     final localizedDescription = widget.workshop.description ?? '';
 
+    final contentWidget = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _WorkshopHeaderImage(
+          imageUrl: widget.workshop.coverImage,
+          isFavorite: _isFavorite,
+          onFavoriteToggle: () {
+            setState(() => _isFavorite = !_isFavorite);
+          },
+        ),
+        SizedBox(height: spacingLarge),
+        _WorkshopTime(time: widget.workshop.startAt, formatTime: _formatTime),
+        SizedBox(height: spacingMedium),
+        _DescriptionSection(description: localizedDescription),
+        SizedBox(height: spacingLarge),
+        _WorkshopDetailsSection(
+          workshop: widget.workshop,
+          formatDateTime: _formatDateTime,
+        ),
+        SizedBox(height: spacingLarge),
+        _NavigationInfo(
+          distanceInMeters: _distanceInMeters,
+          isLoading: _isLoadingLocation,
+          isNavigating: _isNavigating,
+          currentRoad: _currentRoad,
+          formatDistance: _formatDistance,
+          estimateWalkingTime: _estimateWalkingTime,
+          isOnline: _isOnline,
+          currentPosition: _currentPosition,
+        ),
+        SizedBox(height: spacingMedium),
+        _MapPreview(
+          controller: _mapController,
+          isMapReady: _isMapReady,
+          isNavigating: _isNavigating,
+          distanceInMeters: _distanceInMeters,
+          isOnline: _isOnline,
+          onReady: () {
+            setState(() => _isMapReady = true);
+            if (_currentPosition != null && _isOnline) {
+              _updateMapWithRoute(_currentPosition!);
+            }
+          },
+        ),
+        SizedBox(height: spacingLarge),
+        if (widget.isEmbedded)
+          SizedBox(
+            height: ProgramsLayout.size(context, 56),
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: (_currentPosition == null ||
+                  _isLoadingLocation ||
+                  _mapController == null ||
+                  !_isOnline)
+                  ? null
+                  : () {
+                if (_isNavigating) {
+                  _stopNavigation();
+                } else {
+                  _startNavigation();
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _isNavigating ? Colors.red : AppColor.black,
+                foregroundColor: AppColor.white,
+                disabledBackgroundColor: AppColor.gray400,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    ProgramsLayout.radius16(context),
+                  ),
+                ),
+              ),
+              child: _isLoadingLocation
+                  ? SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColor.white,
+                ),
+              )
+                  : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    !_isOnline
+                        ? 'Navigation unavailable offline'
+                        : (_isNavigating ? 'Stop Now' : 'Start Now'),
+                    style: ProgramsTypography.bodyPrimary(context).copyWith(
+                      color: AppColor.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+
+    if (widget.isEmbedded) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // AppBar content as regular widgets
+          Row(
+            children: [
+              Text(
+                localizedTitle,
+                style: ProgramsTypography.headingMedium(context),
+              ),
+              Spacer(),
+              if (!_isOnline)
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColor.primaryColor,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.cloud_off, size: 14, color: Colors.white),
+                      SizedBox(width: 4),
+                      Text(
+                        'Offline',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              if (_isNavigating)
+                IconButton(
+                  icon: Icon(Icons.close),
+                  onPressed: _stopNavigation,
+                  tooltip: 'Stop Navigation',
+                ),
+            ],
+          ),
+          SizedBox(height: spacingMedium),
+          contentWidget,
+        ],
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColor.white,
       appBar: AppBar(
@@ -399,53 +550,7 @@ class _WorkshopInfoScreenState extends State<WorkshopInfoScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: ProgramsLayout.pagePadding(context),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _WorkshopHeaderImage(
-                imageUrl: widget.workshop.coverImage,
-                isFavorite: _isFavorite,
-                onFavoriteToggle: () {
-                  setState(() => _isFavorite = !_isFavorite);
-                },
-              ),
-              SizedBox(height: spacingLarge),
-              _WorkshopTime(time: widget.workshop.startAt, formatTime: _formatTime),
-              SizedBox(height: spacingMedium),
-              _DescriptionSection(description: localizedDescription),
-              SizedBox(height: spacingLarge),
-              _WorkshopDetailsSection(
-                workshop: widget.workshop,
-                formatDateTime: _formatDateTime,
-              ),
-              SizedBox(height: spacingLarge),
-              _NavigationInfo(
-                distanceInMeters: _distanceInMeters,
-                isLoading: _isLoadingLocation,
-                isNavigating: _isNavigating,
-                currentRoad: _currentRoad,
-                formatDistance: _formatDistance,
-                estimateWalkingTime: _estimateWalkingTime,
-                isOnline: _isOnline,
-                currentPosition: _currentPosition,
-              ),
-              SizedBox(height: spacingMedium),
-              _MapPreview(
-                controller: _mapController,
-                isMapReady: _isMapReady,
-                isNavigating: _isNavigating,
-                distanceInMeters: _distanceInMeters,
-                isOnline: _isOnline,
-                onReady: () {
-                  setState(() => _isMapReady = true);
-                  if (_currentPosition != null && _isOnline) {
-                    _updateMapWithRoute(_currentPosition!);
-                  }
-                },
-              ),
-              SizedBox(height: spacingLarge),
-            ],
-          ),
+          child: contentWidget,
         ),
       ),
       bottomNavigationBar: SafeArea(
@@ -492,12 +597,10 @@ class _WorkshopInfoScreenState extends State<WorkshopInfoScreen> {
                 : Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(_isNavigating ? Icons.stop : Icons.navigation),
-                SizedBox(width: 8),
                 Text(
                   !_isOnline
                       ? 'Navigation unavailable offline'
-                      : (_isNavigating ? 'Stop Navigation' : 'Start Navigation'),
+                      : (_isNavigating ? 'Stop Now' : 'Start Now'),
                   style: ProgramsTypography.bodyPrimary(context).copyWith(
                     color: AppColor.white,
                     fontWeight: FontWeight.w500,
@@ -541,14 +644,14 @@ class _WorkshopHeaderImage extends StatelessWidget {
                 : _placeholder,
           ),
         ),
-        Positioned(
-          left: 8,
-          bottom: 8,
-          child: _FavoriteButton(
-            isFavorite: isFavorite,
-            onPressed: onFavoriteToggle,
-          ),
-        ),
+        // Positioned(
+        //   left: 8,
+        //   bottom: 8,
+        //   child: _FavoriteButton(
+        //     isFavorite: isFavorite,
+        //     onPressed: onFavoriteToggle,
+        //   ),
+        // ),
       ],
     );
   }
@@ -621,7 +724,7 @@ class _WorkshopTime extends StatelessWidget {
           ),
         ),
         Transform.rotate(
-          angle: -0.785398,
+          angle: 2.356194, // 135 degrees in radians (pointing bottom-right)
           child: Container(
             width: 64,
             height: 64,
@@ -661,11 +764,11 @@ class _DescriptionSection extends StatelessWidget {
         SizedBox(height: 4),
         Text(
           description,
-          style: ProgramsTypography.bodySecondary(context).copyWith(
-            fontWeight: FontWeight.w300,
+          style: ProgramsTypography.labelSmallLight(context).copyWith(
+            fontWeight: FontWeight.w400,
             fontSize: 12,
             height: 1.5,
-            color: AppColor.black,
+            color: AppColor.gray900,
           ),
         ),
       ],
@@ -736,7 +839,7 @@ class _DetailRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Icon(icon, size: 24, color: AppColor.black),
         SizedBox(width: 8),
@@ -819,29 +922,21 @@ class _NavigationInfo extends StatelessWidget {
     }
 
     if (distanceInMeters == null) {
-      return Container(
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColor.primaryColor.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColor.primaryColor.withOpacity(0.2)),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.location_off, size: 24, color: AppColor.primaryColor),
-            SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Location unavailable',
-                style: ProgramsTypography.bodySecondary(context).copyWith(
-                  fontWeight: FontWeight.w400,
-                  fontSize: 14,
-                  color: AppColor.gray900,
-                ),
+      return Row(
+        children: [
+          Icon(Icons.location_off, size: 24, color: AppColor.primaryColor),
+          SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Location unavailable',
+              style: ProgramsTypography.bodySecondary(context).copyWith(
+                fontWeight: FontWeight.w400,
+                fontSize: 14,
+                color: AppColor.gray900,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       );
     }
 
@@ -852,172 +947,147 @@ class _NavigationInfo extends StatelessWidget {
 
     final isCachedLocation = !isOnline && currentPosition != null;
 
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isNavigating
-            ? Colors.blue.shade50
-            : (isCachedLocation ? AppColor.primaryColor.withOpacity(0.05) : AppColor.gray50),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isNavigating
-              ? Colors.blue
-              : (isCachedLocation ? AppColor.primaryColor : AppColor.gray200),
-          width: 2,
-        ),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: isNavigating
-                      ? Colors.blue
-                      : (isCachedLocation ? AppColor.primaryColor : AppColor.black),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  isNavigating
-                      ? Icons.navigation
-                      : (isCachedLocation ? Icons.history : Icons.directions_walk),
-                  color: Colors.white,
-                  size: 28,
-                ),
-              ),
-              SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          roadDistance != null
-                              ? '${(roadDistance / 1000).toStringAsFixed(1)} km'
-                              : distance,
-                          style: ProgramsTypography.headingMedium(context)
-                              .copyWith(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 24,
-                            color: AppColor.black,
+    return Column(
+      children: [
+        Row(
+          children: [
+            Icon(
+              isNavigating
+                  ? Icons.navigation
+                  : (isCachedLocation ? Icons.history : Icons.directions_walk),
+              color: Colors.black,
+              size: 28,
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        roadDistance != null
+                            ? '${(roadDistance / 1000).toStringAsFixed(1)} km'
+                            : distance,
+                        style: ProgramsTypography.bodyPrimary(context)
+                            .copyWith(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 16,
+                          color: AppColor.black,
+                        ),
+                      ),
+                      if (isNavigating) ...[
+                        SizedBox(width: 8),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.blue,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            'LIVE',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                        if (isNavigating) ...[
-                          SizedBox(width: 8),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.blue,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              'LIVE',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                        if (isCachedLocation) ...[
-                          SizedBox(width: 8),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppColor.primaryColor,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              'CACHED',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
                       ],
+                      if (isCachedLocation) ...[
+                        SizedBox(width: 8),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColor.primaryColor,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            'CACHED',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  Text(
+                    roadDuration != null
+                        ? '${(roadDuration / 60).round()} min walking'
+                        : '$walkingTime min walking',
+                    style: ProgramsTypography.labelSmallLight(context).copyWith(
+                      fontWeight: FontWeight.w400,
+                      fontSize: 12,
+                      color: AppColor.gray600,
                     ),
-                    SizedBox(height: 4),
-                    Text(
-                      roadDuration != null
-                          ? '${(roadDuration / 60).round()} min walking'
-                          : '$walkingTime min walking',
-                      style: ProgramsTypography.bodySecondary(context).copyWith(
-                        fontWeight: FontWeight.w400,
-                        fontSize: 14,
-                        color: AppColor.gray600,
-                      ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        if (isCachedLocation) ...[
+          SizedBox(height: 12),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColor.primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.info_outline,
+                    size: 16, color: AppColor.gray900),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Showing last known location (offline)',
+                    style: TextStyle(
+                      color: AppColor.gray900,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          if (isCachedLocation) ...[
-            SizedBox(height: 12),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColor.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.info_outline,
-                      size: 16, color: AppColor.gray900),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Showing last known location (offline)',
-                      style: TextStyle(
-                        color: AppColor.gray900,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          if (isNavigating) ...[
-            SizedBox(height: 12),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade100,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.info_outline,
-                      size: 16, color: Colors.blue.shade900),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Navigation active - Following your location',
-                      style: TextStyle(
-                        color: Colors.blue.shade900,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ],
-      ),
+        if (isNavigating) ...[
+          SizedBox(height: 12),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade100,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.info_outline,
+                    size: 16, color: Colors.blue.shade900),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Navigation active - Following your location',
+                    style: TextStyle(
+                      color: Colors.blue.shade900,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

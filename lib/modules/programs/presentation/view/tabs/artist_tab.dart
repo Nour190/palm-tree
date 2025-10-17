@@ -63,8 +63,9 @@ class _ArtistTabContentState extends State<ArtistTabContent> {
 
   Widget _buildList() {
     return ListView.separated(
-      physics: const BouncingScrollPhysics(),
+      physics: NeverScrollableScrollPhysics(),
       padding: EdgeInsets.symmetric(horizontal: 16.h, vertical: 12.h),
+      shrinkWrap: true,
       itemCount: widget.artists.length,
       itemBuilder: (context, i) {
         final artist = widget.artists[i];
@@ -78,7 +79,7 @@ class _ArtistTabContentState extends State<ArtistTabContent> {
         );
       },
       separatorBuilder: (_, __) => Padding(
-        padding: EdgeInsets.symmetric(vertical: 12.h),
+        padding: EdgeInsets.only(bottom: 30.h, top: 12),
         child: Container(height: 1, color: AppColor.gray200),
       ),
     );
@@ -89,8 +90,9 @@ class _ArtistTabContentState extends State<ArtistTabContent> {
     final childAspectRatio = _isDesktop ? 0.82 : 0.88;
 
     return GridView.builder(
-      physics: const BouncingScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
       padding: EdgeInsets.symmetric(horizontal: 16.h, vertical: 12.h),
+      shrinkWrap: true,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
         childAspectRatio: childAspectRatio,
