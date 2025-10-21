@@ -35,6 +35,7 @@ class IthraGallerySection extends StatelessWidget {
       padding: EdgeInsets.only(
         left:horizontalPadding ,right:horizontalPadding ,
         top: 20.sH,
+        bottom: 20.sH
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
