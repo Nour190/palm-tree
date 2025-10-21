@@ -49,6 +49,18 @@ import 'package:baseqat/modules/home/data/models/artist_model.dart';
 // ---- Optional location (if you surface distance inside About tab)
 import 'package:baseqat/core/location/location_service.dart';
 
+
+// ---- Tabs & Navigation
+import 'package:baseqat/modules/tabs/presentation/manger/tabs_cubit.dart';
+import 'package:baseqat/modules/tabs/presentation/manger/tabs_states.dart';
+
+import '../../../../../core/components/custom_widgets/custom_top_bar.dart';
+import '../../../../../core/components/custom_widgets/desktop_top_bar.dart';
+import '../../../../../core/components/qr_scanner/qr_scanner_screen.dart';
+import '../../../../../core/resourses/constants_manager.dart';
+import '../../../../../core/resourses/navigation_manger.dart';
+import '../../../../../core/utils/rtl_helper.dart';
+
 class ArtWorkDetailsScreen extends StatefulWidget {
   const ArtWorkDetailsScreen({
     super.key,
@@ -234,6 +246,7 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
       child: Scaffold(
         backgroundColor: AppColor.white,
         body: SafeArea(
+          bottom: false,
           child: MultiBlocListener(
             listeners: [
               // When artwork loads, fetch its artist
@@ -258,13 +271,86 @@ class _ArtWorkDetailsScreenState extends State<ArtWorkDetailsScreen>
                 },
               ),
             ],
-            child: devType == DeviceType.desktop ? _buildDesktopLayout() :_buildMobileLayout() ,
+            child: Column(
+              children: [
+                BlocBuilder<TabsCubit, TabsState>(
+                  builder: (context, state) {
+                    final selectedIndex = state is SelectedIndexChanged
+                        ? state.selectedIndex
+                        : context.read<TabsCubit>().selectedIndex;
+
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        devType == DeviceType.desktop
+                            ? DesktopTopBar(
+                          items: [
+                            "navigation.home".tr(),
+                            "navigation.programs".tr(),
+                            "navigation.virtual_tour".tr(),
+                          ],
+                          selectedIndex: selectedIndex,
+                          onItemTap: (index) {
+                            Navigator.of(context).pop();
+                            context.read<TabsCubit>().changeSelectedIndex(index);
+                          },
+                          onLoginTap: () {},
+                          showScanButton: true,
+                          onScanTap: () => _handleQRScan(context),
+                        )
+                            : TopBar(
+                          items: [
+                            "navigation.home".tr(),
+                            "navigation.programs".tr(),
+                            "navigation.virtual_tour".tr(),
+                          ],
+                          selectedIndex: selectedIndex,
+                          onItemTap: (index) {
+                            Navigator.of(context).pop();
+                            context.read<TabsCubit>().changeSelectedIndex(index);
+                          },
+                          onLoginTap: () {},
+                          showScanButton: true,
+                          onScanTap: () => _handleQRScan(context),
+                        ),
+                        if (devType != DeviceType.desktop)
+                          Divider(
+                            height: 1,
+                            thickness: 1,
+                            color: Theme.of(context).dividerColor.withOpacity(0.2),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+                Expanded(
+                  child: devType == DeviceType.desktop ? _buildDesktopLayout() : _buildMobileLayout(),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
+  void _handleQRScan(BuildContext context) {
+    navigateTo(
+      context,
+      QRScannerScreen(
+        onCodeScanned: (String artworkId) {
+          Navigator.pop(context);
+          navigateTo(
+            context,
+            ArtWorkDetailsScreen(
+              artworkId: artworkId,
+              userId: AppConstants.userIdValue ?? "",
+            ),
+          );
+        },
+      ),
+    );
+  }
   Widget _buildMobileLayout() {
     return _selectedIndex == 3 ? Column(
       children: [
@@ -740,7 +826,9 @@ class _MobileHeader extends StatelessWidget {
               InkWell(
                 onTap: () => Navigator.of(context).pop(),
                 child: Iconify(
-                  MaterialSymbols.arrow_back_rounded,
+                  RTLHelper.isRTL(context)
+                      ? MaterialSymbols.arrow_forward_rounded
+                      : MaterialSymbols.arrow_back_rounded,
                   color: Colors.black,
                   size: 32.sW,
                 ),

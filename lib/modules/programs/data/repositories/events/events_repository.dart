@@ -5,6 +5,7 @@ import 'package:baseqat/modules/programs/data/models/fav_extension.dart';
 import 'package:baseqat/modules/home/data/models/artist_model.dart';
 import 'package:baseqat/modules/home/data/models/artwork_model.dart';
 import 'package:baseqat/modules/home/data/models/speaker_model.dart';
+import 'package:baseqat/modules/home/data/models/event_model.dart';
 import 'package:dartz/dartz.dart';
 
 import '../../models/gallery_item.dart';
@@ -52,7 +53,7 @@ abstract class EventsRepository {
     List<String>? inEntityIds,
   });
 
-  /// Convenience getters for “only favorites” lists.
+  /// Convenience getters for "only favorites" lists.
   Future<Either<Failure, List<Artist>>> getFavoriteArtists({
     required String userId,
     int limit = 10,
@@ -67,4 +68,7 @@ abstract class EventsRepository {
     required String userId,
     int limit = 10,
   });
+
+  Future<Either<Failure, List<Event>>> getEvents({int limit = 10});
+  Future<Either<Failure, Event?>> getEventById(String eventId);
 }

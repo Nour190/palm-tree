@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'package:baseqat/modules/home/data/models/artist_model.dart';
 import 'package:baseqat/modules/home/data/models/artwork_model.dart';
+import 'package:baseqat/modules/home/data/models/event_model.dart';
 import 'package:baseqat/modules/home/data/models/speaker_model.dart';
 import 'package:baseqat/modules/home/data/models/workshop_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -21,6 +22,7 @@ class EventsCubit extends Cubit<EventsState> {
   int _speakersReq = 0;
   int _workshopsReq = 0;
   int _galleryReq = 0;
+  int _eventsReq = 0;
 
   // ---------------------------------------------------------------------------
   // Local search only (purely in-memory)
@@ -32,6 +34,7 @@ class EventsCubit extends Cubit<EventsState> {
   List<Artwork> _artworksAll = const [];
   List<Speaker> _speakersAll = const [];
   List<Workshop> _workshopsAll = const [];
+  List<Event> _eventsAll = const [];
 
   // ---------------------------------------------------------------------------
   // Public API — Search
@@ -283,6 +286,52 @@ class EventsCubit extends Cubit<EventsState> {
   }
 
   // ---------------------------------------------------------------------------
+  // Events
+  // ---------------------------------------------------------------------------
+  Future<void> loadEvents({int limit = 10, bool force = false}) async {
+    developer.log('loadEvents - limit: $limit, force: $force', name: 'EventsCubit');
+    if (!force && state.eventsStatus == SliceStatus.loading) {
+      developer.log('Events already loading, skipping', name: 'EventsCubit');
+      return;
+    }
+
+    final req = ++_eventsReq;
+    developer.log('Events request token: $req', name: 'EventsCubit');
+
+    emit(state.copyWith(eventsStatus: SliceStatus.loading, eventsError: null));
+
+    try {
+      final failureOrData = await repo.getEvents(limit: limit);
+
+      if (req != _eventsReq) {
+        developer.log('Events request $req outdated (current: $_eventsReq)', name: 'EventsCubit');
+        return;
+      }
+
+      failureOrData.fold(
+            (failure) {
+          developer.log('Events load failed: ${failure.message}', name: 'EventsCubit');
+          emit(state.copyWith(
+            eventsStatus: SliceStatus.error,
+            eventsError: failure.message,
+          ));
+        },
+            (data) {
+          developer.log('Events loaded successfully: ${data.length} items', name: 'EventsCubit');
+          _eventsAll = List<Event>.unmodifiable(data);
+          _applyFilters(emitEventsOnly: true);
+        },
+      );
+    } catch (e, stackTrace) {
+      developer.log('Events exception: $e', name: 'EventsCubit', error: e, stackTrace: stackTrace);
+      emit(state.copyWith(
+        eventsStatus: SliceStatus.error,
+        eventsError: e.toString(),
+      ));
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // Convenience: home screen "load everything"
   // ---------------------------------------------------------------------------
   Future<void> loadHome({int limit = 10}) async {
@@ -294,6 +343,7 @@ class EventsCubit extends Cubit<EventsState> {
         loadSpeakers(limit: limit),
         loadWorkshops(limit: limit),
         loadGallery(limitArtworks: limit),
+        loadEvents(limit: limit),
       ]);
       developer.log('loadHome completed successfully', name: 'EventsCubit');
     } catch (e, stackTrace) {
@@ -305,6 +355,7 @@ class EventsCubit extends Cubit<EventsState> {
   // Core local filtering (text search only)
   // ---------------------------------------------------------------------------
   void _applyFilters({
+    bool emitEventsOnly = false,
     bool emitArtistsOnly = false,
     bool emitArtworksOnly = false,
     bool emitSpeakersOnly = false,
@@ -312,6 +363,25 @@ class EventsCubit extends Cubit<EventsState> {
   }) {
     final q = _searchQuery.toLowerCase();
     developer.log('_applyFilters - query: "$q"', name: 'EventsCubit');
+
+    if (!emitArtistsOnly && !emitArtworksOnly && !emitSpeakersOnly && !emitWorkshopsOnly) {
+      var list = _eventsAll;
+
+      if (q.isNotEmpty) {
+        list = list
+            .where((e) => _matchAny(q, [
+          e.name, e.nameAr, e.overview, e.overviewAr,
+        ]))
+            .toList(growable: false);
+      }
+
+      developer.log('Events filtered: ${list.length} items', name: 'EventsCubit');
+      emit(state.copyWith(
+        events: List<Event>.unmodifiable(list),
+        eventsStatus: SliceStatus.success,
+        eventsError: null,
+      ));
+    }
 
     // ---------------- Artists ----------------
     if (!emitArtworksOnly && !emitSpeakersOnly && !emitWorkshopsOnly) {

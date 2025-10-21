@@ -422,14 +422,20 @@
   "programs": {
     "header": {
       "title": "Programs",
-      "search_placeholder": "What do you want to see today?"
+      "search_placeholder": "What want to see today?"
     },
     "tabs": {
       "artworks": "Art Works",
       "artists": "Artists",
       "schedule": "Schedule",
       "gallery": "Gallery",
-      "virtual_tour": "Virtual Tour"
+      "virtual_tour": "Virtual Tour",
+      "events": "Events",
+      "museum": "المتاحف"
+    },
+    "museum":{
+      "visit_now": "Visit Now"
+
     },
     "errors": {
       "artworks": "Unable to load artworks",

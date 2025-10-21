@@ -456,45 +456,45 @@ class _WorkshopInfoScreenState extends State<WorkshopInfoScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // AppBar content as regular widgets
-          Row(
-            children: [
-              Text(
-                localizedTitle,
-                style: ProgramsTypography.headingMedium(context),
-              ),
-              Spacer(),
-              if (!_isOnline)
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColor.primaryColor,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.cloud_off, size: 14, color: Colors.white),
-                      SizedBox(width: 4),
-                      Text(
-                        'Offline',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              if (_isNavigating)
-                IconButton(
-                  icon: Icon(Icons.close),
-                  onPressed: _stopNavigation,
-                  tooltip: 'Stop Navigation',
-                ),
-            ],
-          ),
-          SizedBox(height: spacingMedium),
+          // Row(
+          //   children: [
+          //     Text(
+          //       localizedTitle,
+          //       style: ProgramsTypography.headingMedium(context),
+          //     ),
+          //     Spacer(),
+          //     if (!_isOnline)
+          //       Container(
+          //         padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          //         decoration: BoxDecoration(
+          //           color: AppColor.primaryColor,
+          //           borderRadius: BorderRadius.circular(12),
+          //         ),
+          //         child: Row(
+          //           mainAxisSize: MainAxisSize.min,
+          //           children: [
+          //             Icon(Icons.cloud_off, size: 14, color: Colors.white),
+          //             SizedBox(width: 4),
+          //             Text(
+          //               'Offline',
+          //               style: TextStyle(
+          //                 color: Colors.white,
+          //                 fontSize: 12,
+          //                 fontWeight: FontWeight.bold,
+          //               ),
+          //             ),
+          //           ],
+          //         ),
+          //       ),
+          //     if (_isNavigating)
+          //       IconButton(
+          //         icon: Icon(Icons.close),
+          //         onPressed: _stopNavigation,
+          //         tooltip: 'Stop Navigation',
+          //       ),
+          //   ],
+          // ),
+          // SizedBox(height: spacingMedium),
           contentWidget,
         ],
       );
@@ -664,40 +664,40 @@ class _WorkshopHeaderImage extends StatelessWidget {
   );
 }
 
-class _FavoriteButton extends StatelessWidget {
-  const _FavoriteButton({
-    required this.isFavorite,
-    required this.onPressed,
-  });
-
-  final bool isFavorite;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 32,
-      height: 32,
-      decoration: BoxDecoration(
-        color: AppColor.black.withOpacity(0.6),
-        shape: BoxShape.circle,
-        border: Border.all(color: AppColor.white, width: 1),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(16),
-          child: Icon(
-            isFavorite ? Icons.favorite : Icons.favorite_border,
-            color: AppColor.white,
-            size: 18,
-          ),
-        ),
-      ),
-    );
-  }
-}
+// class _FavoriteButton extends StatelessWidget {
+//   const _FavoriteButton({
+//     required this.isFavorite,
+//     required this.onPressed,
+//   });
+//
+//   final bool isFavorite;
+//   final VoidCallback onPressed;
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       width: 32,
+//       height: 32,
+//       decoration: BoxDecoration(
+//         color: AppColor.black.withOpacity(0.6),
+//         shape: BoxShape.circle,
+//         border: Border.all(color: AppColor.white, width: 1),
+//       ),
+//       child: Material(
+//         color: Colors.transparent,
+//         child: InkWell(
+//           onTap: onPressed,
+//           borderRadius: BorderRadius.circular(16),
+//           child: Icon(
+//             isFavorite ? Icons.favorite : Icons.favorite_border,
+//             color: AppColor.white,
+//             size: 18,
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 class _WorkshopTime extends StatelessWidget {
   const _WorkshopTime({
@@ -852,7 +852,7 @@ class _DetailRow extends StatelessWidget {
           ),
         ),
         SizedBox(width: 4),
-        Expanded(
+        Flexible(
           child: Text(
             value,
             style: ProgramsTypography.bodySecondary(context).copyWith(
@@ -860,6 +860,7 @@ class _DetailRow extends StatelessWidget {
               fontSize: 8,
               color: AppColor.black,
             ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],

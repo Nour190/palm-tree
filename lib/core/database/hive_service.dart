@@ -17,6 +17,10 @@ import 'package:baseqat/core/database/type_adapters/review_adapter.dart';
 import 'package:baseqat/core/database/type_adapters/pending_feedback_adapter.dart';
 import 'package:baseqat/core/database/type_adapters/speaker_adapter.dart';
 import 'package:baseqat/core/database/type_adapters/workshop_adapter.dart';
+import 'package:baseqat/core/database/type_adapters/event_adapter.dart';
+import 'package:baseqat/modules/home/data/models/event_model.dart';
+import 'package:baseqat/core/database/type_adapters/museum_adapter.dart';
+import 'package:baseqat/modules/home/data/models/museum_model.dart';
 
 import '../../modules/artwork_details/data/models/conversation_models.dart';
 
@@ -36,6 +40,8 @@ class HiveService {
   static const String programsArtworksBox = 'programs_artworks_box';
   static const String programsSpeakersBox = 'programs_speakers_box';
   static const String programsWorkshopsBox = 'programs_workshops_box';
+  static const String programsEventsBox = 'programs_events_box';
+  static const String programsMuseumsBox = 'programs_museums_box';
 
   static Future<void> initialize() async {
     if (kIsWeb) {
@@ -73,6 +79,13 @@ class HiveService {
     if (!Hive.isAdapterRegistered(8)) {
       Hive.registerAdapter(WorkshopAdapter());
     }
+    if (!Hive.isAdapterRegistered(9)) {
+      Hive.registerAdapter(EventAdapter());
+    }
+
+    if (!Hive.isAdapterRegistered(15)) {
+      Hive.registerAdapter(MuseumAdapter());
+    }
 
     // Open boxes
     await Hive.openBox<Artist>(artistsBox);
@@ -85,6 +98,8 @@ class HiveService {
     await Hive.openBox<MessageRecord>(messagesBox);
     await Hive.openBox(metadataBox);
     await Hive.openBox(locationCacheBox);
+    await Hive.openBox<Event>(programsEventsBox);
+    await Hive.openBox<Museum>(programsMuseumsBox);
 
     await Hive.openBox<Artist>(programsArtistsBox);
     await Hive.openBox<Artwork>(programsArtworksBox);
@@ -101,6 +116,8 @@ class HiveService {
     await Hive.box<ConversationRecord>(conversationsBox).clear();
     await Hive.box<MessageRecord>(messagesBox).clear();
     await Hive.box(locationCacheBox).clear();
+    await Hive.box<Event>(programsEventsBox).clear();
+    await Hive.box<Museum>(programsMuseumsBox).clear();
 
     await Hive.box<Artist>(programsArtistsBox).clear();
     await Hive.box<Artwork>(programsArtworksBox).clear();

@@ -74,6 +74,7 @@ class ArtWorksGalleryContent extends StatelessWidget {
         final artwork = artworks[index];
 
         return ArtWorkCardWidget(
+          index: index,
           artwork: artwork,
           viewType: ArtworkCardViewType.list,
           languageCode: languageCode,
@@ -103,6 +104,7 @@ class ArtWorksGalleryContent extends StatelessWidget {
         final artwork = artworks[index];
 
         return ArtWorkCardWidget(
+          index: index,
           artwork: artwork,
           viewType: ArtworkCardViewType.grid,
           languageCode: languageCode,
@@ -135,6 +137,7 @@ class _EmptyState extends StatelessWidget {
     final spacingMedium = ProgramsLayout.spacingMedium(context);
 
     return Center(
+
       child: Padding(
         padding: ProgramsLayout.sectionPadding(context),
         child: Column(
@@ -146,7 +149,7 @@ class _EmptyState extends StatelessWidget {
                 width: size,
                 height: size,
                 decoration: BoxDecoration(
-                  color: AppColor.gray100,
+                  color: AppColor.white,
                   borderRadius: BorderRadius.circular(radius),
                 ),
                 child: icon ??

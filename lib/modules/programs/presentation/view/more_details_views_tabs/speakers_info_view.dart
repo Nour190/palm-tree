@@ -451,45 +451,45 @@ class _SpeakersInfoScreenState extends State<SpeakersInfoScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // AppBar content as regular widgets
-          Row(
-            children: [
-              Text(
-                localizedName,
-                style: ProgramsTypography.headingMedium(context),
-              ),
-              Spacer(),
-              if (!_isOnline)
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColor.primaryColor,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.cloud_off, size: 14, color: Colors.white),
-                      SizedBox(width: 4),
-                      Text(
-                        'Offline',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              if (_isNavigating)
-                IconButton(
-                  icon: Icon(Icons.close),
-                  onPressed: _stopNavigation,
-                  tooltip: 'Stop Navigation',
-                ),
-            ],
-          ),
-          SizedBox(height: spacingMedium),
+          // Row(
+          //   children: [
+          //     Text(
+          //       localizedName,
+          //       style: ProgramsTypography.headingMedium(context),
+          //     ),
+          //     Spacer(),
+          //     if (!_isOnline)
+          //       Container(
+          //         padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          //         decoration: BoxDecoration(
+          //           color: AppColor.primaryColor,
+          //           borderRadius: BorderRadius.circular(12),
+          //         ),
+          //         child: Row(
+          //           mainAxisSize: MainAxisSize.min,
+          //           children: [
+          //             Icon(Icons.cloud_off, size: 14, color: Colors.white),
+          //             SizedBox(width: 4),
+          //             Text(
+          //               'Offline',
+          //               style: TextStyle(
+          //                 color: Colors.white,
+          //                 fontSize: 12,
+          //                 fontWeight: FontWeight.bold,
+          //               ),
+          //             ),
+          //           ],
+          //         ),
+          //       ),
+          //     if (_isNavigating)
+          //       IconButton(
+          //         icon: Icon(Icons.close),
+          //         onPressed: _stopNavigation,
+          //         tooltip: 'Stop Navigation',
+          //       ),
+          //   ],
+          // ),
+          // SizedBox(height: spacingMedium),
           contentWidget,
         ],
       );

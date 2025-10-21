@@ -1,6 +1,7 @@
 // lib/modules/programs/data/repositories/events/events_repository_impl.dart
 import 'package:baseqat/core/database/image_cache_service.dart';
 import 'package:baseqat/core/network/connectivity_service.dart';
+import 'package:baseqat/modules/home/data/models/event_model.dart';
 import 'package:baseqat/modules/home/data/models/workshop_model.dart';
 import 'package:baseqat/modules/programs/data/datasources/events_local_data_source.dart';
 import 'package:baseqat/modules/programs/data/models/fav_extension.dart';
@@ -59,6 +60,15 @@ class EventsRepositoryImpl implements EventsRepository {
           urls.add(entity.coverImage!);
         }
         urls.addAll(entity.gallery.where((url) => url.isNotEmpty));
+      } else if (entity is Event) {
+        if (entity.circleAvatar != null && entity.circleAvatar!.isNotEmpty) {
+          urls.add(entity.circleAvatar!);
+        }
+        if (entity.coverImage != null && entity.coverImage!.isNotEmpty) {
+          urls.add(entity.coverImage!);
+        }
+        urls.add(entity.overviewImages!);
+        //urls.addAll(entity.overviewImages.where((url) => url.isNotEmpty));
       }
     }
 
@@ -66,6 +76,67 @@ class EventsRepositoryImpl implements EventsRepository {
   }
 
   // ---------------- Base fetchers (offline-first) ----------------
+  @override
+  Future<Either<Failure, List<Event>>> getEvents({int limit = 10}) async {
+    try {
+      final isOnline = await connectivity.hasConnection();
+
+      if (isOnline) {
+        debugPrint('[EventsRepo] Fetching events from remote');
+        final data = await remote.fetchEvents(limit: limit);
+
+        // Cache data and images in background
+        unawaited(local.cacheEvents(data));
+        final imageUrls = _collectImageUrls(data);
+        unawaited(ImageCacheService.cacheImages(imageUrls));
+
+        return Right(data);
+      } else {
+        debugPrint('[EventsRepo] Loading events from cache (offline)');
+        final cached = await local.getCachedEvents();
+        return Right(cached);
+      }
+    } catch (e) {
+      debugPrint('[EventsRepo] Error fetching events, falling back to cache: $e');
+      try {
+        final cached = await local.getCachedEvents();
+        return Right(cached);
+      } catch (cacheError) {
+        return Left(_asFailure(e));
+      }
+    }
+  }
+
+  @override
+  Future<Either<Failure, Event?>> getEventById(String eventId) async {
+    try {
+      final isOnline = await connectivity.hasConnection();
+
+      if (isOnline) {
+        debugPrint('[EventsRepo] Fetching event $eventId from remote');
+        final event = await remote.fetchEventById(eventId);
+
+        if (event != null) {
+          final imageUrls = _collectImageUrls([event]);
+          unawaited(ImageCacheService.cacheImages(imageUrls));
+        }
+
+        return Right(event);
+      } else {
+        debugPrint('[EventsRepo] Loading event $eventId from cache (offline)');
+        final cached = await local.getCachedEvents();
+        final event = cached.firstWhere(
+              (e) => e.id == eventId,
+          orElse: () => null as Event,
+        );
+        return Right(event);
+      }
+    } catch (e) {
+      debugPrint('[EventsRepo] Error fetching event: $e');
+      return Left(_asFailure(e));
+    }
+  }
+
   @override
   Future<Either<Failure, List<Artist>>> getArtists({int limit = 10}) async {
     try {

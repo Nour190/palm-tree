@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'package:baseqat/core/network/remote/error_mapper.dart';
 import 'package:baseqat/core/network/remote/net_guard.dart';
+import 'package:baseqat/modules/home/data/models/event_model.dart';
 import 'package:baseqat/modules/home/data/models/workshop_model.dart';
 import 'package:baseqat/modules/programs/data/models/fav_extension.dart';
 import 'package:baseqat/modules/home/data/models/artist_model.dart';
@@ -15,6 +16,9 @@ abstract class EventsRemoteDataSource {
   Future<List<Artwork>> fetchArtworks({int limit = 10});
   Future<List<Speaker>> fetchSpeakers({int limit = 10});
   Future<List<Workshop>> fetchWorkshops({int limit = 10});
+
+  Future<List<Event>> fetchEvents({int limit = 10});
+  Future<Event?> fetchEventById(String eventId);
 
   // Favorites (generic ops)
   Future<void> setFavorite({
@@ -64,6 +68,93 @@ class EventsRemoteDataSourceImpl implements EventsRemoteDataSource {
   static const _favTable = 'favorites';
 
   // ---------------- Fetchers ----------------
+
+  @override
+  Future<List<Event>> fetchEvents({int limit = 10}) async {
+    try {
+      await ensureOnline();
+      final res =
+      await client
+          .from('events')
+          .select()
+          .order('event_date', ascending: false)
+          .timeout(_timeout);
+      // [
+      //   {
+      //     'id': 'dummy_1',
+      //     'name': 'Art Exhibition Opening',
+      //     'overview': 'Join us for the grand opening of our contemporary art exhibition.',
+      //     'event_date': DateTime.now().add(Duration(days: 5)).toIso8601String(),
+      //     'cover_image': "https://images.pexels.com/photos/276217/pexels-photo-276217.jpeg",
+      //     'status': 'published',
+      //     "artist_ids": ["4096702d-43bb-4fd4-a0b7-ff9974e148c6"],
+      //     "overview_images":"https://images.pexels.com/photos/460736/pexels-photo-460736.jpeg",
+      //     "circle_avatar":"https://images.pexels.com/photos/460736/pexels-photo-460736.jpeg",
+      //     "artwork_ids":["0b667f2f-0571-4970-a3c6-6cb6185d7dc7"],
+      //   },
+      //   {
+      //     'id': 'dummy_2',
+      //     'name': 'Live Music Performance',
+      //     'overview': 'Experience an evening of live music from local artists.',
+      //     'event_date': DateTime.now().add(Duration(days: 10)).toIso8601String(),
+      //     'cover_image': 'https://images.pexels.com/photos/460736/pexels-photo-460736.jpeg',
+      //     'status': 'published',
+      //     "artwork_ids":["4a458720-e8f9-4fc6-a5a6-6b7827410651"],
+      //     "artist_ids": ["5508fa59-e451-44c7-8cfd-2ea5860a962c"],
+      //     "circle_avatar":"https://images.pexels.com/photos/460736/pexels-photo-460736.jpeg",
+      //   },
+      //
+      // ];
+
+
+      final rows = (res as List).cast<Map<String, dynamic>>();
+      return rows.map(Event.fromMap).toList();
+    } catch (e, st) {
+      throw mapError(e, st);
+    }
+  }
+
+  @override
+  Future<Event?> fetchEventById(String eventId) async {
+    try {
+      await ensureOnline();
+      final res =
+      await client
+          .from('events')
+          .select()
+          .eq('id', eventId)
+          .limit(1)
+          .timeout(_timeout);
+      // [
+      //   {
+      //     'id': 'dummy_1',
+      //     'name': 'Art Exhibition Opening',
+      //     'overview': 'Join us for the grand opening of our contemporary art exhibition.',
+      //     'event_date': DateTime.now().add(Duration(days: 5)).toIso8601String(),
+      //     'cover_image': 'https://images.pexels.com/photos/460736/pexels-photo-460736.jpeg',
+      //     'status': 'published',
+      //   // "artist_ids": ["4096702d-43bb-4fd4-a0b7-ff9974e148c6"]
+      //   },
+      //   {
+      //     'id': 'dummy_2',
+      //     'name': 'Live Music Performance',
+      //     'overview': 'Experience an evening of live music from local artists.',
+      //     'event_date': DateTime.now().add(Duration(days: 10)).toIso8601String(),
+      //     'cover_image':  "https://images.pexels.com/photos/276217/pexels-photo-276217.jpeg",
+      //     'status': 'published',
+      //    // "artist_ids":["4096702d-43bb-4fd4-a0b7-ff9974e148c6"]
+      //   },
+      //
+      // ];
+
+
+      final rows = (res as List).cast<Map<String, dynamic>>();
+      if (rows.isEmpty) return null;
+      return Event.fromMap(rows.first);
+    } catch (e, st) {
+      throw mapError(e, st);
+    }
+  }
 
   @override
   Future<List<Artist>> fetchArtists({int limit = 10}) async {
@@ -156,7 +247,7 @@ class EventsRemoteDataSourceImpl implements EventsRemoteDataSource {
         final payload = <String, dynamic>{
           'user_id': userId,
           'entity_kind':
-              kind.db, // e.g., 'artist' | 'artwork' | 'speaker' | 'event'
+          kind.db, // e.g., 'artist' | 'artwork' | 'speaker' | 'event'
           'entity_id': entityId,
           if (title != null) 'title': title,
           if (description != null) 'description': description,
@@ -172,10 +263,10 @@ class EventsRemoteDataSourceImpl implements EventsRemoteDataSource {
             .from(_favTable)
             .delete()
             .match({
-              'user_id': userId,
-              'entity_kind': kind.db,
-              'entity_id': entityId,
-            })
+          'user_id': userId,
+          'entity_kind': kind.db,
+          'entity_id': entityId,
+        })
             .timeout(_timeout);
       }
     } catch (e, st) {

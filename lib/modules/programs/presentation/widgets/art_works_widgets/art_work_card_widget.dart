@@ -12,6 +12,7 @@ class ArtWorkCardWidget extends StatelessWidget {
     super.key,
     required this.artwork,
     required this.languageCode,
+    required this.index,            // new required param
     this.onTap,
     this.viewType = ArtworkCardViewType.list,
     this.isFavorite = false,
@@ -26,15 +27,23 @@ class ArtWorkCardWidget extends StatelessWidget {
   final VoidCallback? onFavoriteTap;
   final String? userId;
   final String languageCode;
+  final int index; // index of this card in the list/grid
 
   @override
   Widget build(BuildContext context) {
     final spacingLarge = ProgramsLayout.spacingLarge(context);
     final spacingSmall = ProgramsLayout.spacingSmall(context);
     final radius = ProgramsLayout.radius20(context);
-    final description = artwork.localizedDescription(
-      languageCode: languageCode,
-    );
+    final description =
+    artwork.localizedDescription(languageCode: languageCode);
+
+    final bool isBlack = index % 2 == 1;
+
+    final Color backgroundColor = isBlack ? AppColor.black : AppColor.white;
+    final Color borderColor = isBlack ? AppColor.white : AppColor.primaryColor;
+    final Color titleColor = isBlack ? AppColor.white : AppColor.black;
+    final Color subtitleColor = isBlack ? AppColor.white : AppColor.gray600;
+    final Color iconColor = isBlack ? AppColor.white : AppColor.gray400;
 
     return Material(
       color: Colors.transparent,
@@ -43,13 +52,13 @@ class ArtWorkCardWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(radius),
         child: Container(
           decoration: BoxDecoration(
-            color: AppColor.white,
+            color: backgroundColor,
             borderRadius: BorderRadius.circular(radius),
-            border: Border.all(color: AppColor.blueGray100),
+            border: Border.all(color: borderColor, width: 1.2),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 12,
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 10,
                 offset: const Offset(0, 6),
               ),
             ],
@@ -57,7 +66,13 @@ class ArtWorkCardWidget extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _ArtworkImage(url: _coverImage(artwork)),
+              // image
+              Padding(
+                padding: EdgeInsets.all(spacingLarge),
+                child: _ArtworkImage(url: _coverImage(artwork)),
+              ),
+
+              // content
               Padding(
                 padding: EdgeInsets.all(spacingLarge),
                 child: Column(
@@ -65,22 +80,28 @@ class ArtWorkCardWidget extends StatelessWidget {
                   children: [
                     Text(
                       artwork.localizedName(languageCode: languageCode),
-                      style: ProgramsTypography.headingMedium(
-                        context,
-                      ).copyWith(color: AppColor.black),
+                      style: ProgramsTypography.headingMedium(context)
+                          .copyWith(color: titleColor),
                     ),
                     SizedBox(height: spacingSmall),
                     if (description?.isNotEmpty ?? false)
                       Text(
                         description!,
-                        maxLines: viewType == ArtworkCardViewType.grid ? 3 : 4,
+                        maxLines:
+                        viewType == ArtworkCardViewType.grid ? 3 : 4,
                         overflow: TextOverflow.ellipsis,
-                        style: ProgramsTypography.bodySecondary(
-                          context,
-                        ).copyWith(color: AppColor.gray600),
+                        style: ProgramsTypography.bodySecondary(context)
+                            .copyWith(color: subtitleColor),
                       ),
                     SizedBox(height: spacingLarge),
-                    _ArtistInfo(artwork: artwork, languageCode: languageCode),
+                    // pass computed colors to artist info so it contrasts correctly
+                    _ArtistInfo(
+                      artwork: artwork,
+                      languageCode: languageCode,
+                      primaryTextColor: titleColor,
+                      secondaryTextColor: subtitleColor,
+                      iconColor: iconColor,
+                    ),
                     SizedBox(height: spacingSmall),
                     if (onFavoriteTap != null)
                       Align(
@@ -93,10 +114,8 @@ class ArtWorkCardWidget extends StatelessWidget {
                             isFavorite
                                 ? Icons.favorite_rounded
                                 : Icons.favorite_border_rounded,
-                            color: isFavorite
-                                ? AppColor.primaryColor
-                                : AppColor.gray400,
                           ),
+                          color: isFavorite ? AppColor.primaryColor : iconColor,
                           onPressed: onFavoriteTap,
                         ),
                       ),
@@ -124,9 +143,8 @@ class _ArtworkImage extends StatelessWidget {
     final height = ProgramsLayout.size(context, 180);
 
     return ClipRRect(
-      borderRadius: BorderRadius.only(
-        topLeft: Radius.circular(ProgramsLayout.radius20(context)),
-        topRight: Radius.circular(ProgramsLayout.radius20(context)),
+      borderRadius: BorderRadius.all(
+        Radius.circular(ProgramsLayout.radius20(context)),
       ),
       child: SizedBox(
         height: height,
@@ -156,10 +174,19 @@ class _ArtworkImage extends StatelessWidget {
 }
 
 class _ArtistInfo extends StatelessWidget {
-  const _ArtistInfo({required this.artwork, required this.languageCode});
+  const _ArtistInfo({
+    required this.artwork,
+    required this.languageCode,
+    this.primaryTextColor,
+    this.secondaryTextColor,
+    this.iconColor,
+  });
 
   final Artwork artwork;
   final String languageCode;
+  final Color? primaryTextColor;
+  final Color? secondaryTextColor;
+  final Color? iconColor;
 
   @override
   Widget build(BuildContext context) {
@@ -168,11 +195,15 @@ class _ArtistInfo extends StatelessWidget {
     }
 
     final spacingSmall = ProgramsLayout.spacingSmall(context);
-    final radius = ProgramsLayout.radius16(context);
+    final radius = ProgramsLayout.radius20(context);
     final artistName =
         artwork.localizedArtistName(languageCode: languageCode) ??
             'programs.artwork_card.unknown_artist'.tr();
-    final materials = artwork.localizedMaterials(languageCode: languageCode);
+
+    final Color primary = primaryTextColor ?? AppColor.black;
+    final Color secondary = secondaryTextColor ?? AppColor.gray500;
+    final Color avatarBg = AppColor.gray100;
+    final Color avatarIconColor = iconColor ?? AppColor.gray400;
 
     return Row(
       children: [
@@ -184,11 +215,11 @@ class _ArtistInfo extends StatelessWidget {
               width: ProgramsLayout.size(context, 44),
               height: ProgramsLayout.size(context, 44),
               fit: BoxFit.cover,
-              errorWidget: _artistPlaceholder(context),
+              errorWidget: _artistPlaceholder(context, avatarIconColor),
             ),
           )
         else
-          _artistPlaceholder(context),
+          _artistPlaceholder(context, avatarIconColor),
         SizedBox(width: spacingSmall),
         Expanded(
           child: Column(
@@ -198,18 +229,16 @@ class _ArtistInfo extends StatelessWidget {
                 artistName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: ProgramsTypography.bodyPrimary(
-                  context,
-                ).copyWith(color: AppColor.black, fontWeight: FontWeight.w600),
+                style: ProgramsTypography.bodyPrimary(context)
+                    .copyWith(color: primary, fontWeight: FontWeight.w600),
               ),
-              if (materials?.isNotEmpty ?? false)
+              if (artwork.artworkType?.isNotEmpty ?? false)
                 Text(
-                  materials!,
+                  artwork.artworkType!,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: ProgramsTypography.bodySecondary(
-                    context,
-                  ).copyWith(color: AppColor.gray500),
+                  style: ProgramsTypography.bodySecondary(context)
+                      .copyWith(color: secondary),
                 ),
             ],
           ),
@@ -218,7 +247,7 @@ class _ArtistInfo extends StatelessWidget {
     );
   }
 
-  Widget _artistPlaceholder(BuildContext context) => Container(
+  Widget _artistPlaceholder(BuildContext context, Color iconColor) => Container(
     width: ProgramsLayout.size(context, 44),
     height: ProgramsLayout.size(context, 44),
     decoration: BoxDecoration(
@@ -228,7 +257,7 @@ class _ArtistInfo extends StatelessWidget {
     child: Icon(
       Icons.person_outline_rounded,
       size: ProgramsLayout.size(context, 24),
-      color: AppColor.gray400,
+      color: iconColor,
     ),
   );
 }

@@ -422,12 +422,18 @@
       "title": "البرامج",
       "search_placeholder": "ماذا تريد أن تشاهد اليوم؟"
     },
+"museum":{
+  "visit_now": "زر الان"
+
+},
     "tabs": {
       "artworks": "الأعمال الفنية",
       "artists": "الفنانون",
       "schedule": "الجدول",
       "gallery": "المعرض",
-      "virtual_tour": "الجولة الافتراضية"
+      "virtual_tour": "الجولة الافتراضية",
+      "events": "الفعاليات",
+      "museum": "Museums"
     },
     "errors": {
       "artworks": "تعذر تحميل الأعمال الفنية",

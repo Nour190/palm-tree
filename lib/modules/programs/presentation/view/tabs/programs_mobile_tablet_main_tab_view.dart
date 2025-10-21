@@ -4,21 +4,29 @@ import 'package:baseqat/core/database/image_cache_service.dart';
 import 'package:baseqat/core/network/connectivity_service.dart';
 import 'package:baseqat/core/resourses/assets_manager.dart';
 import 'package:baseqat/core/resourses/color_manager.dart';
+import 'package:baseqat/core/responsive/size_ext.dart';
 import 'package:baseqat/modules/home/data/models/artist_model.dart';
 import 'package:baseqat/modules/home/data/models/artwork_model.dart';
 import 'package:baseqat/modules/programs/data/datasources/events_local_data_source.dart';
 import 'package:baseqat/modules/programs/data/datasources/events_remote_data_source.dart';
+import 'package:baseqat/modules/programs/data/datasources/museums_local_data_source.dart';
+import 'package:baseqat/modules/programs/data/datasources/museums_remote_data_source.dart';
 import 'package:baseqat/modules/programs/data/models/gallery_item.dart';
 import 'package:baseqat/modules/programs/data/models/month_data.dart';
-
 import 'package:baseqat/modules/programs/data/repositories/events/events_repository.dart';
 import 'package:baseqat/modules/programs/data/repositories/events/events_repository_impl.dart';
+import 'package:baseqat/modules/programs/data/repositories/museums/museums_repository.dart';
+import 'package:baseqat/modules/programs/data/repositories/museums/museums_repository_impl.dart';
 import 'package:baseqat/modules/programs/presentation/manger/events/events_cubit.dart';
-import 'package:baseqat/modules/programs/presentation/manger/events/events_state.dart';
+import 'package:baseqat/modules/programs/presentation/manger/events/events_state.dart' as events_state;
+import 'package:baseqat/modules/programs/presentation/manger/museums/museums_cubit.dart';
+import 'package:baseqat/modules/programs/presentation/manger/museums/museums_state.dart' as museums_state;
 import 'package:baseqat/modules/programs/presentation/theme/programs_theme.dart';
 import 'package:baseqat/modules/programs/presentation/view/tabs/art_works_tab.dart';
 import 'package:baseqat/modules/programs/presentation/view/tabs/artist_tab.dart';
+import 'package:baseqat/modules/programs/presentation/view/tabs/events_tab.dart';
 import 'package:baseqat/modules/programs/presentation/view/tabs/gallery_tav_tab.dart';
+import 'package:baseqat/modules/programs/presentation/view/tabs/museum_tab.dart';
 import 'package:baseqat/modules/programs/presentation/view/tabs/speakers_tab.dart';
 import 'package:baseqat/modules/programs/presentation/view/tabs/virtual_tour_tab.dart';
 import 'package:baseqat/modules/tabs/presentation/manger/tabs_cubit.dart';
@@ -26,19 +34,22 @@ import 'package:baseqat/modules/tabs/presentation/manger/tabs_states.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../../core/resourses/style_manager.dart';
+import '../../../../../core/utils/rtl_helper.dart';
+import '../../../../home/data/models/event_model.dart';
+import '../../../../home/data/models/museum_model.dart';
 import '../../../../home/data/models/speaker_model.dart';
 import '../../../../home/data/models/workshop_model.dart';
 import '../more_details_views_tabs/speakers_info_view.dart';
 import '../more_details_views_tabs/workshop_info_view.dart';
 
-
 class EventsMobileTabletView extends StatelessWidget {
-  const EventsMobileTabletView({
-    super.key,
-    EventsRepository? repository,
-  }) : _repository = repository;
+  const EventsMobileTabletView({super.key, EventsRepository? repository})
+      : _repository = repository;
 
   final EventsRepository? _repository;
 
@@ -56,19 +67,36 @@ class EventsMobileTabletView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     print("-----------");
-    return BlocProvider<EventsCubit>(
-      create: (_) => EventsCubit(_resolveRepository())..loadHome(limit: 10),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<EventsCubit>(
+          create: (_) => EventsCubit(_resolveRepository())..loadHome(limit: 10),
+        ),
+        BlocProvider<MuseumsCubit>(
+          create: (_) {
+            final client = Supabase.instance.client;
+            final repo = MuseumsRepositoryImpl(
+              MuseumsRemoteDataSourceImpl(client),
+              MuseumsLocalDataSourceImpl(),
+              ConnectivityService(),
+            );
+            return MuseumsCubit(repo)..loadMuseums(limit: 10);
+          },
+        ),
+      ],
       child: const _EventsView(),
     );
   }
 }
 
 enum ProgramsTab {
+
   artworks('programs.tabs.artworks', Icons.palette_outlined),
   artists('programs.tabs.artists', Icons.people_alt_outlined),
   schedule('programs.tabs.schedule', Icons.event_available_outlined),
-  gallery('programs.tabs.gallery', Icons.photo_library_outlined);
-  // virtualTour('programs.tabs.virtual_tour', Icons.explore_outlined);
+  gallery('programs.tabs.gallery', Icons.photo_library_outlined),
+  events('programs.tabs.events', Icons.event_outlined),
+  museum('programs.tabs.museum', Icons.museum_outlined);
 
   const ProgramsTab(this.labelKey, this.icon);
   final String labelKey;
@@ -119,7 +147,7 @@ class _EventsViewState extends State<_EventsView> {
           }
         }
       },
-      child: BlocBuilder<EventsCubit, EventsState>(
+      child: BlocBuilder<EventsCubit, events_state.EventsState>(
         builder: (context, state) {
           return OfflineIndicator(
             child: Container(
@@ -136,9 +164,13 @@ class _EventsViewState extends State<_EventsView> {
                           children: [
                             _ProgramsHeader(
                               controller: _searchController,
-                              onChanged: context.read<EventsCubit>().setSearchQuery,
+                              onChanged: context
+                                  .read<EventsCubit>()
+                                  .setSearchQuery,
                             ),
-                            SizedBox(height: ProgramsLayout.spacingSmall(context)),
+                            SizedBox(
+                              height: ProgramsLayout.spacingSmall(context),
+                            ),
                             _ProgramsTabBar(
                               selected: _tab,
                               onSelected: (tab) => setState(() => _tab = tab),
@@ -165,6 +197,8 @@ class _EventsViewState extends State<_EventsView> {
 
   Widget _buildBody(ProgramsTab tab) {
     switch (tab) {
+      case ProgramsTab.events:
+        return const _EventsSection();
       case ProgramsTab.artworks:
         return const _ArtworksSection();
       case ProgramsTab.artists:
@@ -173,9 +207,33 @@ class _EventsViewState extends State<_EventsView> {
         return const _ScheduleSection();
       case ProgramsTab.gallery:
         return const _GallerySection();
-    // case ProgramsTab.virtualTour:
-    //   return const _VirtualTourSection();
+      case ProgramsTab.museum:
+        return const _MuseumSection();
     }
+  }
+}
+
+class _EventsSection extends StatelessWidget {
+  const _EventsSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return _DataSection<Event, events_state.EventsState, EventsCubit>(
+      selector: (state) => _SliceData(
+        items: state.events,
+        status: state.eventsStatus,
+        errorMessage: state.eventsError,
+      ),
+      errorKey: 'programs.errors.events',
+      onRetry: () =>
+          context.read<EventsCubit>().loadEvents(limit: 10, force: true),
+      builder: (context, events) => EventsTabContent(
+        artworks:context.read<EventsCubit>().state.artworks ,
+        events: events,
+        artists: context.read<EventsCubit>().state.artists,
+        languageCode: context.locale.languageCode,
+      ),
+    );
   }
 }
 
@@ -194,10 +252,12 @@ class _ProgramsHeader extends StatelessWidget {
             Expanded(
               flex: 3,
               child: Container(
+                height: ProgramsLayout.size(context, 44),
                 decoration: BoxDecoration(
                   color: AppColor.gray50,
-                  borderRadius:
-                  BorderRadius.circular(ProgramsLayout.radius20(context)),
+                  borderRadius: BorderRadius.circular(
+                    ProgramsLayout.radius20(context),
+                  ),
                   border: Border.all(color: AppColor.gray200),
                 ),
                 padding: EdgeInsets.symmetric(
@@ -207,16 +267,33 @@ class _ProgramsHeader extends StatelessWidget {
                   controller: controller,
                   onChanged: onChanged,
                   textInputAction: TextInputAction.search,
+
+                  // centers the text/hint vertically
+                  textAlignVertical: TextAlignVertical.center,
+
+                  style: ProgramsTypography.bodyPrimary(context)
+                      .copyWith(fontSize: ProgramsLayout.size(context, 14), height: 1),
+
                   decoration: InputDecoration(
+                    isDense: true,
+                    // contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 0),
+
                     hintText: 'programs.header.search_placeholder'.tr(),
                     hintStyle: ProgramsTypography.bodySecondary(context)
-                        .copyWith(color: AppColor.gray500),
+                        .copyWith(fontSize: ProgramsLayout.size(context, 14), color: AppColor.gray500),
+
                     border: InputBorder.none,
-                    icon: Image.asset(
-                      AppAssetsManager.imgSearch,
-                      width: ProgramsLayout.size(context, 20),
-                      height: ProgramsLayout.size(context, 25),
-                      color: AppColor.black,
+
+                    // use prefixIcon so the icon doesn't push the hint off-center.
+                    prefixIcon: Icon(
+                      Icons.search,
+                      size: ProgramsLayout.size(context, 20),
+                      color: AppColor.primaryColor,
+                    ),
+                    // control the prefix icon constraints (keeps layout tight)
+                    prefixIconConstraints: BoxConstraints(
+                      minWidth: ProgramsLayout.size(context, 36),
+                      minHeight: ProgramsLayout.size(context, 36),
                     ),
                   ),
                 ),
@@ -225,8 +302,9 @@ class _ProgramsHeader extends StatelessWidget {
             SizedBox(width: ProgramsLayout.spacingSmall(context)),
             Text(
               'programs.header.title'.tr(),
-              style: ProgramsTypography.headingLarge(context)
-                  .copyWith(color: AppColor.black),
+              style: ProgramsTypography.headingLarge(
+                context,
+              ).copyWith(color: AppColor.black),
             ),
           ],
         ),
@@ -248,17 +326,19 @@ class _ProgramsTabBar extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: ProgramsTab.values
-            .map((tab) => Padding(
-          padding: EdgeInsetsDirectional.only(
-            end: ProgramsLayout.spacingMedium(context),
+            .map(
+              (tab) => Padding(
+            padding: EdgeInsetsDirectional.only(
+              end: ProgramsLayout.spacingMedium(context),
+            ),
+            child: _TabChip(
+              label: tab.labelKey.tr(),
+              icon: tab.icon,
+              isSelected: tab == selected,
+              onTap: () => onSelected(tab),
+            ),
           ),
-          child: _TabChip(
-            label: tab.labelKey.tr(),
-            icon: tab.icon,
-            isSelected: tab == selected,
-            onTap: () => onSelected(tab),
-          ),
-        ))
+        )
             .toList(),
       ),
     );
@@ -286,7 +366,9 @@ class _TabChip extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: isSelected ? AppColor.primaryColor : AppColor.transparent,
-          border: Border.all(color: isSelected ? AppColor.primaryColor : AppColor.gray200),
+          border: Border.all(
+            color: isSelected ? AppColor.primaryColor : AppColor.gray200,
+          ),
           borderRadius: BorderRadius.circular(ProgramsLayout.radius16(context)),
         ),
         child: Padding(
@@ -308,7 +390,7 @@ class _TabChip extends StatelessWidget {
 }
 
 // Generic Section Widget
-class _DataSection<T> extends StatelessWidget {
+class _DataSection<T, S, C extends Cubit> extends StatelessWidget {
   const _DataSection({
     required this.selector,
     required this.builder,
@@ -316,25 +398,41 @@ class _DataSection<T> extends StatelessWidget {
     required this.errorKey,
   });
 
-  final _SliceData<T> Function(EventsState) selector;
+  final _SliceData<T> Function(S) selector;
   final Widget Function(BuildContext, List<T>) builder;
   final VoidCallback onRetry;
   final String errorKey;
 
   @override
   Widget build(BuildContext context) {
-    return BlocSelector<EventsCubit, EventsState, _SliceData<T>>(
-      selector: selector,
-      builder: (context, slice) {
-        if (slice.status == SliceStatus.error) {
-          return _InlineError(
-            title: slice.errorMessage ?? errorKey.tr(),
-            onRetry: onRetry,
-          );
-        }
-        return builder(context, slice.items);
-      },
-    );
+    if (C == EventsCubit) {
+      return BlocSelector<EventsCubit, events_state.EventsState, _SliceData<T>>(
+        selector: (state) => selector(state as S),
+        builder: (context, slice) {
+          if (slice.status == events_state.SliceStatus.error) {
+            return _InlineError(
+              title: slice.errorMessage ?? errorKey.tr(),
+              onRetry: onRetry,
+            );
+          }
+          return builder(context, slice.items);
+        },
+      );
+    } else if (C == MuseumsCubit) {
+      return BlocSelector<MuseumsCubit, museums_state.MuseumsState, _SliceData<T>>(
+        selector: (state) => selector(state as S),
+        builder: (context, slice) {
+          if (slice.status == museums_state.SliceStatus.error) {
+            return _InlineError(
+              title: slice.errorMessage ?? errorKey.tr(),
+              onRetry: onRetry,
+            );
+          }
+          return builder(context, slice.items);
+        },
+      );
+    }
+    return const SizedBox.shrink();
   }
 }
 
@@ -343,7 +441,7 @@ class _ArtworksSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _DataSection<Artwork>(
+    return _DataSection<Artwork, events_state.EventsState, EventsCubit>(
       selector: (state) => _SliceData(
         items: state.artworks,
         status: state.artworksStatus,
@@ -365,7 +463,7 @@ class _ArtistsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _DataSection<Artist>(
+    return _DataSection<Artist, events_state.EventsState, EventsCubit>(
       selector: (state) => _SliceData(
         items: state.artists,
         status: state.artistsStatus,
@@ -421,10 +519,7 @@ class _ScheduleSectionState extends State<_ScheduleSection> {
     if (_currentView == 'speaker' && _selectedSpeaker != null) {
       return Column(
         children: [
-          Padding(
-            padding: ProgramsLayout.pagePadding(context),
-            child: _BackButton(onBack: _backToSchedule),
-          ),
+          _BackButton(onBack: _backToSchedule, title: _selectedSpeaker!.name),
           SizedBox(height: ProgramsLayout.spacingMedium(context)),
           Padding(
             padding: ProgramsLayout.pagePadding(context),
@@ -441,31 +536,29 @@ class _ScheduleSectionState extends State<_ScheduleSection> {
     if (_currentView == 'workshop' && _selectedWorkshop != null) {
       return Column(
         children: [
-          Padding(
-            padding: ProgramsLayout.pagePadding(context),
-            child: _BackButton(onBack: _backToSchedule),
-          ),
-          SizedBox(height: ProgramsLayout.spacingMedium(context)),
+          _BackButton(onBack: _backToSchedule, title:RTLHelper.isRTL(context)? _selectedWorkshop!.nameAr:_selectedWorkshop!.name),
+          //SizedBox(height: ProgramsLayout.spacingMedium(context)),
           Padding(
             padding: ProgramsLayout.pagePadding(context),
             child: WorkshopInfoScreen(
               workshop: _selectedWorkshop!,
               userId: "",
-             // isEmbedded: true,
+              isEmbedded: true,
             ),
           ),
         ],
       );
     }
 
-    return BlocBuilder<EventsCubit, EventsState>(
+    return BlocBuilder<EventsCubit, events_state.EventsState>(
       builder: (context, state) {
         final hasError =
             state.speakersError != null || state.workshopsError != null;
 
         if (hasError) {
           return _InlineError(
-            title: state.speakersError ??
+            title:
+            state.speakersError ??
                 state.workshopsError ??
                 'programs.errors.schedule'.tr(),
             onRetry: () {
@@ -503,63 +596,77 @@ class _GallerySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _DataSection<GalleryItem>(
+    return _DataSection<GalleryItem, events_state.EventsState, EventsCubit>(
       selector: (state) => _SliceData(
         items: state.gallery,
         status: state.galleryStatus,
         errorMessage: state.galleryError,
       ),
       errorKey: 'programs.errors.gallery',
-      onRetry: () => context
-          .read<EventsCubit>()
-          .loadGallery(limitArtworks: 50, force: true),
+      onRetry: () => context.read<EventsCubit>().loadGallery(
+        limitArtworks: 50,
+        force: true,
+      ),
       builder: (context, gallery) => GalleryGrid(items: gallery, onTap: (_) {}),
     );
   }
 }
 
-class _BackButton extends StatelessWidget {
-  const _BackButton({required this.onBack});
-
-  final VoidCallback onBack;
+class _MuseumSection extends StatelessWidget {
+  const _MuseumSection();
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        InkWell(
-          onTap: onBack,
-          borderRadius: BorderRadius.circular(20),
-          child: Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: ProgramsLayout.size(context, 16),
-              vertical: ProgramsLayout.size(context, 8),
-            ),
-            decoration: BoxDecoration(
-              border: Border.all(color: AppColor.gray200),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.arrow_back,
-                  size: ProgramsLayout.size(context, 20),
-                  color: AppColor.black,
-                ),
-                SizedBox(width: ProgramsLayout.spacingSmall(context)),
-                Text(
-                  'Back to Schedule',
-                  style: ProgramsTypography.bodyPrimary(context).copyWith(
-                    color: AppColor.black,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
+    return _DataSection<Museum, museums_state.MuseumsState, MuseumsCubit>(
+      selector: (state) => _SliceData(
+        items: state.museums,
+        status: state.museumsStatus,
+        errorMessage: state.museumsError,
+      ),
+      errorKey: 'programs.errors.museums',
+      onRetry: () =>
+          context.read<MuseumsCubit>().loadMuseums(limit: 10, force: true),
+      builder: (context, museums) => MuseumTabContent(
+        museums: museums,
+        artists: context.read<EventsCubit>().state.artists,
+        languageCode: context.locale.languageCode,
+      ),
+    );
+  }
+}
+
+class _BackButton extends StatelessWidget {
+  const _BackButton({required this.onBack, this.title});
+
+  final VoidCallback onBack;
+  final String? title;
+
+  @override
+  Widget build(BuildContext context) {
+    final displayTitle = title ?? 'Back to Schedule';
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.sW),
+      decoration: BoxDecoration(color: AppColor.white),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          InkWell(
+            onTap: onBack,
+            child: Iconify(
+              RTLHelper.isRTL(context)
+                  ? MaterialSymbols.arrow_forward_rounded
+                  : MaterialSymbols.arrow_back_rounded,
+              color: Colors.black,
+              size: 32.sW,
             ),
           ),
-        ),
-      ],
+          Text(
+            displayTitle,
+            style: TextStyleHelper.instance.headline24BoldInter,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -583,8 +690,9 @@ class _InlineError extends StatelessWidget {
             padding: EdgeInsets.all(ProgramsLayout.size(context, 20)),
             decoration: BoxDecoration(
               color: AppColor.gray50,
-              borderRadius:
-              BorderRadius.circular(ProgramsLayout.radius16(context)),
+              borderRadius: BorderRadius.circular(
+                ProgramsLayout.radius16(context),
+              ),
               border: Border.all(color: AppColor.gray200),
               boxShadow: [
                 BoxShadow(
@@ -599,11 +707,10 @@ class _InlineError extends StatelessWidget {
               children: [
                 SizedBox(height: ProgramsLayout.spacingLarge(context)),
                 Text(
-                  isOffline
-                      ? 'programs.offline.no_cached_data'.tr()
-                      : title,
-                  style: ProgramsTypography.headingMedium(context)
-                      .copyWith(color: AppColor.gray900),
+                  isOffline ? 'programs.offline.no_cached_data'.tr() : title,
+                  style: ProgramsTypography.headingMedium(
+                    context,
+                  ).copyWith(color: AppColor.gray900),
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: ProgramsLayout.spacingSmall(context)),
@@ -611,8 +718,9 @@ class _InlineError extends StatelessWidget {
                   isOffline
                       ? 'programs.offline.connect_to_load'.tr()
                       : 'programs.errors.generic_subtitle'.tr(),
-                  style: ProgramsTypography.bodySecondary(context)
-                      .copyWith(color: AppColor.gray600),
+                  style: ProgramsTypography.bodySecondary(
+                    context,
+                  ).copyWith(color: AppColor.gray600),
                   textAlign: TextAlign.center,
                 ),
                 if (!isOffline) ...[
@@ -639,6 +747,6 @@ class _SliceData<T> {
   });
 
   final List<T> items;
-  final SliceStatus status;
+  final dynamic status;
   final String? errorMessage;
 }
