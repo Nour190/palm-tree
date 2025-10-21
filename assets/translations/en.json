@@ -431,7 +431,8 @@
       "gallery": "Gallery",
       "virtual_tour": "Virtual Tour",
       "events": "Events",
-      "museum": "المتاحف"
+      "museum": "Museums",
+
     },
     "museum":{
       "visit_now": "Visit Now"
